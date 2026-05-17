@@ -24,15 +24,29 @@
 </head>
 <body>
 
-  <!-- ═══ 초대장 열기 (전통 커튼) ═══ -->
-  <div id="curtain" class="curtain">
-    <div class="curtain__left"></div>
-    <div class="curtain__right"></div>
-    <div class="curtain__content">
-      <div class="curtain__emblem"></div>
-      <p class="curtain__subtitle">청 첩 장</p>
-      <p class="curtain__names" id="curtainNames"></p>
-      <button class="curtain__btn" id="curtainBtn">초대장 열기</button>
+  <!-- ═══ 초대장 열기 (편지 봉투) ═══ -->
+<div id="envelopeOpening" class="envelope-opening">
+    <div class="envelope__container">
+      <div class="envelope" id="envelope">
+        <div class="envelope__front">
+          <div class="envelope__body">
+            <div class="envelope__seam"></div>
+            <button class="envelope__btn btn--envelope" id="envelopeBtn">초대장 열기</button>
+          </div>
+        </div>
+        <div class="envelope__back">
+          <div class="envelope__flap"></div>
+          <div class="card">
+            <div class="card__header blue-handscript" id="cardNames"></div>
+            <div class="card__greeting" id="cardGreeting"></div>
+            <div class="card__details">
+              <p class="card__address" id="cardAddress"></p>
+              <p class="card__logo">진우 🤍 지나</p>
+              <p class="card__date-time" id="cardDateTime"></p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
