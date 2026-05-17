@@ -127,61 +127,36 @@
 
   function initEnvelopeOpening() {
     const envelopeOpening = $('#envelopeOpening');
-    const envelope = $('#envelope');
-    const btn = $('#envelopeBtn');
 
-    // CONFIG에 useCurtain이 false이면 봉투 개봉도 건너뜁니다.
     if (CONFIG.useCurtain === false) {
       envelopeOpening.style.display = 'none';
       return;
     }
 
-    // 1. 봉투 안의 카드에 실제 정보 입력하기 (CONFIG 값 활용)
-    const dt = getWeddingDateTime();
-    const year = dt.getFullYear();
-    const month = String(dt.getMonth() + 1).padStart(2, '0');
-    const day = String(dt.getDate()).padStart(2, '0');
-    const weekDays = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
-    const weekDay = weekDays[dt.getDay()];
-    const hour = CONFIG.wedding.time.split(':')[0];
-    const minute = CONFIG.wedding.time.split(':')[1];
-    const period = parseInt(hour) < 12 ? '오전' : '오후';
-    const h12 = parseInt(hour) % 12 || 12;
+    document.body.classList.add('no-scroll');
 
-    // 파란색 손글씨 이름: "진우 ♥ 진아"
-    $('#cardNames').textContent = `${CONFIG.groom.name} ♥ ${CONFIG.bride.name}`;
-    
-    // 중앙 텍스트: CONFIG.meta.description ("2026년 12월 5일, 소중한 분들을 초대합니다.")
-    $('#cardGreeting').textContent = CONFIG.meta.description;
-    
-    // 하단 좌측 주소: "서울특별시 영등포구 신길로 89\n베뉴비안 에메랄드홀 2층"
-    $('#cardAddress').textContent = `${CONFIG.wedding.address}\n${CONFIG.wedding.venue} ${CONFIG.wedding.hall}`;
-    
-    // 하단 우측 날짜/시간: "2026년 12월 5일 (토요일)\n오전 11:00"
-    $('#cardDateTime').textContent = `${year}년 ${month}월 ${day}일 (${weekDay})\n${period} ${h12}:${minute}`;
+    // 화면 아무 곳이나 터치하면 실행
+    envelopeOpening.addEventListener('click', () => {
+      // 이미 열렸으면 중복 실행 방지
+      if (envelopeOpening.classList.contains('is-open')) return;
 
-
-    // 2. '초대장 열기' 클릭 이벤트 설정
-    btn.addEventListener('click', () => {
-      // 1. 봉투가 뒤집히고 열리는 애니메이션 시작 (is-open 클래스 추가)
+      // 1. 애니메이션 시작 (CSS 클래스 추가)
       envelopeOpening.classList.add('is-open');
 
-    // 2. 애니메이션이 끝날 무렵 (약 2.5초 후) 메인 콘텐츠로 전환
-    setTimeout(() => {
-        envelopeOpening.style.opacity = '0'; // 서서히 사라지기
-        envelopeOpening.style.transition = 'opacity 0.6s ease';
-        
-        // 메인 콘텐츠가 스크롤 가능하게 처리
+      // 2. 가이드 문구 숨기기
+      const guide = envelopeOpening.querySelector('.envelope__guide');
+      if (guide) guide.style.opacity = '0';
+
+      // 3. 2.5초간 카드를 보여준 뒤 메인 화면으로 부드럽게 전환
+      setTimeout(() => {
+        envelopeOpening.style.opacity = '0';
         document.body.classList.remove('no-scroll');
         
         setTimeout(() => {
-            envelopeOpening.style.display = 'none'; // 완전히 제거
-        }, 600); // 서서히 사라지는 시간
-      }, 2500); // 전체 애니메이션 시간
+          envelopeOpening.style.display = 'none';
+        }, 800); // 0.8초 동안 페이드아웃
+      }, 2500); 
     });
-
-    // 봉투 개봉 중에는 메인 콘텐츠 스크롤 불가
-    document.body.classList.add('no-scroll');
   }
 
   /* ═══════════════════════════════════════════
