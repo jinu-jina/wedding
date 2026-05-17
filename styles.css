@@ -157,229 +157,83 @@ a {
 }
 
 /* ═══════════════════════════════════════════
-   Envelope Opening (image_0.png style)
+   Envelope Animation (Tap to open)
    ═══════════════════════════════════════════ */
-
-/* ─── Blue Hand-script Font 불러오기 (이미지의 우아함을 살리기 위해 Caveat 사용) ─── */
-@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap');
-
-:root {
-  --color-blue-script: #002DBC; /* 이미지의 파란색 잉크 색상 */
-  --color-paper-warm: #F8F4EA; /* 수제 종이의 따뜻한 화이트 색상 */
-}
-
 .envelope-opening {
   position: fixed;
   inset: 0;
   z-index: 9999;
+  background-color: var(--color-bg); /* 청첩장 배경색과 동일하게 */
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: var(--color-white); /* 흰 배경 */
-  padding: 2rem;
-  padding-top: var(--safe-top);
-  padding-bottom: var(--safe-bottom);
-}
-
-.envelope__container {
-  width: 100%;
-  max-width: 440px;
-  perspective: 1200px; /* 3D 효과를 위한 원근법 */
+  cursor: pointer; /* 터치 가능함을 표시 */
+  transition: opacity 0.8s ease;
+  padding-bottom: 10%;
 }
 
 .envelope {
   position: relative;
+  width: 85%;
+  max-width: 360px;
+  perspective: 1000px; /* 3D 덮개 회전을 위한 원근감 */
+}
+
+/* 주머니 (가장 앞) */
+.envelope__pocket {
+  display: block;
   width: 100%;
-  aspect-ratio: 16 / 12; /* 가로로 긴 봉투 비율 */
-  transform-style: preserve-3d;
-  transition: transform 1.2s cubic-bezier(0.77, 0, 0.175, 1);
-  will-change: transform;
-}
-
-/* 개봉 시 봉투가 뒤집히는 애니메이션 */
-.envelope-opening.is-open .envelope {
-  transform: rotateY(-180deg);
-}
-
-.envelope__front,
-.envelope__back {
-  position: absolute;
-  inset: 0;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  box-shadow: 0 10px 40px rgba(44, 36, 32, 0.08); /* 은은한 그림자 */
-  background-color: var(--color-paper-warm);
-}
-
-.envelope__back {
-  transform: rotateY(180deg); /* 뒷면 설정 */
-  display: flex;
-  align-items: flex-end; /* 카드가 아래에서 위로 올라오므로 */
-}
-
-.envelope__body {
   position: relative;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  z-index: 3;
 }
 
-/* ─── 1. 닫힌 봉투의 전면 (덮개 + 솔기) ─── */
-.envelope__front {
-  padding: 0;
-}
-
-.envelope__front-flap {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 55%; /* 닫힌 덮개 비율 */
-  background-image: url('images/envelope/envelope_flap.png'); /* 이미지 사용 */
-  background-size: 100% 100%;
-  transform-origin: top center;
-  transform: rotateX(0deg); /* 닫혀있음 */
-  transition: transform 0.6s 0.8s ease; /* 뒤집히고 나서 열림 */
-  z-index: 2;
-}
-
-/* 개봉 시 덮개가 위로 열리는 애니메이션 */
-.envelope-opening.is-open .envelope__front-flap {
-  transform: rotateX(-180deg); /* 위로 열림 */
-}
-
-.envelope__seam {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image: url('images/envelope/envelope_seam.png'); /* 이미지 사용 */
-  background-size: 100% 100%;
-  z-index: 1;
-}
-
-/* '초대장 열기' 버튼 (닫힌 봉투 중앙) */
-.btn--envelope {
-  position: relative;
-  z-index: 3; /* 덮개보다 위로 */
-  font-family: var(--font-serif);
-  font-size: 0.9375rem;
-  font-weight: 700;
-  letter-spacing: 2px;
-  color: var(--color-text);
-  background: var(--color-bg-card);
-  padding: 1rem 2.5rem;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border);
-  box-shadow: 0 4px 12px rgba(44, 36, 32, 0.05);
-  transition: var(--transition);
-}
-
-.btn--envelope:hover {
-  background: var(--color-white);
-  border-color: var(--color-gold);
-  color: var(--color-crimson);
-}
-
-/* ─── 2. 열린 봉투의 뒷면 (V자 주머니) ─── */
-.envelope__back {
-  background-image: url('images/envelope/envelope_back.png'); /* 이미지 사용 (V자 주머니) */
-  background-size: 100% 100%;
-}
-
-/* 열린 상태에서 위로 솟아오른 덮개 */
+/* 덮개 (주머니 바로 위에 위치하며 밑변을 축으로 아래로 접혀있음) */
 .envelope__flap {
   position: absolute;
-  top: -38%;
+  bottom: 99%; /* 주머니와 딱 맞물리도록 위치 */
   left: 0;
   width: 100%;
-  height: 40%;
-  background-image: url('images/envelope/envelope_flap.png'); /* 이미지 사용 */
-  background-size: 100% 100%;
+  transform-origin: bottom center; /* 아랫부분을 힌지(경첩)로 사용 */
+  transform: rotateX(180deg); /* 기본상태: 닫혀있음 (아래로 접힘) */
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 4; /* 닫혀있을 땐 제일 앞에 있음 */
 }
 
-/* ─── 3. 열린 봉투 안의 카드 (이미지 뒤, 위로 올라옴) ─── */
-.card {
+/* 카드 (주머니 뒤에 숨어있음) */
+.envelope__card {
   position: absolute;
-  bottom: 0; /* 아래에 고정 */
-  left: 6%; /* 봉투보다 살짝 안으로 */
-  width: 88%; /* 봉투보다 살짝 작게 */
-  height: 120%; /* 위로 길게 */
-  margin-bottom: -10%; /* 아래로 숨겨둠 */
-  background-image: url('images/envelope/card_blank.png'); /* 이미지 사용 */
-  background-size: 100% 100%;
-  transition: transform 0.6s 1.2s ease; /* 덮개가 열리고 나서 올라옴 */
-  z-index: -1; /* 봉투 이미지 뒤로 들어가게 설정 */
-  
-  /* 카드 내부 텍스트 배치 */
-  padding: 1rem 1.5rem 2.5rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  text-align: center;
+  bottom: 0;
+  left: 3%;
+  width: 94%;
+  z-index: 2;
+  transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1) 0.5s; /* 덮개 열리고 0.5초 뒤 스르륵 올라옴 */
 }
 
-/* 개봉 시 카드가 위로 올라오는 애니메이션 */
-.envelope-opening.is-open .card {
-  transform: translateY(-90%); /* 위로 올라옴 */
-}
-
-.card__header {
-  height: 30%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* 파란색 손글씨 효과 */
-.blue-handscript {
-  font-family: 'Caveat', cursive;
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: var(--color-blue-script);
-  transform: rotate(-2deg);
-  text-shadow: 0.5px 0.5px 0 rgba(0, 0, 0, 0.1);
-  white-space: nowrap;
-}
-
-.card__greeting {
-  font-size: 0.9375rem;
-  line-height: 1.8;
-  color: var(--color-text);
-  white-space: pre-line;
-  margin: 1rem 0 2rem;
-  font-weight: 500;
-}
-
-.card__details {
-  display: grid;
-  grid-template-columns: 1.5fr 1fr 1.5fr;
-  align-items: flex-end;
-  gap: 0.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid rgba(216, 204, 186, 0.3);
-  text-align: left;
-  font-size: 0.75rem;
-  color: var(--color-text-light);
-}
-
-.card__address,
-.card__date-time {
-  line-height: 1.6;
-}
-
-.card__date-time {
-  text-align: right;
-}
-
-.card__logo {
+/* 깜빡이는 터치 안내 문구 */
+.envelope__guide {
+  margin-top: 3rem;
   font-family: var(--font-serif);
   font-size: 0.875rem;
-  font-weight: 700;
-  color: var(--color-text);
-  text-align: center;
-  letter-spacing: 1px;
+  color: var(--color-text-muted);
+  letter-spacing: 2px;
+  animation: pulse 1.5s infinite;
+  transition: opacity 0.3s ease;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* ─── 애니메이션 동작 (is-open 클래스 추가 시) ─── */
+.envelope-opening.is-open .envelope__flap {
+  transform: rotateX(0deg); /* 덮개가 위로 휙! 열림 */
+  z-index: 1; /* 열린 뒤에는 카드 뒤로 들어감 */
+}
+
+.envelope-opening.is-open .envelope__card {
+  transform: translateY(-65%); /* 카드가 위로 스르륵 뽑힘 */
 }
 
 /* ═══════════════════════════════════════════
