@@ -229,11 +229,12 @@ a {
   transform: translateY(-60%); /* 위로 올라옴 */
 }
 
-/* ─── 애니메이션 Step 2: 종이만 화면 꽉 차게 클로즈업 ─── */
+/* ─── 애니메이션 Step 2: 종이 클로즈업 후 1초간 정지 ─── */
 .envelope-opening.step-2 .envelope__card {
-  transform: translateY(-60%) scale(6); /* 거대하게 확대 */
-  opacity: 0; /* 확대되면서 자연스럽게 페이드아웃 */
-  transition: transform 0.7s ease-in, opacity 0.4s ease-in 0.3s; /* 서서히 빨라지는 줌 효과 */
+  /* 화면을 덮을 정도로 확대 (기존 scale(6)에서 3.5 정도로 조절해 깨짐 방지 및 시야 확보) */
+  transform: translateY(-60%) scale(3.5); 
+  /* 투명도(opacity) 조절을 빼서 선명하게 멈춰있도록 함 */
+  transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1); 
 }
 
 .envelope-opening.step-2 .envelope__pocket,
