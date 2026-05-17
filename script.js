@@ -121,7 +121,7 @@
     setMeta('name', 'description', m.description);
   }
 
-  /* ═══════════════════════════════════════════
+ /* ═══════════════════════════════════════════
      Envelope Opening (image_0.png style)
      ═══════════════════════════════════════════ */
 
@@ -163,8 +163,8 @@
 
     // 2. '초대장 열기' 클릭 이벤트 설정
     btn.addEventListener('click', () => {
-      // 1. 봉투가 서서히 뒤집히며 열리는 애니메이션 (styles.css의 is-open 적용)
-      envelope.classList.add('is-open');
+      // 1. 봉투가 뒤집히고 열리는 애니메이션 시작 (is-open 클래스 추가)
+      envelopeOpening.classList.add('is-open');
 
     // 2. 애니메이션이 끝날 무렵 (약 2.5초 후) 메인 콘텐츠로 전환
     setTimeout(() => {
@@ -177,7 +177,7 @@
         setTimeout(() => {
             envelopeOpening.style.display = 'none'; // 완전히 제거
         }, 600); // 서서히 사라지는 시간
-      }, 2500); // 봉투 뒤집히는 시간 (1.2s * 2.1 정도로 설정)
+      }, 2500); // 전체 애니메이션 시간
     });
 
     // 봉투 개봉 중에는 메인 콘텐츠 스크롤 불가
