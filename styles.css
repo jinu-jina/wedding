@@ -160,17 +160,12 @@ a {
    Envelope Opening (image_0.png style)
    ═══════════════════════════════════════════ */
 
-/* ─── Noto Sans KR의 다른 굵기도 불러오기 (카드 중앙 텍스트용) ─── */
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
-
-/* ─── Blue Hand-script Font 불러오기 (이미지의 우아함을 살리기 위해) ─── */
+/* ─── Blue Hand-script Font 불러오기 (이미지의 우아함을 살리기 위해 Caveat 사용) ─── */
 @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap');
 
 :root {
-  /* 이미지의 파란색 잉크 느낌을 위한 색상 추가 */
-  --color-blue-script: #002DBC;
-  /* 편지봉투 질감을 위한 따뜻한 화이트 색상 추가 */
-  --color-paper-warm: #F8F4EA;
+  --color-blue-script: #002DBC; /* 이미지의 파란색 잉크 색상 */
+  --color-paper-warm: #F8F4EA; /* 수제 종이의 따뜻한 화이트 색상 */
 }
 
 .envelope-opening {
@@ -189,20 +184,20 @@ a {
 .envelope__container {
   width: 100%;
   max-width: 440px;
-  perspective: 1000px; /* 3D 효과를 위한 원근법 */
+  perspective: 1200px; /* 3D 효과를 위한 원근법 */
 }
 
 .envelope {
   position: relative;
   width: 100%;
-  aspect-ratio: 16 / 14; /* 봉투 비율 */
+  aspect-ratio: 16 / 12; /* 가로로 긴 봉투 비율 */
   transform-style: preserve-3d;
   transition: transform 1.2s cubic-bezier(0.77, 0, 0.175, 1);
   will-change: transform;
 }
 
-/* 개봉 시 애니메이션 */
-.envelope.is-open {
+/* 개봉 시 봉투가 뒤집히는 애니메이션 */
+.envelope-opening.is-open .envelope {
   transform: rotateY(-180deg);
 }
 
@@ -212,72 +207,62 @@ a {
   inset: 0;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  overflow: hidden;
   box-shadow: 0 10px 40px rgba(44, 36, 32, 0.08); /* 은은한 그림자 */
-  /* 수제 종이 질감을 위한 배경 */
   background-color: var(--color-paper-warm);
-  background-image:
-    url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4OCIgaGVpZ2h0PSI4OCIgdmlld0JveD0iMCAwIDg4IDg4Ij48ZyBmaWxsPSIjQzlBOUZFIiBmaWxsLW9wYWNpdHk9IjAuMDQiPjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgZD0iTTg4IDBoLTIydjIyaDIyVjB6TTQ0IDIyaDIydjIyaDIyVjQ0aC0yMnYyMkg4OFY4OEg2NlY2NmgtMjJ2MjJIMjJWNjZIMFY0NGgyMlYyMmg4OEgyMnY0NEgwVjhiaDIyVjJoMjJ2MjBoMjJVMEgzM3YxN0gwVjhiaDIyVjJIODB6TTQ0IDY2aDIydjIyaDIyVjY2SDA4djg4SDIydjY2SDQ0djg4SDY2djY2SDg4djIyaC0yMlY4OEg4OEg0NEg2NlY0NEg4OEg2NmgtMjJWMjJIODhaIi8+PC9nPjwvc3ZnPg==');
 }
 
 .envelope__back {
   transform: rotateY(180deg); /* 뒷면 설정 */
+  display: flex;
+  align-items: flex-end; /* 카드가 아래에서 위로 올라오므로 */
 }
 
 .envelope__body {
   position: relative;
   width: 100%;
   height: 100%;
-  padding: 2rem;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* 닫힌 봉투의 솔기 디테일 (image_0.png와 유사하게) */
+/* ─── 1. 닫힌 봉투의 전면 (덮개 + 솔기) ─── */
+.envelope__front {
+  padding: 0;
+}
+
+.envelope__front-flap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 55%; /* 닫힌 덮개 비율 */
+  background-image: url('images/envelope/envelope_flap.png'); /* 이미지 사용 */
+  background-size: 100% 100%;
+  transform-origin: top center;
+  transform: rotateX(0deg); /* 닫혀있음 */
+  transition: transform 0.6s 0.8s ease; /* 뒤집히고 나서 열림 */
+  z-index: 2;
+}
+
+/* 개봉 시 덮개가 위로 열리는 애니메이션 */
+.envelope-opening.is-open .envelope__front-flap {
+  transform: rotateX(-180deg); /* 위로 열림 */
+}
+
 .envelope__seam {
   position: absolute;
   inset: 0;
   pointer-events: none;
-}
-
-.envelope__seam::before,
-.envelope__seam::after {
-  content: '';
-  position: absolute;
-  opacity: 0.1;
-}
-
-.envelope__seam::before {
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 60%;
-  background-image:
-    linear-gradient(225deg, transparent 48%, #A88B52 50%, transparent 52%),
-    linear-gradient(315deg, transparent 48%, #A88B52 50%, transparent 52%);
-  background-size: 100% 100%, 100% 100%;
-  background-repeat: no-repeat;
-  background-position: top center, top center;
-}
-
-.envelope__seam::after {
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 40%;
-  background-image:
-    linear-gradient(135deg, transparent 48%, #A88B52 50%, transparent 52%),
-    linear-gradient(45deg, transparent 48%, #A88B52 50%, transparent 52%);
-  background-size: 100% 100%, 100% 100%;
-  background-repeat: no-repeat;
-  background-position: bottom center, bottom center;
+  background-image: url('images/envelope/envelope_seam.png'); /* 이미지 사용 */
+  background-size: 100% 100%;
+  z-index: 1;
 }
 
 /* '초대장 열기' 버튼 (닫힌 봉투 중앙) */
 .btn--envelope {
   position: relative;
-  z-index: 2;
+  z-index: 3; /* 덮개보다 위로 */
   font-family: var(--font-serif);
   font-size: 0.9375rem;
   font-weight: 700;
@@ -297,41 +282,47 @@ a {
   color: var(--color-crimson);
 }
 
-/* 열린 상태 (뒷면) */
+/* ─── 2. 열린 봉투의 뒷면 (V자 주머니) ─── */
 .envelope__back {
-  padding: 0;
-  display: flex;
-  flex-direction: column;
+  background-image: url('images/envelope/envelope_back.png'); /* 이미지 사용 (V자 주머니) */
+  background-size: 100% 100%;
 }
 
+/* 열린 상태에서 위로 솟아오른 덮개 */
 .envelope__flap {
-  height: 35%; /* 윗면 덮개 비율 */
-  background-color: var(--color-paper-warm);
-  border-bottom: 1px solid rgba(168, 139, 82, 0.1);
-  position: relative;
-}
-
-.envelope__flap::before {
-  content: '';
   position: absolute;
-  inset: 0;
-  opacity: 0.1;
-  background-image:
-    linear-gradient(135deg, transparent 48%, #A88B52 50%, transparent 52%),
-    linear-gradient(45deg, transparent 48%, #A88B52 50%, transparent 52%);
-  background-size: 100% 100%, 100% 100%;
-  background-repeat: no-repeat;
-  background-position: bottom center, bottom center;
+  top: -38%;
+  left: 0;
+  width: 100%;
+  height: 40%;
+  background-image: url('images/envelope/envelope_flap.png'); /* 이미지 사용 */
+  background-size: 100% 100%;
 }
 
-/* 열린 봉투 안의 카드 */
+/* ─── 3. 열린 봉투 안의 카드 (이미지 뒤, 위로 올라옴) ─── */
 .card {
-  flex: 1;
-  padding: 1rem 2rem 2.5rem;
+  position: absolute;
+  bottom: 0; /* 아래에 고정 */
+  left: 6%; /* 봉투보다 살짝 안으로 */
+  width: 88%; /* 봉투보다 살짝 작게 */
+  height: 120%; /* 위로 길게 */
+  margin-bottom: -10%; /* 아래로 숨겨둠 */
+  background-image: url('images/envelope/card_blank.png'); /* 이미지 사용 */
+  background-size: 100% 100%;
+  transition: transform 0.6s 1.2s ease; /* 덮개가 열리고 나서 올라옴 */
+  z-index: -1; /* 봉투 이미지 뒤로 들어가게 설정 */
+  
+  /* 카드 내부 텍스트 배치 */
+  padding: 1rem 1.5rem 2.5rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   text-align: center;
+}
+
+/* 개봉 시 카드가 위로 올라오는 애니메이션 */
+.envelope-opening.is-open .card {
+  transform: translateY(-90%); /* 위로 올라옴 */
 }
 
 .card__header {
@@ -341,34 +332,35 @@ a {
   justify-content: center;
 }
 
-/* 파란색 손글씨 효과 (image_0.png의 우아함을 살려) */
+/* 파란색 손글씨 효과 */
 .blue-handscript {
   font-family: 'Caveat', cursive;
-  font-size: 2.25rem;
+  font-size: 2.5rem;
   font-weight: 700;
   color: var(--color-blue-script);
-  transform: rotate(-1.5deg); /* 살짝 비틀어 자연스럽게 */
-  text-shadow: 0.5px 0.5px 0 rgba(0, 0, 0, 0.1); /* 미세한 두께감 */
+  transform: rotate(-2deg);
+  text-shadow: 0.5px 0.5px 0 rgba(0, 0, 0, 0.1);
   white-space: nowrap;
 }
 
 .card__greeting {
-  font-size: 1.0625rem;
+  font-size: 0.9375rem;
   line-height: 1.8;
   color: var(--color-text);
   white-space: pre-line;
-  margin: 1.5rem 0;
+  margin: 1rem 0 2rem;
+  font-weight: 500;
 }
 
 .card__details {
   display: grid;
-  grid-template-columns: 1.5fr 1fr 1.5fr; /* 좌(주소), 중(로고), 우(날짜) 배치 */
-  align-items: center;
-  gap: 1rem;
+  grid-template-columns: 1.5fr 1fr 1.5fr;
+  align-items: flex-end;
+  gap: 0.5rem;
   padding-top: 1.5rem;
-  border-top: 1px solid rgba(216, 204, 186, 0.15); /* 은은한 선 */
+  border-top: 1px solid rgba(216, 204, 186, 0.3);
   text-align: left;
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   color: var(--color-text-light);
 }
 
@@ -383,9 +375,9 @@ a {
 
 .card__logo {
   font-family: var(--font-serif);
-  font-size: 1rem;
+  font-size: 0.875rem;
   font-weight: 700;
-  color: var(--color-blue-script);
+  color: var(--color-text);
   text-align: center;
   letter-spacing: 1px;
 }
