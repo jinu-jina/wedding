@@ -157,30 +157,30 @@ a {
 }
 
 /* ═══════════════════════════════════════════
-   Envelope Animation (Tap to open)
+   Envelope Animation (Slide up & Zoom in)
    ═══════════════════════════════════════════ */
 .envelope-opening {
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background-color: var(--color-bg); /* 청첩장 배경색과 동일하게 */
+  background-color: var(--color-bg); 
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  cursor: pointer; /* 터치 가능함을 표시 */
+  cursor: pointer;
   transition: opacity 0.8s ease;
-  padding-bottom: 10%;
+  overflow: hidden; /* 클로즈업 시 화면 밖으로 넘어가는 것 방지 */
 }
 
 .envelope {
   position: relative;
   width: 85%;
   max-width: 360px;
-  perspective: 1000px; /* 3D 덮개 회전을 위한 원근감 */
+  margin-top: 15%; /* 덮개가 튀어나와 있으므로 위치 조정 */
 }
 
-/* 주머니 (가장 앞) */
+/* 1. 주머니 (가장 앞, 기준 크기) */
 .envelope__pocket {
   display: block;
   width: 100%;
@@ -188,31 +188,29 @@ a {
   z-index: 3;
 }
 
-/* 덮개 (주머니 바로 위에 위치하며 밑변을 축으로 아래로 접혀있음) */
+/* 2. 덮개 (주머니 바로 위에 위치, 이미 열려있음) */
 .envelope__flap {
   position: absolute;
-  bottom: 99%; /* 주머니와 딱 맞물리도록 위치 */
+  bottom: 98%; /* 주머니 윗부분과 딱 맞물리도록 조정 */
   left: 0;
   width: 100%;
-  transform-origin: bottom center; /* 아랫부분을 힌지(경첩)로 사용 */
-  transform: rotateX(180deg); /* 기본상태: 닫혀있음 (아래로 접힘) */
-  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 4; /* 닫혀있을 땐 제일 앞에 있음 */
+  z-index: 1;
 }
 
-/* 카드 (주머니 뒤에 숨어있음) */
+/* 3. 카드 (초기 상태: 주머니 안쪽에 꽂혀있음) */
 .envelope__card {
   position: absolute;
-  bottom: 0;
-  left: 3%;
-  width: 94%;
+  bottom: 5%;
+  left: 4%;
+  width: 92%;
   z-index: 2;
-  transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1) 0.5s; /* 덮개 열리고 0.5초 뒤 스르륵 올라옴 */
+  /* 애니메이션 기본 속도 */
+  transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.5s ease; 
 }
 
-/* 깜빡이는 터치 안내 문구 */
+/* 터치 안내 문구 깜빡임 */
 .envelope__guide {
-  margin-top: 3rem;
+  margin-top: 4rem;
   font-family: var(--font-serif);
   font-size: 0.875rem;
   color: var(--color-text-muted);
@@ -226,14 +224,22 @@ a {
   50% { opacity: 1; }
 }
 
-/* ─── 애니메이션 동작 (is-open 클래스 추가 시) ─── */
-.envelope-opening.is-open .envelope__flap {
-  transform: rotateX(0deg); /* 덮개가 위로 휙! 열림 */
-  z-index: 1; /* 열린 뒤에는 카드 뒤로 들어감 */
+/* ─── 애니메이션 Step 1: 카드가 위로 스르륵 뽑혀 나옴 ─── */
+.envelope-opening.step-1 .envelope__card {
+  transform: translateY(-60%); /* 위로 올라옴 */
 }
 
-.envelope-opening.is-open .envelope__card {
-  transform: translateY(-65%); /* 카드가 위로 스르륵 뽑힘 */
+/* ─── 애니메이션 Step 2: 종이만 화면 꽉 차게 클로즈업 ─── */
+.envelope-opening.step-2 .envelope__card {
+  transform: translateY(-60%) scale(6); /* 거대하게 확대 */
+  opacity: 0; /* 확대되면서 자연스럽게 페이드아웃 */
+  transition: transform 0.7s ease-in, opacity 0.4s ease-in 0.3s; /* 서서히 빨라지는 줌 효과 */
+}
+
+.envelope-opening.step-2 .envelope__pocket,
+.envelope-opening.step-2 .envelope__flap {
+  opacity: 0; /* 카드가 클로즈업될 때 봉투 껍데기는 사라짐 */
+  transition: opacity 0.4s ease;
 }
 
 /* ═══════════════════════════════════════════
