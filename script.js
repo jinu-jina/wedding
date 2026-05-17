@@ -122,29 +122,65 @@
   }
 
   /* ═══════════════════════════════════════════
-     Curtain (Traditional Red/Navy Split)
+     Envelope Opening (image_0.png style)
      ═══════════════════════════════════════════ */
 
-  function initCurtain() {
-    const curtain = $('#curtain');
-    const btn = $('#curtainBtn');
-    const namesEl = $('#curtainNames');
+  function initEnvelopeOpening() {
+    const envelopeOpening = $('#envelopeOpening');
+    const envelope = $('#envelope');
+    const btn = $('#envelopeBtn');
 
+    // CONFIG에 useCurtain이 false이면 봉투 개봉도 건너뜁니다.
     if (CONFIG.useCurtain === false) {
-      curtain.style.display = 'none';
+      envelopeOpening.style.display = 'none';
       return;
     }
 
-    namesEl.textContent = `${CONFIG.groom.name}  &  ${CONFIG.bride.name}`;
+    // 1. 봉투 안의 카드에 실제 정보 입력하기 (CONFIG 값 활용)
+    const dt = getWeddingDateTime();
+    const year = dt.getFullYear();
+    const month = String(dt.getMonth() + 1).padStart(2, '0');
+    const day = String(dt.getDate()).padStart(2, '0');
+    const weekDays = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
+    const weekDay = weekDays[dt.getDay()];
+    const hour = CONFIG.wedding.time.split(':')[0];
+    const minute = CONFIG.wedding.time.split(':')[1];
+    const period = parseInt(hour) < 12 ? '오전' : '오후';
+    const h12 = parseInt(hour) % 12 || 12;
 
+    // 파란색 손글씨 이름: "진우 ♥ 진아"
+    $('#cardNames').textContent = `${CONFIG.groom.name} ♥ ${CONFIG.bride.name}`;
+    
+    // 중앙 텍스트: CONFIG.meta.description ("2026년 12월 5일, 소중한 분들을 초대합니다.")
+    $('#cardGreeting').textContent = CONFIG.meta.description;
+    
+    // 하단 좌측 주소: "서울특별시 영등포구 신길로 89\n베뉴비안 에메랄드홀 2층"
+    $('#cardAddress').textContent = `${CONFIG.wedding.address}\n${CONFIG.wedding.venue} ${CONFIG.wedding.hall}`;
+    
+    // 하단 우측 날짜/시간: "2026년 12월 5일 (토요일)\n오전 11:00"
+    $('#cardDateTime').textContent = `${year}년 ${month}월 ${day}일 (${weekDay})\n${period} ${h12}:${minute}`;
+
+
+    // 2. '초대장 열기' 클릭 이벤트 설정
     btn.addEventListener('click', () => {
-      curtain.classList.add('is-open');
-      document.body.classList.remove('no-scroll');
-      setTimeout(() => {
-        curtain.classList.add('is-hidden');
-      }, 1400);
+      // 1. 봉투가 서서히 뒤집히며 열리는 애니메이션 (styles.css의 is-open 적용)
+      envelope.classList.add('is-open');
+
+    // 2. 애니메이션이 끝날 무렵 (약 2.5초 후) 메인 콘텐츠로 전환
+    setTimeout(() => {
+        envelopeOpening.style.opacity = '0'; // 서서히 사라지기
+        envelopeOpening.style.transition = 'opacity 0.6s ease';
+        
+        // 메인 콘텐츠가 스크롤 가능하게 처리
+        document.body.classList.remove('no-scroll');
+        
+        setTimeout(() => {
+            envelopeOpening.style.display = 'none'; // 완전히 제거
+        }, 600); // 서서히 사라지는 시간
+      }, 2500); // 봉투 뒤집히는 시간 (1.2s * 2.1 정도로 설정)
     });
 
+    // 봉투 개봉 중에는 메인 콘텐츠 스크롤 불가
     document.body.classList.add('no-scroll');
   }
 
@@ -604,7 +640,7 @@
 
   async function init() {
     setMetaTags();
-    initCurtain();
+    initEnvelopeOpening(); //initCurtain(); 대신 실행
     initHero();
     initCountdown();
     initGreeting();
