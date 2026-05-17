@@ -122,11 +122,11 @@
   }
 
  /* ═══════════════════════════════════════════
-     Envelope Opening (image_0.png style)
+     Envelope Opening (Slide up -> Zoom in)
      ═══════════════════════════════════════════ */
-
   function initEnvelopeOpening() {
     const envelopeOpening = $('#envelopeOpening');
+    const guide = $('#envelopeGuide');
 
     if (CONFIG.useCurtain === false) {
       envelopeOpening.style.display = 'none';
@@ -135,27 +135,35 @@
 
     document.body.classList.add('no-scroll');
 
-    // 화면 아무 곳이나 터치하면 실행
+    // 화면 아무 곳이나 터치하면 애니메이션 시작
     envelopeOpening.addEventListener('click', () => {
-      // 이미 열렸으면 중복 실행 방지
-      if (envelopeOpening.classList.contains('is-open')) return;
+      // 이미 실행 중이면 중복 방지
+      if (envelopeOpening.classList.contains('step-1')) return;
 
-      // 1. 애니메이션 시작 (CSS 클래스 추가)
-      envelopeOpening.classList.add('is-open');
-
-      // 2. 가이드 문구 숨기기
-      const guide = envelopeOpening.querySelector('.envelope__guide');
+      // 안내 문구 즉시 숨기기
       if (guide) guide.style.opacity = '0';
 
-      // 3. 2.5초간 카드를 보여준 뒤 메인 화면으로 부드럽게 전환
+      // [Step 1] 카드가 위로 스르륵 뽑혀 나옴
+      envelopeOpening.classList.add('step-1');
+
+      // 0.8초 후 (카드가 다 올라온 뒤)
       setTimeout(() => {
-        envelopeOpening.style.opacity = '0';
-        document.body.classList.remove('no-scroll');
+        // [Step 2] 카드 화면 꽉 차게 클로즈업 + 봉투 사라짐
+        envelopeOpening.classList.add('step-2');
         
+        // 0.6초 후 (클로즈업이 거의 끝날 무렵) 메인 화면 띄우기
         setTimeout(() => {
-          envelopeOpening.style.display = 'none';
-        }, 800); // 0.8초 동안 페이드아웃
-      }, 2500); 
+          envelopeOpening.style.opacity = '0';
+          document.body.classList.remove('no-scroll'); // 스크롤 허용
+          
+          // 0.8초 후 껍데기 완전히 제거
+          setTimeout(() => {
+            envelopeOpening.style.display = 'none';
+          }, 800);
+
+        }, 600); 
+
+      }, 800); // Step 1 카드가 올라오는 데 걸리는 시간 대기
     });
   }
 
