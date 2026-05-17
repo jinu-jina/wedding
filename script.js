@@ -121,8 +121,8 @@
     setMeta('name', 'description', m.description);
   }
 
- /* ═══════════════════════════════════════════
-     Envelope Opening (Slide up -> Zoom in)
+/* ═══════════════════════════════════════════
+     Envelope Opening (Slide up -> Zoom in -> Pause -> Next)
      ═══════════════════════════════════════════ */
   function initEnvelopeOpening() {
     const envelopeOpening = $('#envelopeOpening');
@@ -148,22 +148,23 @@
 
       // 0.8초 후 (카드가 다 올라온 뒤)
       setTimeout(() => {
-        // [Step 2] 카드 화면 꽉 차게 클로즈업 + 봉투 사라짐
+        // [Step 2] 카드 화면 클로즈업 (확대 후 멈춤)
         envelopeOpening.classList.add('step-2');
         
-        // 0.6초 후 (클로즈업이 거의 끝날 무렵) 메인 화면 띄우기
+        // 0.6초(확대되는 시간) + 1초(멈춰서 보여주는 시간) = 1.6초(1600ms) 대기
         setTimeout(() => {
+          // [Step 3] 1초 대기 후 전체 래퍼를 페이드아웃하며 메인 화면 등장
           envelopeOpening.style.opacity = '0';
-          document.body.classList.remove('no-scroll'); // 스크롤 허용
+          document.body.classList.remove('no-scroll'); // 메인 화면 스크롤 허용
           
-          // 0.8초 후 껍데기 완전히 제거
+          // 0.8초 후 (페이드아웃이 끝나면) 껍데기 완전히 제거
           setTimeout(() => {
             envelopeOpening.style.display = 'none';
           }, 800);
 
-        }, 600); 
+        }, 1600); 
 
-      }, 800); // Step 1 카드가 올라오는 데 걸리는 시간 대기
+      }, 800); // Step 1 카드가 올라오는 데 걸리는 시간
     });
   }
 
