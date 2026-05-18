@@ -148,9 +148,9 @@
       setTimeout(() => {
         envelopeOpening.classList.add('state-2');
 
-        // 클로즈업 애니메이션 시간(0.8초) + 멈춰있는 시간(1초) = 총 1.8초(1800ms) 대기
+        // 클로즈업 애니메이션(0.8초) + 멈춰있는 시간(1초) = 총 1.8초 대기
         setTimeout(() => {
-          // 다음 페이지로 페이드아웃 전환
+          // 다음 페이지로 전환
           envelopeOpening.style.opacity = '0';
           document.body.classList.remove('no-scroll');
 
