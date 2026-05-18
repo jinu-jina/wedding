@@ -157,7 +157,7 @@ a {
 }
 
 /* ═══════════════════════════════════════════
-   Envelope Animation (Compact & Correct Positioning)
+   Envelope Animation (Perfect Compact & Masked)
    ═══════════════════════════════════════════ */
 .envelope-opening {
   position: fixed;
@@ -167,52 +167,58 @@ a {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start; /* 상단 기준으로 배치 시작 */
-  /* 파란색 화살표 요청 반영: 전체 이미지를 아래로 쑥 내림 ( 안정적인 눈높이 ) */
-  padding-top: 15vh; 
+  justify-content: flex-start; 
+  padding-top: 15vh; /* 화면 중앙보다 살짝 아래 안정적인 눈높이 */
   overflow: hidden;
   cursor: pointer;
   transition: opacity 0.8s ease;
-  /* 이 봉투는 사용자의 두번째 사진 속 Step 1처럼 최종적인, 컴팩트한 디자인입니다 */
 }
 
 .envelope-wrapper {
   position: relative;
   width: 85%;
-  max-width: 380px; /* PC에서도 모바일처럼 예쁜 크기 유지 */
-  /* 마스킹 해킹 불필요, 컴팩트한 레이어링 사용 */
+  max-width: 380px; 
   display: flex;
   align-items: flex-end; 
   justify-content: center;
 }
 
-/* 1. 봉투 뒷날개 (flap) */
-.envelope__flap {
+/* [핵심 1] 주머니 밑으로 튀어나오는 카드를 감쪽같이 숨겨주는 하얀 가림막 복구! */
+.envelope-wrapper::after {
+  content: '';
   position: absolute;
-  /* 빨간 동그라미 요청 반영: 주머니와 2px 겹치게 하여 흰 틈 완벽 제거 */
-  bottom: calc(100% - 2px); 
-  left: 0;
-  width: 100%; 
-  z-index: 1;
-  /* flap과 card가 길게 늘어지지 않게 컴팩트한 봉투 조립을 위한 설정입니다 */
+  top: 100%; /* 봉투 밑바닥에서 바로 시작 */
+  left: -50vw;
+  width: 200vw;
+  height: 100vh;
+  background-color: #fff;
+  z-index: 10;
 }
 
-/* 2. 편지 카드 (card) */
+/* 1. 봉투 뒷날개 */
+.envelope__flap {
+  position: absolute;
+  bottom: calc(100% - 2px); /* 흰 틈새 완벽 제거 */
+  left: 0.5%;
+  width: 99%; 
+  z-index: 1;
+}
+
+/* 2. 편지 카드 */
 .envelope__card {
   position: absolute;
-  /* 카드의 바닥을 주머니 바닥에 고정 (절대 밑으로 튀어나오지 않음) */
-  bottom: 1%; 
+  bottom: 0; 
   left: 4%;
-  width: 92%; /* 주머니 안쪽에 쏙 들어가는 너비 */
+  width: 92%;
   z-index: 2;
-  /* 컴팩트한 카드 포지셔닝: 'getSaveTheDate'가 주머니 라인에 걸치게 카드를 깊숙이 넣음 */
-  /* card가 저렇게 튀어나오지 않게 처음엔 pocket 아래는 잘리도록. - 이 설정은 카드를 깊숙이 넣음으로써 자연스럽게 해결됩니다 */
-  transform: translateY(25%); /* 카드를 깊숙이 넣음 */
+  /* [핵심 2] 카드를 적당히 내려서 길게 늘어지지 않게 컴팩트하게 만듭니다.
+     ※ 만약 덮개(flap)와 카드 사이에 틈이 보인다면 이 15% 숫자를 10%로 줄여보세요! */
+  transform: translateY(15%); 
   transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
   will-change: transform;
 }
 
-/* 3. 봉투 주머니 (pocket) */
+/* 3. 봉투 주머니 */
 .envelope__pocket {
   position: relative;
   width: 100%;
@@ -222,16 +228,15 @@ a {
 
 /* 가이드 문구 */
 .envelope__guide {
-  /* 화면을 터치해 주세요 글씨도 너무 이미지와 붙지 않도록 두번째 사진처럼 공간 띄워줌: 3rem에서 5rem으로 증가 */
+  /* [핵심 3] 터치 안내 문구가 봉투와 붙지 않도록 5rem으로 공간 넉넉히 확보 */
   margin-top: 5rem; 
+  position: relative;
+  z-index: 15; /* 하얀 가림막(z-index:10)보다 위에 보이도록 설정 */
   font-family: var(--font-serif);
   font-size: 0.9rem;
   color: #8C7E72;
   letter-spacing: 2px;
   animation: pulse 1.5s infinite;
-  /* Extra layering needed for guide text visibility */
-  position: relative;
-  z-index: 15; 
 }
 
 @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
@@ -240,7 +245,7 @@ a {
 
 /* 1단계: 편지가 한 번에 스윽 올라옴 */
 .envelope-opening.state-1 .envelope__card {
-  transform: translateY(-20%); /* 카드가 예쁘게 올라오는 높이 */
+  transform: translateY(-20%);
 }
 
 /* 2단계: 편지 클로즈업 */
@@ -249,9 +254,11 @@ a {
   transition: transform 0.8s cubic-bezier(0.2, 0, 0.2, 1);
 }
 
-/* 클로즈업 시 봉투 껍데기는 서서히 사라짐 */
+/* 클로즈업 시 봉투 껍데기와 하얀 가림막 모두 서서히 사라짐 */
+/* (가림막이 사라져야 확대된 달력 하단까지 전부 예쁘게 보입니다) */
 .envelope-opening.state-2 .envelope__pocket,
-.envelope-opening.state-2 .envelope__flap {
+.envelope-opening.state-2 .envelope__flap,
+.envelope-opening.state-2 .envelope-wrapper::after {
   opacity: 0;
   transition: opacity 0.6s ease;
 }
