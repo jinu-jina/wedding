@@ -157,13 +157,13 @@ a {
 }
 
 /* ═══════════════════════════════════════════
-   Envelope Animation (4-Step Slide & Zoom)
+   Envelope Animation (Perfect Alignment)
    ═══════════════════════════════════════════ */
 .envelope-opening {
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background-color: #fff; /* 깨끗한 흰 배경 */
+  background-color: #fff;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -175,40 +175,44 @@ a {
 
 .envelope-wrapper {
   position: relative;
-  width: 90%;
-  max-width: 400px;
-  /* 이미지 1번의 초기 구도를 잡기 위해 상단 여백 설정 */
-  margin-top: 50px;
+  width: 85%;
+  max-width: 380px;
+  margin-top: 20px;
+  /* pocket의 높이에 맞춰 wrapper의 크기가 결정되도록 설정 */
   display: flex;
+  align-items: flex-end; 
   justify-content: center;
-  align-items: flex-end;
 }
 
-/* 1. 봉투 뒷날개 (고정) */
+/* 1. 봉투 뒷날개 */
 .envelope__flap {
   position: absolute;
-  bottom: 45%; /* 주머니 위로 살짝 보이게 배치 */
-  width: 100%;
+  /* 주머니(pocket) 위쪽에 딱 맞물리도록 배치 (1px 빈틈 방지를 위해 98%로 설정) */
+  bottom: 98%; 
+  left: 0;
+  width: 100%; /* pocket과 너비 완벽 일치 */
   z-index: 1;
 }
 
-/* 2. 편지 (슬라이드 및 확대 주인공) */
+/* 2. 편지 카드 */
 .envelope__card {
-  position: relative;
-  width: 92%;
+  position: absolute;
+  /* 카드의 바닥을 주머니 바닥에 고정 (절대 밑으로 튀어나오지 않음) */
+  bottom: 1%; 
+  left: 4%;
+  width: 92%; /* 주머니 안쪽에 쏙 들어가는 너비 */
   z-index: 2;
-  /* 이미지 1번 상태: 주머니 안쪽 깊숙이 위치 */
-  transform: translateY(15%); 
+  transform: translateY(0); 
   transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
   will-change: transform;
 }
 
-/* 3. 봉투 주머니 (가장 앞) */
+/* 3. 봉투 주머니 (기준점) */
 .envelope__pocket {
-  position: absolute;
-  bottom: 0;
+  position: relative;
   width: 100%;
   z-index: 3;
+  display: block;
 }
 
 /* 가이드 문구 */
@@ -225,29 +229,28 @@ a {
 
 /* ─── 애니메이션 단계별 제어 ─── */
 
-/* 2단계: 편지가 위로 살짝 나옴 (Peeking) */
+/* 2단계: 편지가 위로 살짝 나옴 */
 .envelope-opening.state-2 .envelope__card {
-  transform: translateY(-5%);
+  transform: translateY(-8%);
 }
 
-/* 3단계: 편지가 봉투 앞으로 완전히 나옴 */
+/* 3단계: 편지가 봉투 앞으로 나옴 (밑단 흰 틈이 보이지 않도록 -28%까지만 상승) */
 .envelope-opening.state-3 .envelope__card {
-  transform: translateY(-45%);
+  transform: translateY(-28%);
 }
 
-/* 4단계: 편지 클로즈업 (화면 꽉 차게 확대) */
+/* 4단계: 편지 클로즈업 */
 .envelope-opening.state-4 .envelope__card {
-  /* 이미지 4번처럼 상단 위주로 크게 확대 */
-  transform: translateY(-20%) scale(2.8);
-  transform-origin: top center;
-  transition: transform 0.7s cubic-bezier(0.2, 0, 0.2, 1);
+  /* scale을 1.35로 줄여 카드 내용 전체가 화면에 예쁘게 꽉 차게 보이도록 수정 */
+  transform: translateY(-12%) scale(1.35);
+  transition: transform 0.8s cubic-bezier(0.2, 0, 0.2, 1);
 }
 
 /* 클로즈업 시 봉투 껍데기는 서서히 사라짐 */
 .envelope-opening.state-4 .envelope__pocket,
 .envelope-opening.state-4 .envelope__flap {
   opacity: 0;
-  transition: opacity 0.5s ease;
+  transition: opacity 0.6s ease;
 }
 
 /* ═══════════════════════════════════════════
