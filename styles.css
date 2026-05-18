@@ -199,7 +199,7 @@ a {
 /* ─── 애니메이션 ─── */
 /* Step 1: 편지가 부드럽게 위로 나옴 */
 .envelope-opening.state-1 .envelope__card {
-  transform: translateY(-28%);
+  transform: translateY(-23%);
 }
 
 /* Step 2: 클로즈업 */
