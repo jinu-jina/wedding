@@ -135,9 +135,9 @@ a {
 /* 1. 이미지 전체를 아래로 내림 */
 .envelope {
   position: relative;
-  width: 65%;
+  width: 85%;
   max-width: 380px;
-  margin-top: 20vh; /* 봉투를 화면 아래로 쑥 내려 안정감 부여 */
+  margin-top: 40vh; /* 봉투를 화면 아래로 쑥 내려 안정감 부여 */
   display: block !important; /* 높이가 깨지는 버그 원천 차단 */
 }
 
@@ -154,7 +154,7 @@ a {
   position: absolute !important;
   bottom: calc(100% - 2px) !important; /* 흰 틈새 완벽 제거 */
   left: 0;
-  width: 70%;
+  width: 80%;
   z-index: 1;
 }
 
