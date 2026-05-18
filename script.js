@@ -122,52 +122,53 @@
   }
 
 /* ═══════════════════════════════════════════
-     Envelope Opening (Slide up -> Zoom in -> Pause -> Next)
+     Envelope Opening (Slide -> Zoom -> 1s Pause)
      ═══════════════════════════════════════════ */
-function initEnvelopeOpening() {
-  const envelopeOpening = $('#envelopeOpening');
-  const guide = $('#envelopeGuide');
+  function initEnvelopeOpening() {
+    const envelopeOpening = $('#envelopeOpening');
+    const guide = $('#envelopeGuide');
 
-  if (CONFIG.useCurtain === false) {
-    envelopeOpening.style.display = 'none';
-    return;
-  }
+    if (CONFIG.useCurtain === false) {
+      envelopeOpening.style.display = 'none';
+      return;
+    }
 
-  document.body.classList.add('no-scroll');
+    document.body.classList.add('no-scroll');
 
-  envelopeOpening.addEventListener('click', () => {
-    // 중복 실행 방지
-    if (envelopeOpening.classList.contains('state-2')) return;
+    envelopeOpening.addEventListener('click', () => {
+      // 중복 실행 방지
+      if (envelopeOpening.classList.contains('state-2')) return;
 
-    if (guide) guide.style.opacity = '0';
+      if (guide) guide.style.opacity = '0';
 
-    // [Step 2] 편지가 살짝 올라옴 (이미지 2번)
-    envelopeOpening.classList.add('state-2');
+      // [Step 2] 편지가 살짝 올라옴
+      envelopeOpening.classList.add('state-2');
 
-    // 0.6초 후 [Step 3] 편지가 더 올라옴 (이미지 3번)
-    setTimeout(() => {
-      envelopeOpening.classList.add('state-3');
-
-      // 0.8초 후 [Step 4] 클로즈업 실행 (이미지 4번)
+      // 0.5초 후 [Step 3] 편지가 더 올라옴
       setTimeout(() => {
-        envelopeOpening.classList.add('state-4');
+        envelopeOpening.classList.add('state-3');
 
-        // 클로즈업 된 상태로 1초 대기 (여운 주기) 후 다음 페이지
+        // 0.7초 후 [Step 4] 클로즈업 실행
         setTimeout(() => {
-          envelopeOpening.style.opacity = '0';
-          document.body.classList.remove('no-scroll');
+          envelopeOpening.classList.add('state-4');
 
+          // [핵심] 클로즈업 애니메이션 시간(0.8초) + 멈춰있는 시간(1초) = 총 1.8초(1800ms) 대기
           setTimeout(() => {
-            envelopeOpening.style.display = 'none';
-          }, 800);
+            // 다음 페이지로 페이드아웃 전환
+            envelopeOpening.style.opacity = '0';
+            document.body.classList.remove('no-scroll');
 
-        }, 1700); // 클로즈업 시간(0.7s) + 대기 시간(1s)
+            setTimeout(() => {
+              envelopeOpening.style.display = 'none';
+            }, 800);
 
-      }, 800);
+          }, 1800); 
 
-    }, 600);
-  });
-}
+        }, 700);
+
+      }, 500);
+    });
+  }
 
   /* ═══════════════════════════════════════════
      Hero Section
