@@ -166,7 +166,7 @@ a {
   width: 92%;
   z-index: 2;
   /* 5. 카드를 아래로 깊숙이 내려서 두 번째 이미지처럼 쏙 들어가게 세팅 */
-  transform: translateY(27%);
+  transform: translateY(24%);
   transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
   will-change: transform;
 }
@@ -174,9 +174,10 @@ a {
 /* 6. 하단 가림막 (카드를 내렸을 때 밑으로 튀어나오는 종이 완벽 삭제) */
 .envelope__mask {
   position: absolute !important;
-  top: 100% !important;
+  /* 100%에서 3px 만큼 위로 끌어올려 삐져나온 선을 완벽하게 덮습니다 */
+  top: calc(100% - 4px) !important; 
   left: -50vw;
-  width: 210vw;
+  width: 200vw;
   height: 100vh;
   background-color: #fff;
   z-index: 10;
