@@ -122,7 +122,7 @@
   }
 
 /* ═══════════════════════════════════════════
-     Envelope Animation (Step 1 -> Step 2)
+     Envelope Opening (Slide Up -> Zoom -> Pause 1s)
      ═══════════════════════════════════════════ */
   function initEnvelopeOpening() {
     const envelopeOpening = $('#envelopeOpening');
@@ -135,27 +135,30 @@
 
     document.body.classList.add('no-scroll');
 
-    // 화면 아무 곳이나 터치하면 실행
     envelopeOpening.addEventListener('click', () => {
-      // 이미 열렸으면 중복 실행 방지
-      if (envelopeOpening.classList.contains('state-2')) return;
+      if (envelopeOpening.classList.contains('state-1')) return;
 
-      // 1. 안내 문구 즉시 숨기기
       if (guide) guide.style.opacity = '0';
 
-      // 2. 애니메이션 시작 (CSS state-2 클래스 추가: 카드가 위로 쑥!)
-      envelopeOpening.classList.add('state-2');
+      // [Step 1] 편지가 스윽 올라옴
+      envelopeOpening.classList.add('state-1');
 
-      // 3. 2.5초간 카드를 보여준 뒤 메인 화면으로 부드럽게 전환
-      // (카드가 올라가는 시간 0.8초 + 확대되는 시간 0.8초 + 여운 주기 0.9초)
+      // 0.8초 후 [Step 2] 클로즈업 실행
       setTimeout(() => {
-        envelopeOpening.style.opacity = '0'; // 서서히 사라지기
-        document.body.classList.remove('no-scroll'); // 메인 화면 스크롤 허용
-        
+        envelopeOpening.classList.add('state-2');
+
+        // 클로즈업 애니메이션(0.8초) + 멈춰있는 시간(1초) = 총 1.8초 대기 후 전환
         setTimeout(() => {
-          envelopeOpening.style.display = 'none'; // 완전히 제거
-        }, 800); // 사라지는 시간
-      }, 2500); // 전체 애니메이션 시간
+          envelopeOpening.style.opacity = '0';
+          document.body.classList.remove('no-scroll');
+
+          setTimeout(() => {
+            envelopeOpening.style.display = 'none';
+          }, 800);
+
+        }, 1800); 
+
+      }, 800);
     });
   }
 
