@@ -137,7 +137,7 @@ a {
   position: relative;
   width: 90%;
   max-width: 380px;
-  margin-top: 40vh; /* 봉투를 화면 아래로 쑥 내려 안정감 부여 */
+  margin-top: 50vh; /* 봉투를 화면 아래로 쑥 내려 안정감 부여 */
   display: block !important; /* 높이가 깨지는 버그 원천 차단 */
 }
 
@@ -152,7 +152,7 @@ a {
 /* 3. 덮개 (주머니 위에 정확히 붙음) */
 .envelope__flap {
   position: absolute !important;
-  bottom: calc(110% - 2px) !important; /* 흰 틈새 완벽 제거 */
+  bottom: calc(70% - 2px) !important; /* 흰 틈새 완벽 제거 */
   left: 0;
   width: 100%;
   z-index: 1;
@@ -166,7 +166,7 @@ a {
   width: 92%;
   z-index: 2;
   /* 5. 카드를 아래로 깊숙이 내려서 두 번째 이미지처럼 쏙 들어가게 세팅 */
-  transform: translateY(42%);
+  transform: translateY(35%);
   transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
   will-change: transform;
 }
