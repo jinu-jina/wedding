@@ -124,49 +124,50 @@
 /* ═══════════════════════════════════════════
      Envelope Opening (Slide up -> Zoom in -> Pause -> Next)
      ═══════════════════════════════════════════ */
-  function initEnvelopeOpening() {
-    const envelopeOpening = $('#envelopeOpening');
-    const guide = $('#envelopeGuide');
+function initEnvelopeOpening() {
+  const envelopeOpening = $('#envelopeOpening');
+  const guide = $('#envelopeGuide');
 
-    if (CONFIG.useCurtain === false) {
-      envelopeOpening.style.display = 'none';
-      return;
-    }
+  if (CONFIG.useCurtain === false) {
+    envelopeOpening.style.display = 'none';
+    return;
+  }
 
-    document.body.classList.add('no-scroll');
+  document.body.classList.add('no-scroll');
 
-    // 화면 아무 곳이나 터치하면 애니메이션 시작
-    envelopeOpening.addEventListener('click', () => {
-      // 이미 실행 중이면 중복 방지
-      if (envelopeOpening.classList.contains('step-1')) return;
+  envelopeOpening.addEventListener('click', () => {
+    // 중복 실행 방지
+    if (envelopeOpening.classList.contains('state-2')) return;
 
-      // 안내 문구 즉시 숨기기
-      if (guide) guide.style.opacity = '0';
+    if (guide) guide.style.opacity = '0';
 
-      // [Step 1] 카드가 위로 스르륵 뽑혀 나옴
-      envelopeOpening.classList.add('step-1');
+    // [Step 2] 편지가 살짝 올라옴 (이미지 2번)
+    envelopeOpening.classList.add('state-2');
 
-      // 0.8초 후 (카드가 다 올라온 뒤)
+    // 0.6초 후 [Step 3] 편지가 더 올라옴 (이미지 3번)
+    setTimeout(() => {
+      envelopeOpening.classList.add('state-3');
+
+      // 0.8초 후 [Step 4] 클로즈업 실행 (이미지 4번)
       setTimeout(() => {
-        // [Step 2] 카드 화면 클로즈업 (확대 후 멈춤)
-        envelopeOpening.classList.add('step-2');
-        
-        // 0.6초(확대되는 시간) + 1초(멈춰서 보여주는 시간) = 1.6초(1600ms) 대기
+        envelopeOpening.classList.add('state-4');
+
+        // 클로즈업 된 상태로 1초 대기 (여운 주기) 후 다음 페이지
         setTimeout(() => {
-          // [Step 3] 1초 대기 후 전체 래퍼를 페이드아웃하며 메인 화면 등장
           envelopeOpening.style.opacity = '0';
-          document.body.classList.remove('no-scroll'); // 메인 화면 스크롤 허용
-          
-          // 0.8초 후 (페이드아웃이 끝나면) 껍데기 완전히 제거
+          document.body.classList.remove('no-scroll');
+
           setTimeout(() => {
             envelopeOpening.style.display = 'none';
           }, 800);
 
-        }, 1600); 
+        }, 1700); // 클로즈업 시간(0.7s) + 대기 시간(1s)
 
-      }, 800); // Step 1 카드가 올라오는 데 걸리는 시간
-    });
-  }
+      }, 800);
+
+    }, 600);
+  });
+}
 
   /* ═══════════════════════════════════════════
      Hero Section
