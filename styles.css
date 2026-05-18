@@ -152,7 +152,7 @@ a {
 /* 3. 덮개 (주머니 위에 정확히 붙음) */
 .envelope__flap {
   position: absolute !important;
-  bottom: calc(90% - 2px) !important; /* 흰 틈새 완벽 제거 */
+  bottom: calc(60% - 2px) !important; /* 흰 틈새 완벽 제거 */
   left: 0;
   width: 97%;
   z-index: 1;
@@ -166,7 +166,7 @@ a {
   width: 92%;
   z-index: 2;
   /* 5. 카드를 아래로 깊숙이 내려서 두 번째 이미지처럼 쏙 들어가게 세팅 */
-  transform: translateY(40%);
+  transform: translateY(60%);
   transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
   will-change: transform;
 }
@@ -177,7 +177,7 @@ a {
   top: 100% !important;
   left: -50vw;
   width: 200vw;
-  height: 102vh;
+  height: 105vh;
   background-color: #fff;
   z-index: 10;
 }
