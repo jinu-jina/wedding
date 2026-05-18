@@ -116,96 +116,7 @@ a {
 }
 
 /* ═══════════════════════════════════════════
-   Envelope Animation (One-step slide, Zoom, Centered)
-   ═══════════════════════════════════════════ */
-.envelope-opening {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  background-color: var(--color-bg); /* 청첩장 배경색과 동일하게 */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start; /* 상단 기준으로 배치 시작 */
-  padding-top: 15vh; /* 파란색 화살표 요청 반영: 전체 이미지를 아래로 쑥 내림 */
-  overflow: hidden;
-  cursor: pointer; /* 터치 가능함을 표시 */
-  transition: opacity 0.8s ease;
-}
-
-.envelope {
-  position: relative;
-  width: 85%;
-  max-width: 380px; /* PC에서도 모바일처럼 예쁜 크기 유지 */
-  display: flex;
-  align-items: flex-end; 
-  justify-content: center;
-}
-
-/* 1. 봉투 뒷날개 */
-.envelope__flap {
-  position: absolute;
-  /* 빨간 동그라미 요청 반영: 주머니와 2px 겹치게 하여 흰 틈 완벽 제거 */
-  bottom: calc(100% - 2px); 
-  left: 0;
-  width: 100%; 
-  z-index: 1;
-}
-
-/* 2. 편지 카드 */
-.envelope__card {
-  position: absolute;
-  bottom: 0; /* 카드 밑단이 튀어나오지 않게 완벽 고정 */
-  left: 4%;
-  width: 92%;
-  z-index: 2;
-  transform: translateY(0); 
-  transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
-  will-change: transform;
-}
-
-/* 3. 봉투 주머니 */
-.envelope__pocket {
-  position: relative;
-  width: 100%;
-  z-index: 3;
-  display: block;
-}
-
-/* 가이드 문구 */
-.envelope__guide {
-  margin-top: 3rem;
-  font-family: var(--font-serif);
-  font-size: 0.9rem;
-  color: #8C7E72;
-  letter-spacing: 2px;
-  animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
-
-/* ─── 애니메이션 ─── */
-
-/* 1단계: 편지가 한 번에 부드럽게 쑥 올라옴 (멈칫거림 제거) */
-.envelope-opening.state-1 .envelope__card {
-  transform: translateY(-28%);
-}
-
-/* 2단계: 편지 클로즈업 */
-.envelope-opening.state-2 .envelope__card {
-  transform: translateY(-12%) scale(1.35); /* 기존의 예쁜 배율 유지 */
-  transition: transform 0.8s cubic-bezier(0.2, 0, 0.2, 1);
-}
-
-/* 클로즈업 시 봉투 껍데기는 서서히 사라짐 */
-.envelope-opening.state-2 .envelope__pocket,
-.envelope-opening.state-2 .envelope__flap {
-  opacity: 0;
-  transition: opacity 0.6s ease;
-}
-
-/* ═══════════════════════════════════════════
-   Envelope Animation (Final Perfect Fit)
+   Envelope Animation (Final Perfect Alignment)
    ═══════════════════════════════════════════ */
 .envelope-opening {
   position: fixed;
@@ -215,81 +126,92 @@ a {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center; /* 화면 중앙으로 깔끔하게 정렬 */
+  justify-content: flex-start;
   overflow: hidden;
   cursor: pointer;
   transition: opacity 0.8s ease;
 }
 
-.envelope-wrapper {
+/* 1. 이미지 전체를 아래로 내림 */
+.envelope {
   position: relative;
   width: 85%;
   max-width: 380px;
-  display: flex;
-  align-items: flex-end; /* 바닥(bottom)을 기준으로 정렬 */
-  justify-content: center;
+  margin-top: 20vh; /* 봉투를 화면 아래로 쑥 내려 안정감 부여 */
+  display: block !important; /* 높이가 깨지는 버그 원천 차단 */
 }
 
-/* 1. 봉투 뒷날개 (flap.png - 뒷면 전체) */
+/* 2. 주머니 (레이아웃 기준점) */
+.envelope__pocket {
+  display: block !important;
+  position: relative !important;
+  width: 100%;
+  z-index: 3;
+}
+
+/* 3. 덮개 (주머니 위에 정확히 붙음) */
 .envelope__flap {
-  position: absolute;
-  /* [오류 해결!] flap이 뒷면 전체이므로, 앞주머니(pocket)와 바닥을 똑같이(bottom: 0) 맞춰주면 완벽하게 겹칩니다. */
-  bottom: 0; 
+  position: absolute !important;
+  bottom: calc(100% - 2px) !important; /* 흰 틈새 완벽 제거 */
   left: 0;
   width: 100%;
   z-index: 1;
 }
 
-/* 2. 편지 카드 (card.png) */
+/* 4. 카드 */
 .envelope__card {
-  position: absolute;
-  bottom: 2%; /* 주머니 바닥에서 아주 살짝만 띄워 자연스럽게 쏙 들어가게 배치 */
+  position: absolute !important;
+  bottom: 0 !important;
   left: 4%;
   width: 92%;
   z-index: 2;
-  transform: translateY(0); /* 억지로 내리지 않아도 제자리에 딱 맞습니다 */
+  /* 5. 카드를 아래로 깊숙이 내려서 두 번째 이미지처럼 쏙 들어가게 세팅 */
+  transform: translateY(22%);
   transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
   will-change: transform;
 }
 
-/* 3. 봉투 주머니 (pocket.png - 앞면) */
-.envelope__pocket {
-  position: relative;
-  width: 100%;
-  z-index: 3;
-  display: block;
+/* 6. 하단 가림막 (카드를 내렸을 때 밑으로 튀어나오는 종이 완벽 삭제) */
+.envelope__mask {
+  position: absolute !important;
+  top: 100% !important;
+  left: -50vw;
+  width: 200vw;
+  height: 100vh;
+  background-color: #fff;
+  z-index: 10;
 }
 
 /* 가이드 문구 */
 .envelope__guide {
-  margin-top: 5rem;
+  margin-top: 4rem;
+  position: relative;
+  z-index: 15; /* 가림막 위로 올라오게 설정 */
   font-family: var(--font-serif);
   font-size: 0.9rem;
   color: #8C7E72;
   letter-spacing: 2px;
   animation: pulse 1.5s infinite;
-  position: relative;
-  z-index: 15;
 }
 
 @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
 
 /* ─── 애니메이션 ─── */
-
-/* 1단계: 편지가 한 번에 스윽 올라옴 */
+/* Step 1: 편지가 부드럽게 위로 나옴 */
 .envelope-opening.state-1 .envelope__card {
-  transform: translateY(-25%); /* 예쁘게 뽑혀 올라오는 높이 */
+  transform: translateY(-28%);
 }
 
-/* 2단계: 편지 클로즈업 */
+/* Step 2: 클로즈업 */
 .envelope-opening.state-2 .envelope__card {
-  transform: translateY(-10%) scale(1.35); /* 화면에 꽉 차게 클로즈업 */
+  transform: translateY(-10%) scale(1.35);
   transition: transform 0.8s cubic-bezier(0.2, 0, 0.2, 1);
 }
 
-/* 클로즈업 시 봉투 껍데기 사라짐 */
+/* 클로즈업 시 봉투 껍데기와 가림막 서서히 사라짐 */
 .envelope-opening.state-2 .envelope__pocket,
-.envelope-opening.state-2 .envelope__flap {
+.envelope-opening.state-2 .envelope__flap,
+.envelope-opening.state-2 .envelope__mask {
   opacity: 0;
   transition: opacity 0.6s ease;
 }
