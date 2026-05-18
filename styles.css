@@ -135,9 +135,9 @@ a {
 /* 1. 이미지 전체를 아래로 내림 */
 .envelope {
   position: relative;
-  width: 85%;
+  width: 95%;
   max-width: 380px;
-  margin-top: 40vh; /* 봉투를 화면 아래로 쑥 내려 안정감 부여 */
+  margin-top: 20vh; /* 봉투를 화면 아래로 쑥 내려 안정감 부여 */
   display: block !important; /* 높이가 깨지는 버그 원천 차단 */
 }
 
@@ -152,9 +152,9 @@ a {
 /* 3. 덮개 (주머니 위에 정확히 붙음) */
 .envelope__flap {
   position: absolute !important;
-  bottom: calc(100% - 2px) !important; /* 흰 틈새 완벽 제거 */
+  bottom: calc(100% - 20px) !important; /* 흰 틈새 완벽 제거 */
   left: 0;
-  width: 80%;
+  width: 100%;
   z-index: 1;
 }
 
