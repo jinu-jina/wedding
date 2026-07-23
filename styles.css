@@ -137,7 +137,7 @@ a {
   position: relative;
   width: 90%;
   max-width: 380px;
-  margin-top: 25vh; /* 봉투를 화면 아래로 쑥 내려 안정감 부여 */
+  margin-top: 35vh; /* 봉투를 화면 아래로 쑥 내려 안정감 부여 */
   display: block !important; /* 높이가 깨지는 버그 원천 차단 */
 }
 
