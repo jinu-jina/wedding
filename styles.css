@@ -205,7 +205,7 @@ a {
 
 /* Step 2: 클로즈업 */
 .envelope-opening.state-2 .envelope__card {
-  transform: translateY(10%) scale(2);
+  transform: translateY(10%) scale(1.8);
   transition: transform 0.8s cubic-bezier(0.2, 0, 0.2, 1);
 }
 
