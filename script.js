@@ -122,7 +122,7 @@
   }
 
 /* ═══════════════════════════════════════════
-     Envelope Opening (Slide Up -> Zoom -> Pause 1s)
+    0.오프닝 Opening (Canva Fade Out)
      ═══════════════════════════════════════════ */
   function initEnvelopeOpening() {
     const envelopeOpening = $('#envelopeOpening');
@@ -133,31 +133,23 @@
       return;
     }
 
+    // 스크롤 방지
     document.body.classList.add('no-scroll');
 
     envelopeOpening.addEventListener('click', () => {
-      if (envelopeOpening.classList.contains('state-1')) return;
+      // 중복 클릭 방지
+      if (envelopeOpening.classList.contains('is-closing')) return;
+      envelopeOpening.classList.add('is-closing');
 
       if (guide) guide.style.opacity = '0';
 
-      // [Step 1] 편지가 스윽 올라옴
-      envelopeOpening.classList.add('state-1');
+      // 부드럽게 투명해짐
+      envelopeOpening.style.opacity = '0';
+      document.body.classList.remove('no-scroll');
 
-      // 0.8초 후 [Step 2] 클로즈업 실행
+      // CSS 트랜지션(0.8초)이 끝난 후 화면에서 완전히 제거
       setTimeout(() => {
-        envelopeOpening.classList.add('state-2');
-
-        // 클로즈업 애니메이션(0.8초) + 멈춰있는 시간(1초) = 총 1.8초 대기 후 전환
-        setTimeout(() => {
-          envelopeOpening.style.opacity = '0';
-          document.body.classList.remove('no-scroll');
-
-          setTimeout(() => {
-            envelopeOpening.style.display = 'none';
-          }, 800);
-
-        }, 1800); 
-
+        envelopeOpening.style.display = 'none';
       }, 800);
     });
   }
