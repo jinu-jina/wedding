@@ -24,23 +24,20 @@
 </head>
 <body>
 
-<!-- ═══ 0. 초대장 열기  ═══ -->
+<!-- ═══ 초대장 열기 (편지 봉투) ═══ -->
   <div id="envelopeOpening" class="envelope-opening">
-    
-    <!-- 캔바 임베드 코드 시작 -->
-    <div style="position: relative; width: 90%; max-width: 400px; height: 0; padding-top: 56.2225%; padding-bottom: 0; box-shadow: 0 2px 8px 0 rgba(63,69,81,0.16); margin-top: 30vh; margin-bottom: 0.9em; overflow: hidden; border-radius: 8px; will-change: transform;">
-      <iframe loading="lazy" style="position: absolute; width: 100%; height: 100%; top: 0; left: 0; border: none; padding: 0;margin: 0;"
-        src="https://www.canva.com/design/DAHLGT9xO0k/1KsjAhYM5wXMxQNEVTy3ew/view?embed" allowfullscreen="allowfullscreen" allow="fullscreen">
-      </iframe>
+    <div class="envelope">
+      <img src="images/envelope/flap.png" class="envelope__flap" alt="">
+      
+      <img src="images/envelope/card.png" class="envelope__card" id="envelopeCard" alt="초대장">
+      
+      <img src="images/envelope/pocket.png" class="envelope__pocket" alt="">
+      
+      <div class="envelope__mask"></div>
     </div>
-    <!-- 캔바 텍스트 링크는 디자인 요소상 제외했습니다 -->
-
-    <!-- 중요: iframe 위에서 터치를 인식하기 위한 투명 덮개 -->
-    <div class="canva-click-mask"></div>
-
     <p class="envelope__guide" id="envelopeGuide">화면을 터치해 주세요</p>
   </div>
-
+  
     <!-- ─── 메인 (히어로) ─── -->
     <section class="section hero" id="hero">
       <div class="hero__frame">
