@@ -135,10 +135,15 @@
 
     document.body.classList.add('no-scroll');
 
-    envelopeOpening.addEventListener('click', () => {
+envelopeOpening.addEventListener('click', () => {
       if (envelopeOpening.classList.contains('state-1')) return;
 
-      if (guide) guide.style.opacity = '0';
+      // 텍스트의 깜빡임 애니메이션을 끄고 투명하게 숨김 처리
+      if (guide) {
+        guide.style.animation = 'none';
+        guide.style.opacity = '0';
+        guide.style.transition = 'opacity 0.4s ease'; // 부드럽게 사라지도록 효과 추가
+      }
 
       // [Step 1] 편지가 스윽 올라옴
       envelopeOpening.classList.add('state-1');
