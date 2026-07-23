@@ -116,105 +116,13 @@ a {
 }
 
 /* ═══════════════════════════════════════════
-   Envelope Animation (Final Perfect Alignment)
+   0.오프닝 Canva Opening Mask
    ═══════════════════════════════════════════ */
-.envelope-opening {
-  position: fixed;
+.canva-click-mask {
+  position: absolute;
   inset: 0;
-  z-index: 9999;
-  background-color: #fff;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  overflow: hidden;
-  cursor: pointer;
-  transition: opacity 0.8s ease;
-}
-
-/* 1. 이미지 전체를 아래로 내림 */
-.envelope {
-  position: relative;
-  width: 90%;
-  max-width: 380px;
-  margin-top: 45vh; /* 봉투를 화면 아래로 쑥 내려 안정감 부여 */
-  display: block !important; /* 높이가 깨지는 버그 원천 차단 */
-}
-
-/* 2. 주머니 (레이아웃 기준점) */
-.envelope__pocket {
-  display: block !important;
-  position: relative !important;
-  width: 100%;
-  z-index: 3;
-}
-
-/* 3. 덮개 (주머니 위에 정확히 붙음) */
-.envelope__flap {
-  position: absolute !important;
-  bottom: calc(55% - 2px) !important; /* 흰 틈새 완벽 제거 */
-  left: 0;
-  width: 97%;
-  z-index: 1;
-}
-
-/* 4. 카드 */
-.envelope__card {
-  position: absolute !important;
-  bottom: 0 !important;
-  left: 4%;
-  width: 92%;
-  z-index: 2;
-  /* 5. 카드를 아래로 깊숙이 내려서 두 번째 이미지처럼 쏙 들어가게 세팅 */
-  transform: translateY(24%);
-  transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
-  will-change: transform;
-}
-
-/* 6. 하단 가림막 (카드를 내렸을 때 밑으로 튀어나오는 종이 완벽 삭제) */
-.envelope__mask {
-  position: absolute !important;
-  /* 100%에서 3px 만큼 위로 끌어올려 삐져나온 선을 완벽하게 덮습니다 */
-  top: calc(100% - 4px) !important; 
-  left: -50vw;
-  width: 200vw;
-  height: 100vh;
-  background-color: #fff;
   z-index: 10;
-}
-
-/* 가이드 문구 */
-.envelope__guide {
-  margin-top: 4rem;
-  position: relative;
-  z-index: 15; /* 가림막 위로 올라오게 설정 */
-  font-family: var(--font-serif);
-  font-size: 0.9rem;
-  color: #8C7E72;
-  letter-spacing: 2px;
-  animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
-
-/* ─── 애니메이션 ─── */
-/* Step 1: 편지가 부드럽게 위로 나옴 */
-.envelope-opening.state-1 .envelope__card {
-  transform: translateY(-18%);
-}
-
-/* Step 2: 클로즈업 */
-.envelope-opening.state-2 .envelope__card {
-  transform: translateY(-10%) scale(1.35);
-  transition: transform 0.8s cubic-bezier(0.2, 0, 0.2, 1);
-}
-
-/* 클로즈업 시 봉투 껍데기와 가림막 서서히 사라짐 */
-.envelope-opening.state-2 .envelope__pocket,
-.envelope-opening.state-2 .envelope__flap,
-.envelope-opening.state-2 .envelope__mask {
-  opacity: 0;
-  transition: opacity 0.6s ease;
+  cursor: pointer;
 }
 
 /* ═══════════════════════════════════════════
