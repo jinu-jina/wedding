@@ -112,7 +112,7 @@
     const m = CONFIG.meta;
     document.title = m.title;
     const setMeta = (attr, val, content) => {
-      const el = document.querySelector(`meta[${attr}="${val}"]`);
+      const el = document.querySelector(`meta\[${attr}="${val}"]`);
       if (el) el.setAttribute('content', content);
     };
     setMeta('property', 'og:title', m.title);
@@ -156,7 +156,7 @@
             envelopeOpening.style.display = 'none';
           }, 800);
 
-        }, 1800); 
+        }, 1800);
 
       }, 800);
     });
@@ -261,7 +261,7 @@
     // Header
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
       'July', 'August', 'September', 'October', 'November', 'December'];
-    grid.innerHTML = `<div class="calendar__header">${monthNames[month]} ${year}</div>`;
+    grid.innerHTML = `<div class="calendar\_\_header">${monthNames\[month]} ${year}</div>`;
 
     // Weekdays
     const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
@@ -302,7 +302,7 @@
     const startDate = dt.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
     const endDt = new Date(dt.getTime() + 2 * 60 * 60 * 1000);
     const endDate = endDt.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-    const gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(CONFIG.groom.name + ' ♥ ' + CONFIG.bride.name + ' 결혼식')}&dates=${startDate}/${endDate}&location=${encodeURIComponent(CONFIG.wedding.venue + ' ' + CONFIG.wedding.address)}&details=${encodeURIComponent('결혼식에 초대합니다.')}`;
+    const gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE\&text=${encodeURIComponent(CONFIG.groom.name + ' ♥ ' + CONFIG.bride.name + ' 결혼식')}\&dates=${startDate}/${endDate}\&location=${encodeURIComponent(CONFIG.wedding.venue + ' ' + CONFIG.wedding.address)}\&details=${encodeURIComponent('결혼식에 초대합니다.')}`;
     $('#googleCalBtn').href = gcalUrl;
 
     // ICS download (Apple Calendar)
@@ -500,14 +500,14 @@
       const item = document.createElement('div');
       item.className = 'account-item';
       item.innerHTML = `
-        <div class="account-item__info">
-          <div class="account-item__role">${acc.role}</div>
-          <div class="account-item__detail">
-            <span class="account-item__name">${acc.name || ''}</span>
+        <div class="account-item\_\_info">
+          <div class="account-item\_\_role">${acc.role}</div>
+          <div class="account-item\_\_detail">
+            <span class="account-item\_\_name">${acc.name || ''}</span>
             ${acc.bank} ${acc.number}
           </div>
         </div>
-        <button class="account-item__copy" data-account="${acc.bank} ${acc.number} ${acc.name || ''}">
+        <button class="account-item\_\_copy" data-account="${acc.bank} ${acc.number} ${acc.name || ''}">
           복사
         </button>
       `;
@@ -556,7 +556,7 @@
     const year = dt.getFullYear();
     const month = String(dt.getMonth() + 1).padStart(2, '0');
     const day = String(dt.getDate()).padStart(2, '0');
-    $('#footerText').textContent = `${CONFIG.groom.name} & ${CONFIG.bride.name} — ${year}.${month}.${day}`;
+    $('#footerText').textContent = `${CONFIG.groom.name} \& ${CONFIG.bride.name} — ${year}.${month}.${day}`;
   }
 
   /* ═══════════════════════════════════════════
