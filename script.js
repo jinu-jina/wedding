@@ -621,9 +621,12 @@ envelopeOpening.addEventListener('click', () => {
      Init
      ═══════════════════════════════════════════ */
 
-  async function init() {
+ async function init() {
     setMetaTags();
     initEnvelopeOpening();
+    initTopVideo(); 
+    initHero();
+    initCountdown();
     initHero();
     initCountdown();
     initGreeting();
@@ -655,3 +658,19 @@ envelopeOpening.addEventListener('click', () => {
     init();
   }
 })();
+
+/* ═══════════════════════════════════════════
+     Top Video (터치 시 멈춤/재생)
+     ═══════════════════════════════════════════ */
+  function initTopVideo() {
+    const video = $('#topVideo');
+    if (!video) return;
+
+    video.addEventListener('click', () => {
+      if (video.paused) {
+        video.play();
+      } else {
+        video.pause();
+      }
+    });
+  }
