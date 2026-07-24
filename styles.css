@@ -1314,3 +1314,23 @@ a {
     transform: none !important;
   }
 }
+
+/* ═══════════════════════════════════════════
+   Top Video Section (최상단 비디오 영역)
+   ═══════════════════════════════════════════ */
+.top-video-section {
+  background-color: #000000; /* 영상 배경을 검정색으로 설정 */
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0; /* 기본 여백 제거 */
+}
+
+#topVideo {
+  width: 100%;
+  max-width: 1080px; /* 원본 가로 사이즈 */
+  aspect-ratio: 1080 / 750; /* 1080x750 비율 고정 */
+  object-fit: contain; /* 검은 배경 안에서 잘리지 않고 꽉 차게 */
+  cursor: pointer; /* 터치 가능한 요소임을 표시 */
+}
