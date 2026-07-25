@@ -803,138 +803,6 @@ function initParticles() {
     animate();
 }
 
-    // ==========================================
-    // 🛠️ 파티클 커스텀 설정 (여기 수치들을 변경하세요) 🛠️
-    // ==========================================
-    const numParticles = 400;     // 1. 파티클 양 (기존 250 -> 350 증가)
-    const scatterAmount = 2.5;    // 2. 모여있는 형태의 불규칙성 (높을수록 외곽선이 흐트러짐)
-    const jitter = 2.2;           // 3. 꿈틀거리는 진동 폭 (높을수록 요동침)
-    const particleSize = 0.9;     // 4. 파티클 알갱이 하나의 크기 (기본 1.2)
-    const explosionPower = 20;    // 5. 터치 시 퍼져나가는 폭발력
-    const opacitySpeed = 0.08;    // 6. 투명도(깜빡임) 변화 속도
-    const moveSpeed = 0.04;       // 7. 목적지로 모여드는 속도 (기본 0.08 / 높을수록 확 뭉치고, 낮을수록 스르륵 모임)
-    const friction = 0.82;        // 8. 도착 시 튕기는 정도 (기본 0.82 / 0.7 이하면 딱딱하게 멈추고, 0.9 이상이면 젤리처럼 크게 요동침)
-    // ==========================================
-
-      let particles = [];
-
-    // 💡 ▶ 모양 (크기 확대)
-    function getPlayShape() {
-      const pts = [];
-      for(let i=0; i<numParticles; i++) {
-        let r1 = Math.random();
-        let r2 = Math.random();
-        if(r1 + r2 > 1) { r1 = 1 - r1; r2 = 1 - r2; }
-        const scatterX = (Math.random() - 0.5) * scatterAmount;
-        const scatterY = (Math.random() - 0.5) * scatterAmount;
-        pts.push({
-          x: 20 + r1 * 0 + r2 * 65 + scatterX, // 기존 30, 50 -> 20, 65로 더 넓게 펼침
-          y: 15 + r1 * 70 + r2 * 35 + scatterY // 기존 25, 50 -> 15, 70으로 더 길게 펼침
-        });
-      }
-      return pts;
-    }
-
-    // 💡 ❚❚ 모양 (크기 확대 및 간격 조정)
-    function getPauseShape() {
-      const pts = [];
-      for(let i=0; i<numParticles; i++) {
-        const isLeft = Math.random() < 0.5;
-        const scatterX = (Math.random() - 0.5) * scatterAmount;
-        const scatterY = (Math.random() - 0.5) * scatterAmount;
-        pts.push({
-          x: (isLeft ? 22 : 60) + Math.random() * 18 + scatterX, // 기둥 두께와 위치 간격 넓힘
-          y: 15 + Math.random() * 70 + scatterY // 기둥 길이 길게 늘림
-        });
-      }
-      return pts;
-    }
-
-    let currentTarget = getPlayShape(); // 처음 시작 모양은 ▶
-
-    for(let i=0; i<numParticles; i++) {
-      particles.push({
-        x: size / 2, 
-        y: size / 2, 
-        tx: currentTarget[i].x,   
-        ty: currentTarget[i].y,
-        vx: (Math.random() - 0.5) * explosionPower, 
-        vy: (Math.random() - 0.5) * explosionPower,
-        alpha: 0.2 + Math.random() * 0.8 
-      });
-    }
-
-    function explodeParticles() {
-      particles.forEach(p => {
-        const angle = Math.random() * Math.PI * 2;
-        const power = 5 + Math.random() * explosionPower;
-        p.vx = Math.cos(angle) * power;
-        p.vy = Math.sin(angle) * power;
-      });
-    }
-      
-// 비디오 터치 시 이벤트 (안내 문구 숨기기 추가)
-    video.addEventListener('click', () => {
-      explodeParticles(); 
-      
-      // 안내 문구 숨기기
-      const guideText = $('#videoGuideText');
-      if (guideText) guideText.style.display = 'none';
-
-      const bgm = document.getElementById('bgm');
-      
-      if (video.paused) {
-        video.muted = false; 
-        video.play(); 
-        
-        // 💡 음악 재생
-        if (bgm) {
-          bgm.play().catch(e => console.log("오디오 재생 에러:", e));
-        }
-        
-        currentTarget = getPauseShape(); 
-      } else {
-        video.pause(); 
-        
-        // 💡 비디오 멈출 때 음악도 일시정지
-        if (bgm) bgm.pause(); 
-        
-        currentTarget = getPlayShape(); 
-      }
-      
-      particles.forEach((p, i) => { p.tx = currentTarget[i].x; p.ty = currentTarget[i].y; });
-    });
-
-    // 💡 애니메이션 함수 (이벤트 바깥에 있어야 정상 작동합니다)
-    function animate() {
-      ctx.clearRect(0, 0, size, size);
-
-      particles.forEach(p => {
-        p.vx += (p.tx - p.x) * moveSpeed;
-        p.vy += (p.ty - p.y) * moveSpeed;
-        p.vx *= friction;
-        p.vy *= friction;
-        p.x += p.vx;
-        p.y += p.vy;
-
-        const drawX = p.x + (Math.random() - 0.5) * jitter;
-        const drawY = p.y + (Math.random() - 0.5) * jitter;
-
-        p.alpha += (Math.random() - 0.5) * opacitySpeed;
-        if(p.alpha > 1) p.alpha = 1;
-        if(p.alpha < 0.2) p.alpha = 0.2; 
-
-        ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha})`;
-        ctx.beginPath();
-        ctx.arc(drawX, drawY, particleSize, 0, Math.PI * 2);
-        ctx.fill();
-      });
-
-      requestAnimationFrame(animate);
-    }
-    animate();
-  }
-
   /* ═══════════════════════════════════════════
      Init
      ═══════════════════════════════════════════ */
@@ -946,8 +814,7 @@ function initParticles() {
     initParticles();
     initHero();
     initCountdown();
-    initHero();
-    initCountdown();
+    // 💡 중복되었던 initHero()와 initCountdown() 삭제 완료
     initGreeting();
     initCalendar();
 
