@@ -633,6 +633,125 @@ envelopeOpening.addEventListener('click', () => {
     mutObs.observe(document.body, { childList: true, subtree: true });
   }
 
+/* ═══════════════════════════════════════════
+     Particle Interaction (Play/Pause 아이콘)
+     ═══════════════════════════════════════════ */
+  function initParticles() {
+    const canvas = $('#particleCanvas');
+    const video = $('#topVideo');
+    if (!canvas || !video) return;
+
+    const ctx = canvas.getContext('2d');
+    const size = 100;
+    
+    // 모바일 고해상도(Retina) 디스플레이 대응하여 뚜렷하게 렌더링
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = size * dpr;
+    canvas.height = size * dpr;
+    ctx.scale(dpr, dpr);
+
+    const numParticles = 250; // 파티클 개수 (많으면 화려하지만 폰에서 버벅일 수 있음)
+    let particles = [];
+
+    // ▶ 모양 좌표 생성 로직 (재생)
+    function getPlayShape() {
+      const pts = [];
+      for(let i=0; i<numParticles; i++) {
+        let r1 = Math.random();
+        let r2 = Math.random();
+        if(r1 + r2 > 1) { r1 = 1 - r1; r2 = 1 - r2; }
+        // 삼각형 꼭짓점 기준 좌표
+        pts.push({
+          x: 30 + r1 * 0 + r2 * 50,
+          y: 25 + r1 * 50 + r2 * 25
+        });
+      }
+      return pts;
+    }
+
+    // ❚❚ 모양 좌표 생성 로직 (일시정지)
+    function getPauseShape() {
+      const pts = [];
+      for(let i=0; i<numParticles; i++) {
+        const isLeft = Math.random() < 0.5;
+        pts.push({
+          x: (isLeft ? 25 : 60) + Math.random() * 15, // 좌우 막대기 위치 및 두께
+          y: 25 + Math.random() * 50 // 막대기 높이
+        });
+      }
+      return pts;
+    }
+
+    // 초기 형태 설정 (말씀하신 대로 처음엔 재생 모양 ▶)
+    let currentTarget = getPlayShape();
+
+    // 파티클 생성
+    for(let i=0; i<numParticles; i++) {
+      particles.push({
+        x: size / 2, y: size / 2, // 처음엔 중앙에서 시작
+        tx: currentTarget[i].x,   // 가야 할 목표(Target) 위치
+        ty: currentTarget[i].y,
+        vx: (Math.random() - 0.5) * 10, // 폭발을 위한 속도
+        vy: (Math.random() - 0.5) * 10
+      });
+    }
+
+    // 터치 시 확 퍼지게 만드는 폭발 이펙트 함수
+    function explodeParticles() {
+      particles.forEach(p => {
+        const angle = Math.random() * Math.PI * 2;
+        const power = 10 + Math.random() * 15; // 퍼지는 힘
+        p.vx = Math.cos(angle) * power;
+        p.vy = Math.sin(angle) * power;
+      });
+    }
+
+    // 비디오 상태 변경 이벤트와 파티클 연동
+    // (터치하여 일시정지되면 ❚❚ 모양으로, 다시 재생되면 ▶ 모양으로)
+    video.addEventListener('pause', () => {
+      explodeParticles();
+      currentTarget = getPauseShape();
+      particles.forEach((p, i) => { p.tx = currentTarget[i].x; p.ty = currentTarget[i].y; });
+    });
+
+    video.addEventListener('play', () => {
+      explodeParticles();
+      currentTarget = getPlayShape();
+      particles.forEach((p, i) => { p.tx = currentTarget[i].x; p.ty = currentTarget[i].y; });
+    });
+
+    // 매 프레임 파티클을 그리는 애니메이션 루프
+    function animate() {
+      ctx.clearRect(0, 0, size, size);
+      ctx.fillStyle = '#ffffff'; // 파티클 색상 (흰색)
+
+      particles.forEach(p => {
+        // 1. 스프링 물리 효과 (원래 자리로 쫀득하게 돌아감)
+        const spring = 0.08;
+        const friction = 0.82;
+        p.vx += (p.tx - p.x) * spring;
+        p.vy += (p.ty - p.y) * spring;
+        p.vx *= friction;
+        p.vy *= friction;
+        p.x += p.vx;
+        p.y += p.vy;
+
+        // 2. 꿈틀거림 (Jitter - 픽셀/지직거리는 느낌)
+        const jitter = 1.2;
+        const drawX = p.x + (Math.random() - 0.5) * jitter;
+        const drawY = p.y + (Math.random() - 0.5) * jitter;
+
+        // 3. 화면에 찍기
+        ctx.beginPath();
+        ctx.arc(drawX, drawY, 1.5, 0, Math.PI * 2); // 마지막 1.5는 파티클 알갱이 크기
+        ctx.fill();
+      });
+
+      requestAnimationFrame(animate);
+    }
+    animate();
+  }
+  
   /* ═══════════════════════════════════════════
      Init
      ═══════════════════════════════════════════ */
@@ -641,6 +760,7 @@ envelopeOpening.addEventListener('click', () => {
     setMetaTags();
     initEnvelopeOpening();
     initTopVideo(); 
+    initParticles();
     initHero();
     initCountdown();
     initHero();
