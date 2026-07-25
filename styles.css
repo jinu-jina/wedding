@@ -1315,26 +1315,37 @@ a {
   }
 }
 
+/* 👇 1. 부모 박스의 잘라내기(숨김) 설정을 강제로 해제하여 검은 배경이 튀어나갈 수 있게 함 */
+.main-content {
+  overflow: visible !important;
+  overflow-x: visible !important;
+}
+
+/* 👇 2. 대신 화면 전체에 가로 스크롤바가 생기지 않도록 방지 */
+body {
+  overflow-x: hidden !important;
+}
+
 /* ═══════════════════════════════════════════
    Top Video Section
    ═══════════════════════════════════════════ */
 .top-video-section {
-  position: relative;
-  width: 100vw; /* 화면 전체 너비를 강제로 채움 */
+  width: 100vw; 
   height: 100vh;
   height: 100dvh;
   background-color: #000000;
   
-  /* 👇 부모 박스(main) 안에 있어도 모니터 정중앙에 꽉 차게 맞추는 마법의 코드 👇 */
+  /* 👇 3. 부모 박스(480px) 안에서도 모니터 전체(100vw)를 완벽하게 덮는 공식 */
+  position: relative;
   left: 50%;
-  transform: translateX(-50%);
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
   
   display: flex;
   justify-content: center;
   align-items: center;
-  overflow: hidden;
   
-  /* 파란색 깜빡임 방지 */
   -webkit-tap-highlight-color: transparent;
   -webkit-user-select: none;
   user-select: none;
@@ -1343,7 +1354,7 @@ a {
 #topVideo {
   width: 100%;
   height: 100%;
-  max-width: 480px; /* PC에서는 너무 거대해지지 않고 모바일 비율 유지 */
+  max-width: 480px; /* PC에서는 영상 크기 고정 */
   object-fit: contain;
   cursor: pointer;
   display: block;
