@@ -1319,21 +1319,22 @@ a {
    Top Video Section
    ═══════════════════════════════════════════ */
 .top-video-section {
-  width: 100vw;
+  position: relative;
+  width: 100vw; /* 화면 전체 너비를 강제로 채움 */
   height: 100vh;
   height: 100dvh;
   background-color: #000000;
+  
+  /* 👇 부모 박스(main) 안에 있어도 모니터 정중앙에 꽉 차게 맞추는 마법의 코드 👇 */
+  left: 50%;
+  transform: translateX(-50%);
+  
   display: flex;
   justify-content: center;
   align-items: center;
   overflow: hidden;
-  position: relative;
   
-  /* 어떤 박스 안에 있더라도 강제로 화면 전체 너비를 흑색으로 덮습니다 */
-  left: 50%;
-  transform: translateX(-50%);
-  
-  /* 파란색 깜빡임 및 드래그 선택 방지 */
+  /* 파란색 깜빡임 방지 */
   -webkit-tap-highlight-color: transparent;
   -webkit-user-select: none;
   user-select: none;
@@ -1342,7 +1343,7 @@ a {
 #topVideo {
   width: 100%;
   height: 100%;
-  max-width: 480px; /* 💡 PC에서 영상이 거대해지지 않고 모바일과 같은 비율로 나오도록 제한 */
+  max-width: 480px; /* PC에서는 너무 거대해지지 않고 모바일 비율 유지 */
   object-fit: contain;
   cursor: pointer;
   display: block;
@@ -1352,12 +1353,19 @@ a {
   user-select: none;
 }
 
+/* 📱 모바일 화면 전용 (영상 크기 살짝 키우기) */
+@media (max-width: 768px) {
+  #topVideo {
+    transform: scale(1.3);
+  }
+}
+
 /* 파티클 캔버스 스타일 */
 #particleCanvas {
   position: absolute;
   z-index: 10;
   pointer-events: none;
-  bottom: 12%; /* 💡 영상이 커지면 파티클 위치가 안 맞을 수 있으니 이 숫자를 조절해 위치를 맞추세요 */
+  bottom: 12%; 
   left: 50%;
   transform: translateX(-50%) translateZ(1px); 
   -webkit-transform: translateX(-50%) translateZ(1px);
@@ -1365,45 +1373,29 @@ a {
   height: 100px;
 }
 
-/* 📱 모바일 화면 전용 (영상 크기 살짝 키우기) */
-@media (max-width: 768px) {
-  #topVideo {
-    transform: scale(1.7); /* 💡 영상을 1.3배 확대합니다 (원하는 크기로 숫자 조절 가능) */
-  }
-}
-
-/* ═══════════════════════════════════════════
-   Video Guide Text (비디오 터치 안내 문구)
-   ═══════════════════════════════════════════ */
+/* 비디오 터치 안내 문구 */
 .video-guide-text {
   position: absolute;
   z-index: 20;
-  bottom: 25%; /* 파티클 도형 위쪽에 위치하도록 조절 (필요시 숫자 변경) */
+  bottom: 25%;
   left: 50%;
   transform: translateX(-50%);
   color: #ffffff;
   font-size: 0.95rem;
   letter-spacing: 0.1em;
   white-space: nowrap;
-  
-  /* 비디오 터치를 막지 않도록 텍스트 클릭 무시 */
   pointer-events: none; 
-  
-  /* 영상 배경이 밝을 때도 글씨가 잘 보이도록 부드러운 그림자 추가 */
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
-  
-  /* 총 5.5초 동안 3번 깜빡이고 사라지는 애니메이션 (forwards로 투명 상태 유지) */
   animation: blinkThreeTimes 5.5s ease-in-out forwards;
 }
 
-/* 정확히 3번 깜빡이고 0%로 사라지는 애니메이션 키프레임 */
 @keyframes blinkThreeTimes {
-  0%   { opacity: 0; }     /* 처음엔 투명하게 시작 */
-  10%  { opacity: 1; }     /* 첫 번째 켜짐 */
-  25%  { opacity: 0.2; }   /* 첫 번째 꺼짐 */
-  40%  { opacity: 1; }     /* 두 번째 켜짐 */
-  55%  { opacity: 0.2; }   /* 두 번째 꺼짐 */
-  70%  { opacity: 1; }     /* 세 번째 켜짐 */
-  85%  { opacity: 0; }     /* 세 번째 완전히 꺼짐 */
-  100% { opacity: 0; }     /* 끝까지 투명 상태 유지 */
+  0%   { opacity: 0; }
+  10%  { opacity: 1; }
+  25%  { opacity: 0.2; }
+  40%  { opacity: 1; }
+  55%  { opacity: 0.2; }
+  70%  { opacity: 1; }
+  85%  { opacity: 0; }
+  100% { opacity: 0; }
 }
