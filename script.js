@@ -732,33 +732,34 @@ function initParticles() {
     video.addEventListener('click', () => {
       explodeParticles(); 
       
-      // 👇 터치하는 순간 안내 문구가 즉시 완전히 사라지게 만듭니다 👇
-      const guideText = $('#videoGuideText');
-      if (guideText) guideText.style.display = 'none';
+function animate() {
+      ctx.clearRect(0, 0, size, size);
 
-      const bgm = document.getElementById('bgm');
-      
-      if (video.paused) {
-        video.muted = false; 
-        video.play(); 
-        
-        // 💡 여기가 핵심입니다! 배경음악 재생 코드 추가
-        if (bgm) {
-          bgm.play().catch(e => console.log("오디오 재생 에러:", e));
-        }
-        
-        currentTarget = getPauseShape(); 
-      } else {
-        video.pause(); 
-        
-        // 💡 비디오 멈출 때 배경음악도 일시정지
-        if (bgm) bgm.pause(); 
-        
-        currentTarget = getPlayShape(); 
-      }
-      
-      particles.forEach((p, i) => { p.tx = currentTarget[i].x; p.ty = currentTarget[i].y; });
-    });
+      particles.forEach(p => {
+        p.vx += (p.tx - p.x) * moveSpeed;
+        p.vy += (p.ty - p.y) * moveSpeed;
+        p.vx *= friction;
+        p.vy *= friction;
+        p.x += p.vx;
+        p.y += p.vy;
+
+        const drawX = p.x + (Math.random() - 0.5) * jitter;
+        const drawY = p.y + (Math.random() - 0.5) * jitter;
+
+        p.alpha += (Math.random() - 0.5) * opacitySpeed;
+        if(p.alpha > 1) p.alpha = 1;
+        if(p.alpha < 0.2) p.alpha = 0.2; 
+
+        ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha})`;
+        ctx.beginPath();
+        ctx.arc(drawX, drawY, particleSize, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      requestAnimationFrame(animate);
+    }
+    animate();
+  }
   
   /* ═══════════════════════════════════════════
      Init
