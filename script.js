@@ -628,7 +628,7 @@ envelopeOpening.addEventListener('click', () => {
 /* ═══════════════════════════════════════════
      Particle Interaction (Play/Pause 아이콘)
      ═══════════════════════════════════════════ */
-  function initParticles() {
+function initParticles() {
     const canvas = $('#particleCanvas');
     const video = $('#topVideo');
     if (!canvas || !video) return;
@@ -646,7 +646,7 @@ envelopeOpening.addEventListener('click', () => {
     // ==========================================
     const numParticles = 400;     // 1. 파티클 양 (기존 250 -> 350 증가)
     const scatterAmount = 2.5;    // 2. 모여있는 형태의 불규칙성 (높을수록 외곽선이 흐트러짐)
-    const jitter = 1.8;           // 3. 꿈틀거리는 진동 폭 (높을수록 요동침)
+    const jitter = 2.2;           // 3. 꿈틀거리는 진동 폭 (높을수록 요동침)
     const particleSize = 0.9;     // 4. 파티클 알갱이 하나의 크기 (기본 1.2)
     const explosionPower = 15;    // 5. 터치 시 퍼져나가는 폭발력
     const opacitySpeed = 0.08;    // 6. 투명도(깜빡임) 변화 속도
@@ -656,6 +656,7 @@ envelopeOpening.addEventListener('click', () => {
 
       let particles = [];
 
+    // 💡 ▶ 모양 (크기 확대)
     function getPlayShape() {
       const pts = [];
       for(let i=0; i<numParticles; i++) {
@@ -665,13 +666,14 @@ envelopeOpening.addEventListener('click', () => {
         const scatterX = (Math.random() - 0.5) * scatterAmount;
         const scatterY = (Math.random() - 0.5) * scatterAmount;
         pts.push({
-          x: 30 + r1 * 0 + r2 * 50 + scatterX,
-          y: 25 + r1 * 50 + r2 * 25 + scatterY
+          x: 20 + r1 * 0 + r2 * 65 + scatterX, // 기존 30, 50 -> 20, 65로 더 넓게 펼침
+          y: 15 + r1 * 70 + r2 * 35 + scatterY // 기존 25, 50 -> 15, 70으로 더 길게 펼침
         });
       }
       return pts;
     }
 
+    // 💡 ❚❚ 모양 (크기 확대 및 간격 조정)
     function getPauseShape() {
       const pts = [];
       for(let i=0; i<numParticles; i++) {
@@ -679,14 +681,14 @@ envelopeOpening.addEventListener('click', () => {
         const scatterX = (Math.random() - 0.5) * scatterAmount;
         const scatterY = (Math.random() - 0.5) * scatterAmount;
         pts.push({
-          x: (isLeft ? 25 : 60) + Math.random() * 15 + scatterX, 
-          y: 25 + Math.random() * 50 + scatterY 
+          x: (isLeft ? 22 : 60) + Math.random() * 18 + scatterX, // 기둥 두께와 위치 간격 넓힘
+          y: 15 + Math.random() * 70 + scatterY // 기둥 길이 길게 늘림
         });
       }
       return pts;
     }
 
-    let currentTarget = getPlayShape();
+    let currentTarget = getPlayShape(); // 처음 시작 모양은 ▶
 
     for(let i=0; i<numParticles; i++) {
       particles.push({
@@ -709,20 +711,19 @@ envelopeOpening.addEventListener('click', () => {
       });
     }
 
- // 👇 비디오 터치 시 영상 + 배경음악 동기화 로직 👇
-    const bgm = document.getElementById('bgm'); // 오디오 태그 가져오기
-
+    // 터치 시 동작 로직 (비디오와 파티클 동기화)
     video.addEventListener('click', () => {
-      explodeParticles();
+      explodeParticles(); 
       
       if (video.paused) {
-        video.play();
-        if (bgm) bgm.play(); // 💡 영상이 켜질 때 노래도 켜짐
-        currentTarget = getPlayShape();
+        // 비디오가 멈춰있으면 -> 소리를 켜고 재생 (파티클은 ❚❚로 변신)
+        video.muted = false; 
+        video.play(); 
+        currentTarget = getPauseShape(); 
       } else {
-        video.pause();
-        if (bgm) bgm.pause(); // 💡 영상이 꺼질 때 노래도 꺼짐
-        currentTarget = getPauseShape();
+        // 비디오가 재생중이면 -> 비디오 멈춤 (파티클은 ▶로 변신)
+        video.pause(); 
+        currentTarget = getPlayShape(); 
       }
       
       particles.forEach((p, i) => { p.tx = currentTarget[i].x; p.ty = currentTarget[i].y; });
