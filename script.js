@@ -643,7 +643,7 @@ envelopeOpening.addEventListener('click', () => {
   }
 
 /* ═══════════════════════════════════════════
-     Particle Interaction (Play/Pause 아이콘 원상복구)
+     Particle Interaction (Unified Particle Engine)
      ═══════════════════════════════════════════ */
 function initParticles() {
     const canvas = $('#particleCanvas');
@@ -651,17 +651,14 @@ function initParticles() {
     if (!canvas || !video) return;
 
     const ctx = canvas.getContext('2d');
-    const size = 100;
-    
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = size * dpr;
-    canvas.height = size * dpr;
-    ctx.scale(dpr, dpr);
+    const sCanvas = document.createElement('canvas');
+    const sCtx = sCanvas.getContext('2d', { willReadFrequently: true });
 
-    // ==========================================
-    // 🛠️ 파티클 커스텀 설정 (망가지기 전 원래 설정값 복구)
-    // ==========================================
-    const numParticles = 400;     
+    let width, height;
+    const dpr = window.devicePixelRatio || 1;
+
+    // 🛠️ 파티클 커스텀 설정 (망가지기 전 진아님의 원래 설정값 완벽 복구)
+    const numPlayParticles = 400;     
     const scatterAmount = 2.5;    
     const jitter = 2.2;           
     const particleSize = 0.9;     
@@ -669,97 +666,168 @@ function initParticles() {
     const opacitySpeed = 0.08;    
     const moveSpeed = 0.04;       
     const friction = 0.82;        
-    // ==========================================
 
-      let particles = [];
+    const numVideoParticles = 3500; // 카세트를 그릴 파티클 수
+    const vCols = 65; 
+    const vRows = 65;
+    sCanvas.width = vCols;
+    sCanvas.height = vRows;
 
-    // 💡 ▶ 모양
+    let playParticles = [];
+    let videoParticles = [];
+    let currentPlayTarget = [];
+
+    // 💡 화면 크기에 맞춰 캔버스와 레이아웃 위치 자동 계산
+    function resize() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      ctx.scale(dpr, dpr);
+
+      currentPlayTarget = video.paused ? getPlayShape() : getPauseShape();
+      playParticles.forEach((p, i) => {
+          p.tx = currentPlayTarget[i].x;
+          p.ty = currentPlayTarget[i].y;
+      });
+    }
+    window.addEventListener('resize', resize);
+
+    // 💡 원래 레이아웃 하단(85% 지점)에 재생/일시정지 버튼 위치 강제 고정
     function getPlayShape() {
       const pts = [];
-      for(let i=0; i<numParticles; i++) {
+      const offsetX = width / 2 - 50;
+      const offsetY = height * 0.85 - 50; 
+      for(let i=0; i<numPlayParticles; i++) {
         let r1 = Math.random();
         let r2 = Math.random();
         if(r1 + r2 > 1) { r1 = 1 - r1; r2 = 1 - r2; }
         const scatterX = (Math.random() - 0.5) * scatterAmount;
         const scatterY = (Math.random() - 0.5) * scatterAmount;
         pts.push({
-          x: 20 + r1 * 0 + r2 * 65 + scatterX, 
-          y: 15 + r1 * 70 + r2 * 35 + scatterY 
+          x: offsetX + 20 + r1 * 0 + r2 * 65 + scatterX,
+          y: offsetY + 15 + r1 * 70 + r2 * 35 + scatterY
         });
       }
       return pts;
     }
 
-    // 💡 ❚❚ 모양 (사라졌던 일시정지 복구)
     function getPauseShape() {
       const pts = [];
-      for(let i=0; i<numParticles; i++) {
+      const offsetX = width / 2 - 50;
+      const offsetY = height * 0.85 - 50;
+      for(let i=0; i<numPlayParticles; i++) {
         const isLeft = Math.random() < 0.5;
         const scatterX = (Math.random() - 0.5) * scatterAmount;
         const scatterY = (Math.random() - 0.5) * scatterAmount;
         pts.push({
-          x: (isLeft ? 22 : 60) + Math.random() * 18 + scatterX, 
-          y: 15 + Math.random() * 70 + scatterY 
+          x: offsetX + (isLeft ? 22 : 60) + Math.random() * 18 + scatterX,
+          y: offsetY + 15 + Math.random() * 70 + scatterY
         });
       }
       return pts;
     }
 
-    let currentTarget = getPlayShape(); 
-
-    for(let i=0; i<numParticles; i++) {
-      particles.push({
-        x: size / 2, 
-        y: size / 2, 
-        tx: currentTarget[i].x,   
-        ty: currentTarget[i].y,
+    // 재생 버튼 파티클 생성
+    resize(); // 초기 좌표 세팅
+    for(let i=0; i<numPlayParticles; i++) {
+      playParticles.push({
+        x: width / 2, 
+        y: height * 0.85, 
+        tx: currentPlayTarget[i].x,   
+        ty: currentPlayTarget[i].y,
         vx: (Math.random() - 0.5) * explosionPower, 
         vy: (Math.random() - 0.5) * explosionPower,
         alpha: 0.2 + Math.random() * 0.8 
       });
     }
 
-    function explodeParticles() {
-      particles.forEach(p => {
+    // 비디오(카세트테이프) 파티클 생성
+    for(let i=0; i<numVideoParticles; i++) {
+        videoParticles.push({
+            x: width / 2,
+            y: height / 2,
+            tx: width / 2,
+            ty: height / 2,
+            vx: 0, vy: 0,
+            alpha: 0, targetAlpha: 0
+        });
+    }
+
+    function explodePlayParticles() {
+      playParticles.forEach(p => {
         const angle = Math.random() * Math.PI * 2;
         const power = 5 + Math.random() * explosionPower;
         p.vx = Math.cos(angle) * power;
         p.vy = Math.sin(angle) * power;
       });
     }
-      
-    // 비디오 터치 시 이벤트
-    video.addEventListener('click', () => {
-      explodeParticles(); 
+
+    // 카세트테이프 픽셀 추출
+    function updateVideoTargets() {
+        if (video.readyState < 2) return;
+        
+        sCtx.drawImage(video, 0, 0, vCols, vRows);
+        const imgData = sCtx.getImageData(0, 0, vCols, vRows).data;
+        
+        const targets = [];
+        for (let y = 0; y < vRows; y++) {
+            for (let x = 0; x < vCols; x++) {
+                const i = (y * vCols + x) * 4;
+                const brightness = (imgData[i] + imgData[i+1] + imgData[i+2]) / 3;
+                
+                if (brightness > 45) { // 카세트 형태를 잡는 기준 밝기
+                    const scale = Math.min(width, height) / vCols * 0.9;
+                    const maxW = Math.min(750, width); 
+                    const finalScale = Math.min(scale, maxW / vCols);
+                    
+                    const offsetX = (width - vCols * finalScale) / 2;
+                    const offsetY = (height - vRows * finalScale) / 2 - (height * 0.1); // 중앙에서 살짝 위
+                    
+                    targets.push({
+                        x: offsetX + x * finalScale + (Math.random()-0.5)*scatterAmount,
+                        y: offsetY + y * finalScale + (Math.random()-0.5)*scatterAmount,
+                        alpha: 0.2 + (brightness/255) * 0.8 
+                    });
+                }
+            }
+        }
+
+        videoParticles.forEach((p, i) => {
+            if (i < targets.length) {
+                p.tx = targets[i].x;
+                p.ty = targets[i].y;
+                p.targetAlpha = targets[i].alpha;
+            } else {
+                p.targetAlpha = 0; 
+            }
+        });
+    }
+
+    // 캔버스 터치 (시작/정지)
+    canvas.addEventListener('click', () => {
+      explodePlayParticles();
       
       const guideText = $('#videoGuideText');
       if (guideText) guideText.style.display = 'none';
-
       const bgm = document.getElementById('bgm');
       
       if (video.paused) {
         video.muted = false; 
-        video.play(); 
-        
-        if (bgm) {
-          bgm.play().catch(e => console.log("오디오 재생 에러:", e));
-        }
-        
-        currentTarget = getPauseShape(); 
+        video.play();
+        if (bgm) bgm.play().catch(e => console.log(e));
+        currentPlayTarget = getPauseShape();
       } else {
-        video.pause(); 
-        if (bgm) bgm.pause(); 
-        
-        currentTarget = getPlayShape(); 
+        video.pause();
+        if (bgm) bgm.pause();
+        currentPlayTarget = getPlayShape();
       }
       
-      particles.forEach((p, i) => { p.tx = currentTarget[i].x; p.ty = currentTarget[i].y; });
+      playParticles.forEach((p, i) => { p.tx = currentPlayTarget[i].x; p.ty = currentPlayTarget[i].y; });
     });
 
-    function animate() {
-      ctx.clearRect(0, 0, size, size);
-
-      particles.forEach(p => {
+    // 🌟 모든 파티클에 동일한 물리 엔진 적용 (핵심)
+    function drawParticle(p) {
         p.vx += (p.tx - p.x) * moveSpeed;
         p.vy += (p.ty - p.y) * moveSpeed;
         p.vx *= friction;
@@ -770,14 +838,32 @@ function initParticles() {
         const drawX = p.x + (Math.random() - 0.5) * jitter;
         const drawY = p.y + (Math.random() - 0.5) * jitter;
 
-        p.alpha += (Math.random() - 0.5) * opacitySpeed;
-        if(p.alpha > 1) p.alpha = 1;
-        if(p.alpha < 0.2) p.alpha = 0.2; 
-
         ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha})`;
         ctx.beginPath();
         ctx.arc(drawX, drawY, particleSize, 0, Math.PI * 2);
         ctx.fill();
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+
+      // 1. 재생 버튼 파티클 렌더링
+      playParticles.forEach(p => {
+          p.alpha += (Math.random() - 0.5) * opacitySpeed;
+          if(p.alpha > 1) p.alpha = 1;
+          if(p.alpha < 0.2) p.alpha = 0.2;
+          drawParticle(p);
+      });
+
+      // 2. 카세트테이프 파티클 렌더링 (재생/정지 똑같은 텐션 적용)
+      if (!video.paused || video.currentTime === 0) {
+          updateVideoTargets(); 
+      }
+      videoParticles.forEach(p => {
+          p.alpha += (p.targetAlpha - p.alpha) * 0.1;
+          if (p.alpha > 0.05) {
+              drawParticle(p);
+          }
       });
 
       requestAnimationFrame(animate);
