@@ -1371,3 +1371,39 @@ a {
     transform: scale(1.7); /* 💡 영상을 1.3배 확대합니다 (원하는 크기로 숫자 조절 가능) */
   }
 }
+
+/* ═══════════════════════════════════════════
+   Video Guide Text (비디오 터치 안내 문구)
+   ═══════════════════════════════════════════ */
+.video-guide-text {
+  position: absolute;
+  z-index: 20;
+  bottom: 25%; /* 파티클 도형 위쪽에 위치하도록 조절 (필요시 숫자 변경) */
+  left: 50%;
+  transform: translateX(-50%);
+  color: #ffffff;
+  font-size: 0.95rem;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  
+  /* 비디오 터치를 막지 않도록 텍스트 클릭 무시 */
+  pointer-events: none; 
+  
+  /* 영상 배경이 밝을 때도 글씨가 잘 보이도록 부드러운 그림자 추가 */
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+  
+  /* 총 5.5초 동안 3번 깜빡이고 사라지는 애니메이션 (forwards로 투명 상태 유지) */
+  animation: blinkThreeTimes 5.5s ease-in-out forwards;
+}
+
+/* 정확히 3번 깜빡이고 0%로 사라지는 애니메이션 키프레임 */
+@keyframes blinkThreeTimes {
+  0%   { opacity: 0; }     /* 처음엔 투명하게 시작 */
+  10%  { opacity: 1; }     /* 첫 번째 켜짐 */
+  25%  { opacity: 0.2; }   /* 첫 번째 꺼짐 */
+  40%  { opacity: 1; }     /* 두 번째 켜짐 */
+  55%  { opacity: 0.2; }   /* 두 번째 꺼짐 */
+  70%  { opacity: 1; }     /* 세 번째 켜짐 */
+  85%  { opacity: 0; }     /* 세 번째 완전히 꺼짐 */
+  100% { opacity: 0; }     /* 끝까지 투명 상태 유지 */
+}
