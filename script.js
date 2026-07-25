@@ -643,7 +643,7 @@ envelopeOpening.addEventListener('click', () => {
   }
 
 /* ═══════════════════════════════════════════
-     Particle Interaction (Real-time Video Mesh)
+     Particle Interaction (Play/Pause 아이콘 원상복구)
      ═══════════════════════════════════════════ */
 function initParticles() {
     const canvas = $('#particleCanvas');
@@ -651,138 +651,113 @@ function initParticles() {
     if (!canvas || !video) return;
 
     const ctx = canvas.getContext('2d');
+    const size = 100;
     
-    // 💡 픽셀 데이터를 실시간으로 구워낼 오프스크린 캔버스 세팅
-    const sampleCanvas = document.createElement('canvas');
-    const sCtx = sampleCanvas.getContext('2d', { willReadFrequently: true });
-    
-    let width, height;
     const dpr = window.devicePixelRatio || 1;
-    
-    function resize() {
-      width = window.innerWidth;
-      height = window.innerHeight;
-      canvas.width = width * dpr;
-      canvas.height = height * dpr;
-      ctx.scale(dpr, dpr);
-    }
-    window.addEventListener('resize', resize);
-    resize();
+    canvas.width = size * dpr;
+    canvas.height = size * dpr;
+    ctx.scale(dpr, dpr);
 
-    // 🛠️ 해상도 및 물리 설정 
-    const cols = 70; // 추출할 가로 픽셀 수 (버텍스 밀도)
-    const rows = 70; // 추출할 세로 픽셀 수
-    sampleCanvas.width = cols;
-    sampleCanvas.height = rows;
+    // ==========================================
+    // 🛠️ 파티클 커스텀 설정 (망가지기 전 원래 설정값 복구)
+    // ==========================================
+    const numParticles = 400;     
+    const scatterAmount = 2.5;    
+    const jitter = 2.2;           
+    const particleSize = 0.9;     
+    const explosionPower = 20;    
+    const opacitySpeed = 0.08;    
+    const moveSpeed = 0.04;       
+    const friction = 0.82;        
+    // ==========================================
 
-    const numParticles = 2500; // 형태를 뚜렷하게 잡기 위해 파티클 수 대폭 증가
-    const moveSpeed = 0.15;    // 영상 프레임을 빠르게 따라가도록 속도 증가
-    const friction = 0.75;
+      let particles = [];
 
-    // 초기 형태: 정지 시 화면 중앙에 재생(▶) 버튼 모양
+    // 💡 ▶ 모양
     function getPlayShape() {
       const pts = [];
       for(let i=0; i<numParticles; i++) {
         let r1 = Math.random();
         let r2 = Math.random();
         if(r1 + r2 > 1) { r1 = 1 - r1; r2 = 1 - r2; }
+        const scatterX = (Math.random() - 0.5) * scatterAmount;
+        const scatterY = (Math.random() - 0.5) * scatterAmount;
         pts.push({
-          x: width / 2 - 20 + r1 * 0 + r2 * 60,
-          y: height / 2 - 35 + r1 * 70 + r2 * 35
+          x: 20 + r1 * 0 + r2 * 65 + scatterX, 
+          y: 15 + r1 * 70 + r2 * 35 + scatterY 
         });
       }
       return pts;
     }
 
-    let initialTargets = getPlayShape();
-    let particles = [];
-    
+    // 💡 ❚❚ 모양 (사라졌던 일시정지 복구)
+    function getPauseShape() {
+      const pts = [];
+      for(let i=0; i<numParticles; i++) {
+        const isLeft = Math.random() < 0.5;
+        const scatterX = (Math.random() - 0.5) * scatterAmount;
+        const scatterY = (Math.random() - 0.5) * scatterAmount;
+        pts.push({
+          x: (isLeft ? 22 : 60) + Math.random() * 18 + scatterX, 
+          y: 15 + Math.random() * 70 + scatterY 
+        });
+      }
+      return pts;
+    }
+
+    let currentTarget = getPlayShape(); 
+
     for(let i=0; i<numParticles; i++) {
       particles.push({
-        x: width / 2, 
-        y: height / 2, 
-        tx: initialTargets[i].x, 
-        ty: initialTargets[i].y,
-        vx: (Math.random() - 0.5) * 10, 
-        vy: (Math.random() - 0.5) * 10,
-        alpha: Math.random()
+        x: size / 2, 
+        y: size / 2, 
+        tx: currentTarget[i].x,   
+        ty: currentTarget[i].y,
+        vx: (Math.random() - 0.5) * explosionPower, 
+        vy: (Math.random() - 0.5) * explosionPower,
+        alpha: 0.2 + Math.random() * 0.8 
       });
     }
 
-    // 💡 실시간 텍스처 데이터 추출 및 타겟 좌표 매핑 함수
-    function updateTargets() {
-      if (video.paused || video.ended) return;
-      
-      // 비디오 프레임을 그려 픽셀 데이터 추출
-      sCtx.drawImage(video, 0, 0, cols, rows);
-      const imgData = sCtx.getImageData(0, 0, cols, rows).data;
-      
-      const targets = [];
-      for (let y = 0; y < rows; y++) {
-        for (let x = 0; x < cols; x++) {
-          const i = (y * cols + x) * 4;
-          const r = imgData[i];
-          const g = imgData[i+1];
-          const b = imgData[i+2];
-          
-          // 밝은 부분만 픽업 (알파 채널 또는 명도 기준)
-          const brightness = (r + g + b) / 3;
-          if (brightness > 60) { 
-            const scale = Math.min(width, height) / cols * 0.9;
-            const offsetX = (width - cols * scale) / 2;
-            const offsetY = (height - rows * scale) / 2;
-            
-            targets.push({
-              x: offsetX + x * scale,
-              y: offsetY + y * scale
-            });
-          }
-        }
-      }
-
-      // 파티클들을 새로운 목표 좌표로 분배
-      if (targets.length > 0) {
-        particles.forEach((p, i) => {
-          const target = targets[i % targets.length];
-          // 외곽선이 너무 픽셀처럼 딱딱해보이지 않게 미세한 노이즈 분산
-          p.tx = target.x + (Math.random() - 0.5) * 3;
-          p.ty = target.y + (Math.random() - 0.5) * 3;
-        });
-      }
+    function explodeParticles() {
+      particles.forEach(p => {
+        const angle = Math.random() * Math.PI * 2;
+        const power = 5 + Math.random() * explosionPower;
+        p.vx = Math.cos(angle) * power;
+        p.vy = Math.sin(angle) * power;
+      });
     }
-
-    // 캔버스 터치 이벤트 (비디오 시작/정지 제어)
-    canvas.addEventListener('click', () => {
+      
+    // 비디오 터치 시 이벤트
+    video.addEventListener('click', () => {
+      explodeParticles(); 
+      
       const guideText = $('#videoGuideText');
       if (guideText) guideText.style.display = 'none';
 
       const bgm = document.getElementById('bgm');
       
       if (video.paused) {
-        video.muted = true; // 형태 추출용이므로 비디오 원본 소스 음소거
-        video.play();
+        video.muted = false; 
+        video.play(); 
         
         if (bgm) {
           bgm.play().catch(e => console.log("오디오 재생 에러:", e));
         }
-      } else {
-        video.pause();
-        if (bgm) bgm.pause();
         
-        // 일시정지 시 다시 재생(▶) 버튼 모양으로 복귀
-        const playTargets = getPlayShape();
-        particles.forEach((p, i) => {
-          p.tx = playTargets[i].x;
-          p.ty = playTargets[i].y;
-        });
+        currentTarget = getPauseShape(); 
+      } else {
+        video.pause(); 
+        if (bgm) bgm.pause(); 
+        
+        currentTarget = getPlayShape(); 
       }
+      
+      particles.forEach((p, i) => { p.tx = currentTarget[i].x; p.ty = currentTarget[i].y; });
     });
 
     function animate() {
-      ctx.clearRect(0, 0, width, height);
-
-      // 매 프레임마다 영상에서 타겟 좌표를 뽑아옴
-      updateTargets();
+      ctx.clearRect(0, 0, size, size);
 
       particles.forEach(p => {
         p.vx += (p.tx - p.x) * moveSpeed;
@@ -792,9 +767,16 @@ function initParticles() {
         p.x += p.vx;
         p.y += p.vy;
 
-        ctx.fillStyle = `rgba(255, 255, 255, ${0.3 + p.alpha * 0.7})`;
+        const drawX = p.x + (Math.random() - 0.5) * jitter;
+        const drawY = p.y + (Math.random() - 0.5) * jitter;
+
+        p.alpha += (Math.random() - 0.5) * opacitySpeed;
+        if(p.alpha > 1) p.alpha = 1;
+        if(p.alpha < 0.2) p.alpha = 0.2; 
+
+        ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha})`;
         ctx.beginPath();
-        ctx.arc(p.x, p.y, 1.2, 0, Math.PI * 2);
+        ctx.arc(drawX, drawY, particleSize, 0, Math.PI * 2);
         ctx.fill();
       });
 
