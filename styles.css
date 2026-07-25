@@ -1319,7 +1319,7 @@ a {
    Top Video Section
    ═══════════════════════════════════════════ */
 .top-video-section {
-  width: 100vw; /* 화면 전체 너비 강제 적용 */
+  width: 100vw;
   height: 100vh;
   height: 100dvh;
   background-color: #000000;
@@ -1328,21 +1328,29 @@ a {
   align-items: center;
   overflow: hidden;
   position: relative;
-  
-  /* 💡 핵심: 480px 메인 박스에 갇혀있어도 좌우 검은 배경을 끝까지 밀어냅니다 */
   margin-left: calc(-50vw + 50%);
   margin-right: calc(-50vw + 50%);
+  
+  /* 👇 파란색 깜빡임 및 드래그 선택 방지 👇 */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 #topVideo {
   width: 100%;
   height: 100%;
-  object-fit: contain; /* 👈 cover에서 contain으로 변경하여 확대 문제 해결 */
+  object-fit: contain;
   cursor: pointer;
   display: block;
+  
+  /* 👇 비디오 요소에도 파란색 방지 적용 👇 */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
-/* 파티클 캔버스 스타일 */
+/* 파티클 캔버스 스타일 (이전과 동일) */
 #particleCanvas {
   position: absolute;
   z-index: 10;
