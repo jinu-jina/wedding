@@ -171,16 +171,8 @@ envelopeOpening.addEventListener('click', () => {
      Top Video (터치 시 멈춤/재생)
      ═══════════════════════════════════════════ */
   function initTopVideo() {
-    const video = $('#topVideo');
-    if (!video) return;
-
-    video.addEventListener('click', () => {
-      if (video.paused) {
-        video.play();
-      } else {
-        video.pause();
-      }
-    });
+    // 💡 비디오 재생/정지 제어는 파티클 변화와 0초의 오차도 없이
+    // 완벽하게 동시에 작동하도록 아래 initParticles() 내부로 통합되었습니다.
   }
 
   /* ═══════════════════════════════════════════
@@ -658,25 +650,20 @@ envelopeOpening.addEventListener('click', () => {
     const particleSize = 0.9;     // 4. 파티클 알갱이 하나의 크기 (기본 1.2)
     const explosionPower = 15;    // 5. 터치 시 퍼져나가는 폭발력
     const opacitySpeed = 0.08;    // 6. 투명도(깜빡임) 변화 속도
-    
-    // 👇 새로 추가된 이동 속도 조절 설정 👇
     const moveSpeed = 0.04;       // 7. 목적지로 모여드는 속도 (기본 0.08 / 높을수록 확 뭉치고, 낮을수록 스르륵 모임)
     const friction = 0.82;        // 8. 도착 시 튕기는 정도 (기본 0.82 / 0.7 이하면 딱딱하게 멈추고, 0.9 이상이면 젤리처럼 크게 요동침)
     // ==========================================
 
-    let particles = [];
+      let particles = [];
 
-    // ▶ 모양 좌표 생성 (재생)
     function getPlayShape() {
       const pts = [];
       for(let i=0; i<numParticles; i++) {
         let r1 = Math.random();
         let r2 = Math.random();
         if(r1 + r2 > 1) { r1 = 1 - r1; r2 = 1 - r2; }
-        
         const scatterX = (Math.random() - 0.5) * scatterAmount;
         const scatterY = (Math.random() - 0.5) * scatterAmount;
-        
         pts.push({
           x: 30 + r1 * 0 + r2 * 50 + scatterX,
           y: 25 + r1 * 50 + r2 * 25 + scatterY
@@ -685,14 +672,12 @@ envelopeOpening.addEventListener('click', () => {
       return pts;
     }
 
-    // ❚❚ 모양 좌표 생성 (일시정지)
     function getPauseShape() {
       const pts = [];
       for(let i=0; i<numParticles; i++) {
         const isLeft = Math.random() < 0.5;
         const scatterX = (Math.random() - 0.5) * scatterAmount;
         const scatterY = (Math.random() - 0.5) * scatterAmount;
-        
         pts.push({
           x: (isLeft ? 25 : 60) + Math.random() * 15 + scatterX, 
           y: 25 + Math.random() * 50 + scatterY 
@@ -703,7 +688,6 @@ envelopeOpening.addEventListener('click', () => {
 
     let currentTarget = getPlayShape();
 
-    // 파티클 초기화 생성
     for(let i=0; i<numParticles; i++) {
       particles.push({
         x: size / 2, 
@@ -716,7 +700,6 @@ envelopeOpening.addEventListener('click', () => {
       });
     }
 
-    // 폭발 이펙트 함수
     function explodeParticles() {
       particles.forEach(p => {
         const angle = Math.random() * Math.PI * 2;
@@ -726,25 +709,26 @@ envelopeOpening.addEventListener('click', () => {
       });
     }
 
-    // 비디오 상태 변경 이벤트
-    video.addEventListener('pause', () => {
-      explodeParticles();
-      currentTarget = getPauseShape();
+    // 👇 타이밍 불일치 해결: 비디오 상태를 기다리지 않고 터치 즉시 상태 변경 적용 👇
+    video.addEventListener('click', () => {
+      explodeParticles(); // 터치 즉시 폭발
+      
+      if (video.paused) {
+        video.play(); // 즉시 재생
+        currentTarget = getPlayShape(); // 즉시 ▶ 모양으로 타겟 변경
+      } else {
+        video.pause(); // 즉시 정지
+        currentTarget = getPauseShape(); // 즉시 ❚❚ 모양으로 타겟 변경
+      }
+      
+      // 변경된 타겟으로 파티클들에게 이동 지시
       particles.forEach((p, i) => { p.tx = currentTarget[i].x; p.ty = currentTarget[i].y; });
     });
 
-    video.addEventListener('play', () => {
-      explodeParticles();
-      currentTarget = getPlayShape();
-      particles.forEach((p, i) => { p.tx = currentTarget[i].x; p.ty = currentTarget[i].y; });
-    });
-
-    // 애니메이션 렌더링 루프
     function animate() {
       ctx.clearRect(0, 0, size, size);
 
       particles.forEach(p => {
-        // 물리 엔진 (커스텀 설정의 moveSpeed와 friction 적용)
         p.vx += (p.tx - p.x) * moveSpeed;
         p.vy += (p.ty - p.y) * moveSpeed;
         p.vx *= friction;
@@ -752,16 +736,13 @@ envelopeOpening.addEventListener('click', () => {
         p.x += p.vx;
         p.y += p.vy;
 
-        // 꿈틀거림
         const drawX = p.x + (Math.random() - 0.5) * jitter;
         const drawY = p.y + (Math.random() - 0.5) * jitter;
 
-        // 투명도(Opacity) 무작위 깜빡임 
         p.alpha += (Math.random() - 0.5) * opacitySpeed;
         if(p.alpha > 1) p.alpha = 1;
         if(p.alpha < 0.2) p.alpha = 0.2; 
 
-        // 색상 및 렌더링
         ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha})`;
         ctx.beginPath();
         ctx.arc(drawX, drawY, particleSize, 0, Math.PI * 2);
