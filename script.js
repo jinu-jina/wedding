@@ -1,6 +1,6 @@
 /**
- * Korean Traditional Wedding Invitation
- * 한국 전통 모바일 청첩장 - Script
+ * Jin woo Jin a Wedding Invitation
+ * 지누지 모바일 청첩장 - Script
  */
 
 (function () {
@@ -709,19 +709,22 @@ envelopeOpening.addEventListener('click', () => {
       });
     }
 
-    // 👇 타이밍 불일치 해결: 비디오 상태를 기다리지 않고 터치 즉시 상태 변경 적용 👇
+ // 👇 비디오 터치 시 영상 + 배경음악 동기화 로직 👇
+    const bgm = document.getElementById('bgm'); // 오디오 태그 가져오기
+
     video.addEventListener('click', () => {
-      explodeParticles(); // 터치 즉시 폭발
+      explodeParticles();
       
       if (video.paused) {
-        video.play(); // 즉시 재생
-        currentTarget = getPlayShape(); // 즉시 ▶ 모양으로 타겟 변경
+        video.play();
+        if (bgm) bgm.play(); // 💡 영상이 켜질 때 노래도 켜짐
+        currentTarget = getPlayShape();
       } else {
-        video.pause(); // 즉시 정지
-        currentTarget = getPauseShape(); // 즉시 ❚❚ 모양으로 타겟 변경
+        video.pause();
+        if (bgm) bgm.pause(); // 💡 영상이 꺼질 때 노래도 꺼짐
+        currentTarget = getPauseShape();
       }
       
-      // 변경된 타겟으로 파티클들에게 이동 지시
       particles.forEach((p, i) => { p.tx = currentTarget[i].x; p.ty = currentTarget[i].y; });
     });
 
