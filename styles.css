@@ -1355,13 +1355,27 @@ html, body {
 }
 
 #topVideo {
-  /* 👇 영상은 보이지 않게 숨기고 픽셀 데이터 추출용으로만 백그라운드에서 동작합니다 👇 */
-  opacity: 0; 
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  z-index: -1;
-  pointer-events: none;
+  width: 100%;
+  height: 100%;
+  max-width: 750px; 
+  object-fit: contain;
+  cursor: pointer;
+  display: block;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+  
+  /* 👇 1. 숨겼던 비디오를 다시 나타나게 하고 흑백 필터 유지 */
+  opacity: 1; 
+  position: relative;
+  z-index: 1;
+  filter: grayscale(100%) contrast(120%) brightness(90%);
+  
+  /* 👇 2. 비디오 자체가 수많은 파티클(도트)로 보이게 만드는 마스크 효과 */
+  -webkit-mask-image: radial-gradient(white, black 2px, transparent 2.5px);
+  -webkit-mask-size: 6px 6px;
+  mask-image: radial-gradient(white, black 2px, transparent 2.5px);
+  mask-size: 6px 6px;
 }
 
 /* 📱 모바일 화면 전용 (영상 크기 살짝 키우기) */
@@ -1371,15 +1385,20 @@ html, body {
   }
 }
 
-/* 파티클 캔버스 스타일 */
+/* 파티클 캔버스 스타일 (망가졌던 위치 원상복구) */
 #particleCanvas {
   position: absolute;
   z-index: 10;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  cursor: pointer;
+  pointer-events: none;
+  
+  /* 👇 다시 화면 하단 중앙의 100x100 박스로 되돌림 👇 */
+  bottom: 12%; 
+  left: 50%;
+  transform: translateX(-50%) translateZ(1px); 
+  -webkit-transform: translateX(-50%) translateZ(1px);
+  width: 100px;
+  height: 100px;
+  top: auto; 
 }
 
 /* 비디오 터치 안내 문구 */
