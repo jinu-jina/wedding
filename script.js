@@ -1,6 +1,6 @@
 /**
  * Jin woo Jin a Wedding Invitation
- * 지누지 모바일 청첩장 - Script
+ * 지누지나 모바일 청첩장 - Script
  */
 
 (function () {
@@ -658,17 +658,18 @@ function initParticles() {
     canvas.height = size * dpr;
     ctx.scale(dpr, dpr);
 
+   // ==========================================
+    // 🛠️ 파티클 커스텀 설정 
     // ==========================================
-    // 🛠️ 파티클 커스텀 설정 (여기 수치들을 변경하세요) 🛠️
-    // ==========================================
-    const numParticles = 400;     // 1. 파티클 양 (기존 250 -> 350 증가)
-    const scatterAmount = 2.5;    // 2. 모여있는 형태의 불규칙성 (높을수록 외곽선이 흐트러짐)
-    const jitter = 2.2;           // 3. 꿈틀거리는 진동 폭 (높을수록 요동침)
-    const particleSize = 0.9;     // 4. 파티클 알갱이 하나의 크기 (기본 1.2)
-    const explosionPower = 15;    // 5. 터치 시 퍼져나가는 폭발력
-    const opacitySpeed = 0.08;    // 6. 투명도(깜빡임) 변화 속도
-    const moveSpeed = 0.04;       // 7. 목적지로 모여드는 속도 (기본 0.08 / 높을수록 확 뭉치고, 낮을수록 스르륵 모임)
-    const friction = 0.82;        // 8. 도착 시 튕기는 정도 (기본 0.82 / 0.7 이하면 딱딱하게 멈추고, 0.9 이상이면 젤리처럼 크게 요동침)
+    
+    // 🌸 [서정적이고 로맨틱한 영상일 경우 추천 값] 🌸
+    const numParticles = 300;     // 파티클 양을 살짝 줄여서 여백 확보
+    const scatterAmount = 3.0;    // 모양의 경계를 더 부드럽게 흩트림
+    const jitter = 0.5;           // 진동 폭을 확 줄여서 요동치지 않고 잔잔하게 만듦 (기존 2.2)
+    const particleSize = 1.0;     // 알갱이 크기
+    const explosionPower = 8;     // 터치 시 너무 강하게 터지지 않도록 폭발력 감소 (기존 15)
+    const moveSpeed = 0.02;       // 목적지로 스르륵 아주 부드럽게 모임 (기존 0.04)
+    const friction = 0.90;        // 도착 시 젤리처럼 부드럽게 안착 (기존 0.82)
     // ==========================================
 
       let particles = [];
@@ -779,7 +780,16 @@ function initParticles() {
         if(p.alpha > 1) p.alpha = 1;
         if(p.alpha < 0.2) p.alpha = 0.2; 
 
+        // 기존 코드: 순백색
         ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha})`;
+        
+        // 👇 영상 분위기에 맞춰 RGBA 값을 변경해 보세요 👇
+        // 예시 1: 따뜻한 조명, 노을빛, 부드러운 분위기 (오렌지/골드 톤)
+        ctx.fillStyle = `rgba(255, 220, 160, ${p.alpha})`;
+        
+        // 예시 2: 차갑고 시네마틱한 분위기, 야간 씬 (블루 톤)
+        ctx.fillStyle = `rgba(180, 220, 255, ${p.alpha})`;
+
         ctx.beginPath();
         ctx.arc(drawX, drawY, particleSize, 0, Math.PI * 2);
         ctx.fill();
