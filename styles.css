@@ -1339,10 +1339,8 @@ html, body {
   height: 100dvh;
   background-color: #000000;
   
-  /* 👇 3. 부모 박스(480px) 안에서 화면 정중앙에 100% 꽉 차게 맞추는 공식 */
-  position: relative;
-  left: 50%;
-  transform: translateX(-50%);
+position: relative;
+  margin-left: calc(-50vw + 50%);
   
   display: flex;
   justify-content: center;
