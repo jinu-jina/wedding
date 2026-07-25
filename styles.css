@@ -156,6 +156,8 @@ a {
   left: 0;
   width: 97%;
   z-index: 1;
+   /* 오른쪽으로 살짝 밀어줌 */
+  margin-left: 1px; 
 }
 
 /* 4. 카드 */
