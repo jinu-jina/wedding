@@ -1365,6 +1365,9 @@ html, body {
   -webkit-tap-highlight-color: transparent;
   -webkit-user-select: none;
   user-select: none;
+
+/* 👇 하얀색 파티클과 완벽하게 어울리도록 영상을 흑백 시네마틱 톤으로 변경 👇 */
+  filter: grayscale(100%) contrast(110%) brightness(85%);
 }
 
 /* 📱 모바일 화면 전용 (영상 크기 살짝 키우기) */
