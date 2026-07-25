@@ -1354,7 +1354,7 @@ body {
 #topVideo {
   width: 100%;
   height: 100%;
-  max-width: 480px; /* PC에서는 영상 크기 고정 */
+  max-width: 750px; /* PC에서는 영상 크기 고정 */
   object-fit: contain;
   cursor: pointer;
   display: block;
@@ -1397,16 +1397,29 @@ body {
   white-space: nowrap;
   pointer-events: none; 
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
-  animation: blinkThreeTimes 5.5s ease-in-out forwards;
+  
+  /* 👇 5번 깜빡임에 맞게 시간(8초)과 애니메이션 이름 변경 👇 */
+  animation: blinkFiveTimes 8s ease-in-out forwards;
 }
 
-@keyframes blinkThreeTimes {
-  0%   { opacity: 0; }
-  10%  { opacity: 1; }
-  25%  { opacity: 0.2; }
-  40%  { opacity: 1; }
-  55%  { opacity: 0.2; }
-  70%  { opacity: 1; }
-  85%  { opacity: 0; }
-  100% { opacity: 0; }
+/* 👇 정확히 5번 깜빡이고 0%로 사라지는 애니메이션 키프레임 👇 */
+@keyframes blinkFiveTimes {
+  0%   { opacity: 0; }     /* 처음엔 투명하게 시작 */
+  
+  10%  { opacity: 1; }     /* 1번째 켜짐 */
+  18%  { opacity: 0.2; }   /* 1번째 꺼짐 */
+  
+  28%  { opacity: 1; }     /* 2번째 켜짐 */
+  36%  { opacity: 0.2; }   /* 2번째 꺼짐 */
+  
+  46%  { opacity: 1; }     /* 3번째 켜짐 */
+  54%  { opacity: 0.2; }   /* 3번째 꺼짐 */
+  
+  64%  { opacity: 1; }     /* 4번째 켜짐 */
+  72%  { opacity: 0.2; }   /* 4번째 꺼짐 */
+  
+  82%  { opacity: 1; }     /* 5번째 켜짐 */
+  90%  { opacity: 0; }     /* 5번째 완전히 꺼짐 (투명) */
+  
+  100% { opacity: 0; }     /* 끝까지 투명 상태 유지 */
 }
