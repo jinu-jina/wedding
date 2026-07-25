@@ -643,7 +643,7 @@ envelopeOpening.addEventListener('click', () => {
   }
 
 /* ═══════════════════════════════════════════
-     Particle Interaction (Unified Particle Engine)
+     Particle Interaction (Unified Particle Engine - Fixed Jitter & Initial Frame)
      ═══════════════════════════════════════════ */
 function initParticles() {
     const canvas = $('#particleCanvas');
@@ -657,7 +657,7 @@ function initParticles() {
     let width, height;
     const dpr = window.devicePixelRatio || 1;
 
-    // 🛠️ 파티클 커스텀 설정 (망가지기 전 진아님의 원래 설정값 완벽 복구)
+    // 🛠️ 파티클 커스텀 설정
     const numPlayParticles = 400;     
     const scatterAmount = 2.5;    
     const jitter = 2.2;           
@@ -667,17 +667,19 @@ function initParticles() {
     const moveSpeed = 0.04;       
     const friction = 0.82;        
 
-    const numVideoParticles = 3500; // 카세트를 그릴 파티클 수
-    const vCols = 65; 
-    const vRows = 65;
+    const numVideoParticles = 4000; // 💡비디오 파티클 총 개수를 조절합니다
+    const vCols = 70; // 💡 가로 픽셀 추출 밀도 (해상도)
+    const vRows = 70; // 💡 세로 픽셀 추출 밀도 (해상도)
     sCanvas.width = vCols;
     sCanvas.height = vRows;
 
     let playParticles = [];
     let videoParticles = [];
     let currentPlayTarget = [];
+    
+    // 💡 첫 프레임(3.5초)이 그려졌는지 체크하는 변수
+    let firstFrameCaptured = false;
 
-    // 💡 화면 크기에 맞춰 캔버스와 레이아웃 위치 자동 계산
     function resize() {
       width = window.innerWidth;
       height = window.innerHeight;
@@ -693,7 +695,6 @@ function initParticles() {
     }
     window.addEventListener('resize', resize);
 
-    // 💡 원래 레이아웃 하단(85% 지점)에 재생/일시정지 버튼 위치 강제 고정
     function getPlayShape() {
       const pts = [];
       const offsetX = width / 2 - 50;
@@ -729,7 +730,7 @@ function initParticles() {
     }
 
     // 재생 버튼 파티클 생성
-    resize(); // 초기 좌표 세팅
+    resize(); 
     for(let i=0; i<numPlayParticles; i++) {
       playParticles.push({
         x: width / 2, 
@@ -763,9 +764,8 @@ function initParticles() {
       });
     }
 
-    // 카세트테이프 픽셀 추출
     function updateVideoTargets() {
-        if (video.readyState < 2) return;
+        if (video.readyState < 2) return; 
         
         sCtx.drawImage(video, 0, 0, vCols, vRows);
         const imgData = sCtx.getImageData(0, 0, vCols, vRows).data;
@@ -776,17 +776,18 @@ function initParticles() {
                 const i = (y * vCols + x) * 4;
                 const brightness = (imgData[i] + imgData[i+1] + imgData[i+2]) / 3;
                 
-                if (brightness > 45) { // 카세트 형태를 잡는 기준 밝기
+                if (brightness > 45) { 
                     const scale = Math.min(width, height) / vCols * 0.9;
                     const maxW = Math.min(750, width); 
                     const finalScale = Math.min(scale, maxW / vCols);
                     
                     const offsetX = (width - vCols * finalScale) / 2;
-                    const offsetY = (height - vRows * finalScale) / 2 - (height * 0.1); // 중앙에서 살짝 위
+                    const offsetY = (height - vRows * finalScale) / 2 - (height * 0.1); 
                     
+                    // 💡 형태가 뭉개지지 않도록 불필요한 랜덤(Scatter) 값을 제거했습니다.
                     targets.push({
-                        x: offsetX + x * finalScale + (Math.random()-0.5)*scatterAmount,
-                        y: offsetY + y * finalScale + (Math.random()-0.5)*scatterAmount,
+                        x: offsetX + x * finalScale,
+                        y: offsetY + y * finalScale,
                         alpha: 0.2 + (brightness/255) * 0.8 
                     });
                 }
@@ -802,9 +803,18 @@ function initParticles() {
                 p.targetAlpha = 0; 
             }
         });
+
+        // 💡 페이지 로드 시 3.5초 형태를 파티클에 즉시 고정시킵니다.
+        if (!firstFrameCaptured && targets.length > 0) {
+            videoParticles.forEach(p => {
+                p.x = p.tx;
+                p.y = p.ty;
+                p.alpha = p.targetAlpha;
+            });
+            firstFrameCaptured = true;
+        }
     }
 
-    // 캔버스 터치 (시작/정지)
     canvas.addEventListener('click', () => {
       explodePlayParticles();
       
@@ -826,8 +836,8 @@ function initParticles() {
       playParticles.forEach((p, i) => { p.tx = currentPlayTarget[i].x; p.ty = currentPlayTarget[i].y; });
     });
 
-    // 🌟 모든 파티클에 동일한 물리 엔진 적용 (핵심)
-    function drawParticle(p) {
+    // 🌟 파티클 렌더링 함수 (비디오 파티클은 떨림을 대폭 줄였습니다)
+    function drawParticle(p, isVideoParticle = false) {
         p.vx += (p.tx - p.x) * moveSpeed;
         p.vy += (p.ty - p.y) * moveSpeed;
         p.vx *= friction;
@@ -835,8 +845,10 @@ function initParticles() {
         p.x += p.vx;
         p.y += p.vy;
 
-        const drawX = p.x + (Math.random() - 0.5) * jitter;
-        const drawY = p.y + (Math.random() - 0.5) * jitter;
+        // 💡 비디오 파티클은 형태 유지를 위해 진동(jitter)을 80% 감소시켰습니다.
+        const currentJitter = isVideoParticle ? jitter * 0.2 : jitter;
+        const drawX = p.x + (Math.random() - 0.5) * currentJitter;
+        const drawY = p.y + (Math.random() - 0.5) * currentJitter;
 
         ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha})`;
         ctx.beginPath();
@@ -852,17 +864,19 @@ function initParticles() {
           p.alpha += (Math.random() - 0.5) * opacitySpeed;
           if(p.alpha > 1) p.alpha = 1;
           if(p.alpha < 0.2) p.alpha = 0.2;
-          drawParticle(p);
+          drawParticle(p, false);
       });
 
-      // 2. 카세트테이프 파티클 렌더링 (재생/정지 똑같은 텐션 적용)
-      if (!video.paused || video.currentTime === 0) {
+      // 2. 카세트테이프 타겟 업데이트 (첫 프레임이 안 그려졌을 때도 강제 실행)
+      if (!video.paused || !firstFrameCaptured) {
           updateVideoTargets(); 
       }
+      
+      // 3. 카세트테이프 파티클 렌더링
       videoParticles.forEach(p => {
           p.alpha += (p.targetAlpha - p.alpha) * 0.1;
           if (p.alpha > 0.05) {
-              drawParticle(p);
+              drawParticle(p, true);
           }
       });
 
@@ -870,7 +884,6 @@ function initParticles() {
     }
     animate();
 }
-
   /* ═══════════════════════════════════════════
      Init
      ═══════════════════════════════════════════ */
