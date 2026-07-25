@@ -732,7 +732,36 @@ function initParticles() {
     video.addEventListener('click', () => {
       explodeParticles(); 
       
-function animate() {
+      // 안내 문구 숨기기
+      const guideText = $('#videoGuideText');
+      if (guideText) guideText.style.display = 'none';
+
+      const bgm = document.getElementById('bgm');
+      
+      if (video.paused) {
+        video.muted = false; 
+        video.play(); 
+        
+        // 💡 음악 재생
+        if (bgm) {
+          bgm.play().catch(e => console.log("오디오 재생 에러:", e));
+        }
+        
+        currentTarget = getPauseShape(); 
+      } else {
+        video.pause(); 
+        
+        // 💡 비디오 멈출 때 음악도 일시정지
+        if (bgm) bgm.pause(); 
+        
+        currentTarget = getPlayShape(); 
+      }
+      
+      particles.forEach((p, i) => { p.tx = currentTarget[i].x; p.ty = currentTarget[i].y; });
+    });
+
+    // 💡 애니메이션 함수 (이벤트 바깥에 있어야 정상 작동합니다)
+    function animate() {
       ctx.clearRect(0, 0, size, size);
 
       particles.forEach(p => {
@@ -760,7 +789,7 @@ function animate() {
     }
     animate();
   }
-  
+
   /* ═══════════════════════════════════════════
      Init
      ═══════════════════════════════════════════ */
