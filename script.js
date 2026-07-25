@@ -643,7 +643,7 @@ envelopeOpening.addEventListener('click', () => {
   }
 
 /* ═══════════════════════════════════════════
-     Particle Interaction (Unified Engine - Fixed Grid & Opacity Mapping)
+     Particle Interaction (Unified Engine - Position & Density Adjusted)
      ═══════════════════════════════════════════ */
 function initParticles() {
     const canvas = $('#particleCanvas');
@@ -657,19 +657,20 @@ function initParticles() {
     let width, height;
     const dpr = window.devicePixelRatio || 1;
 
-    // 🛠️ 파티클 커스텀 설정 (재생 버튼과 테이프 파티클에 동일하게 적용됨)
+    // 🛠️ 파티클 커스텀 설정
     const numPlayParticles = 400;     
-    const scatterAmount = 2.5;    // 불규칙하게 흩뿌리는 정도
-    const jitter = 2.2;           // 파티클 자체의 떨림 정도
-    const particleSize = 0.9;     // 알갱이 크기
+    const scatterAmount = 2.5;    
+    const jitter = 2.2;           
+    const particleSize = 0.9;     
     const explosionPower = 20;    
     const opacitySpeed = 0.08;    
     const moveSpeed = 0.04;       
     const friction = 0.82;        
 
-    // 비디오 해상도 및 파티클 설정
-    const vCols = 70; 
-    const vRows = 70;
+    // 💡 [카세트 파티클 개수 조절하는 곳] 💡
+    // 숫자를 높일수록(예: 100) 점이 촘촘해져서 형체가 뚜렷해지고, 낮출수록(예: 50) 듬성듬성해집니다.
+    const vCols = 90; // 가로 파티클 개수 (기존 70 -> 90으로 올려서 선명하게 만듦)
+    const vRows = 90; // 세로 파티클 개수 (가로와 같은 숫자로 맞춰주세요)
     sCanvas.width = vCols;
     sCanvas.height = vRows;
 
@@ -685,22 +686,26 @@ function initParticles() {
       canvas.height = height * dpr;
       ctx.scale(dpr, dpr);
 
-      // 1. 재생 버튼 타겟 업데이트
+      // 재생 버튼 타겟 업데이트
       currentPlayTarget = video.paused ? getPlayShape() : getPauseShape();
       playParticles.forEach((p, i) => {
           p.tx = currentPlayTarget[i].x;
           p.ty = currentPlayTarget[i].y;
       });
 
-      // 2. 비디오 테이프 타겟 고정 좌표 업데이트
+      // 비디오 테이프 타겟 고정 좌표 업데이트
       const scale = Math.min(width, height) / vCols * 0.9;
       const maxW = Math.min(750, width); 
       const finalScale = Math.min(scale, maxW / vCols);
+      
       const offsetX = (width - vCols * finalScale) / 2;
-      const offsetY = (height - vRows * finalScale) / 2 - (height * 0.1); 
+      
+      // 💡 [카세트 테이프 위/아래 위치 조절하는 곳] 💡
+      // 기존에 위로 쏠리게 만들던 수식을 지우고 화면 정중앙에 오도록 수정했습니다.
+      // 더 내리고 싶다면 뒤에 + (height * 0.05) 처럼 더해주시면 됩니다.
+      const offsetY = (height - vRows * finalScale) / 2; 
 
       videoParticles.forEach(p => {
-         // 바둑판 배열을 깨기 위해 각자의 scatter 값 추가 (재생 버튼과 동일한 흩뿌림)
          p.tx = offsetX + p.gridX * finalScale + p.scatterX;
          p.ty = offsetY + p.gridY * finalScale + p.scatterY;
       });
@@ -710,7 +715,11 @@ function initParticles() {
     function getPlayShape() {
       const pts = [];
       const offsetX = width / 2 - 50;
-      const offsetY = height * 0.85 - 50; 
+      
+      // 💡 [재생 버튼 위/아래 위치 조절하는 곳] 💡
+      // 기존 0.85(화면 맨 밑)에서 0.72로 줄여서 버튼을 위로 끌어올렸습니다.
+      const offsetY = height * 0.72 - 50; 
+      
       for(let i=0; i<numPlayParticles; i++) {
         let r1 = Math.random();
         let r2 = Math.random();
@@ -728,7 +737,10 @@ function initParticles() {
     function getPauseShape() {
       const pts = [];
       const offsetX = width / 2 - 50;
-      const offsetY = height * 0.85 - 50;
+      
+      // 💡 [일시정지 버튼 위/아래 위치 조절하는 곳] (위 재생버튼과 동일한 숫자로 맞춰주세요)
+      const offsetY = height * 0.72 - 50; 
+      
       for(let i=0; i<numPlayParticles; i++) {
         const isLeft = Math.random() < 0.5;
         const scatterX = (Math.random() - 0.5) * scatterAmount;
@@ -751,24 +763,25 @@ function initParticles() {
       });
     }
 
-    // 비디오(카세트테이프) 고정 파티클 생성
+    // 비디오 고정 파티클 생성
     for (let y = 0; y < vRows; y++) {
         for (let x = 0; x < vCols; x++) {
             videoParticles.push({
                 x: 0, y: 0, tx: 0, ty: 0,
                 gridX: x, gridY: y,
-                // 재생 버튼과 똑같이 불규칙한 느낌을 주는 개별 난수 부여
                 scatterX: (Math.random() - 0.5) * scatterAmount,
                 scatterY: (Math.random() - 0.5) * scatterAmount,
                 vx: 0, vy: 0,
                 alpha: 0, targetAlpha: 0,
-                initialized: false // 첫 프레임 강제 렌더링용 플래그
+                initialized: false 
             });
         }
     }
     
-    resize(); // 최초 좌표 세팅 (여기서 0으로 세팅된 x, y를 초기화)
-    playParticles.forEach(p => { p.x = width / 2; p.y = height * 0.85; });
+    resize(); 
+    
+    // 💡 초기화 시 재생 버튼 위치 세팅 (위의 offsetY 비율 0.72와 동일하게 맞춰줌)
+    playParticles.forEach(p => { p.x = width / 2; p.y = height * 0.72; });
 
     function explodePlayParticles() {
       playParticles.forEach(p => {
@@ -779,7 +792,7 @@ function initParticles() {
       });
     }
 
-    // 비디오 파티클 업데이트 (좌표 이동 금지, 오직 투명도만 업데이트)
+    // 비디오 파티클 투명도 업데이트
     function updateVideoTargets() {
         if (video.readyState < 2) return; 
         
@@ -792,7 +805,6 @@ function initParticles() {
             
             p.targetAlpha = brightness > 45 ? 0.2 + (brightness/255) * 0.8 : 0;
             
-            // 💡 페이지 로드 시 3.5초 형태를 파티클에 즉시 고정시킵니다.
             if (!p.initialized) {
                 p.x = p.tx;
                 p.y = p.ty;
@@ -823,7 +835,6 @@ function initParticles() {
       playParticles.forEach((p, i) => { p.tx = currentPlayTarget[i].x; p.ty = currentPlayTarget[i].y; });
     });
 
-    // 🌟 테이프 파티클과 재생버튼 모두에 100% 동일하게 들어가는 물리 엔진
     function drawParticle(p) {
         p.vx += (p.tx - p.x) * moveSpeed;
         p.vy += (p.ty - p.y) * moveSpeed;
@@ -832,7 +843,6 @@ function initParticles() {
         p.x += p.vx;
         p.y += p.vy;
 
-        // 동일한 떨림(jitter) 효과
         const drawX = p.x + (Math.random() - 0.5) * jitter;
         const drawY = p.y + (Math.random() - 0.5) * jitter;
 
@@ -845,7 +855,6 @@ function initParticles() {
     function animate() {
       ctx.clearRect(0, 0, width, height);
 
-      // 1. 재생 버튼 파티클 렌더링
       playParticles.forEach(p => {
           p.alpha += (Math.random() - 0.5) * opacitySpeed;
           if(p.alpha > 1) p.alpha = 1;
@@ -853,15 +862,11 @@ function initParticles() {
           drawParticle(p);
       });
 
-      // 2. 카세트테이프 타겟 업데이트
       updateVideoTargets(); 
       
-      // 3. 카세트테이프 파티클 렌더링
       videoParticles.forEach(p => {
-          p.alpha += (p.targetAlpha - p.alpha) * 0.15; // 부드러운 페이드 인/아웃
-          
+          p.alpha += (p.targetAlpha - p.alpha) * 0.15; 
           if (p.alpha > 0.05) {
-              // 재생 버튼과 똑같이 빛이 깜빡거리는 효과 부여
               let displayAlpha = p.alpha + (Math.random() - 0.5) * opacitySpeed;
               if(displayAlpha > 1) displayAlpha = 1;
               if(displayAlpha < 0.2 && p.targetAlpha > 0) displayAlpha = 0.2;
