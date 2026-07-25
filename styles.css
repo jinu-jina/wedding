@@ -1332,18 +1332,13 @@ html, body {
 /* ═══════════════════════════════════════════
    Top Video Section
    ═══════════════════════════════════════════ */
-/* 👇 2. 안정적인 전체 화면 덮기 공식 (중복된 코드 삭제 후 하나로 통합) */
 .top-video-section {
   width: 100vw; 
   height: 100vh;
   height: 100dvh;
   background-color: #000000;
-  
-position: relative;
-  left: 50%;
-  right: 50%;
-  margin-left: -50vw;
-  margin-right: -50vw;
+
+  margin-left: calc(-50vw + 50%);
   
   display: flex;
   justify-content: center;
