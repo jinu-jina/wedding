@@ -643,7 +643,7 @@ envelopeOpening.addEventListener('click', () => {
   }
 
 /* ═══════════════════════════════════════════
-     Particle Interaction (Play/Pause 아이콘)
+     Particle Interaction (Real-time Video Mesh)
      ═══════════════════════════════════════════ */
 function initParticles() {
     const canvas = $('#particleCanvas');
@@ -651,12 +651,157 @@ function initParticles() {
     if (!canvas || !video) return;
 
     const ctx = canvas.getContext('2d');
-    const size = 100;
     
+    // 💡 픽셀 데이터를 실시간으로 구워낼 오프스크린 캔버스 세팅
+    const sampleCanvas = document.createElement('canvas');
+    const sCtx = sampleCanvas.getContext('2d', { willReadFrequently: true });
+    
+    let width, height;
     const dpr = window.devicePixelRatio || 1;
-    canvas.width = size * dpr;
-    canvas.height = size * dpr;
-    ctx.scale(dpr, dpr);
+    
+    function resize() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      ctx.scale(dpr, dpr);
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // 🛠️ 해상도 및 물리 설정 
+    const cols = 70; // 추출할 가로 픽셀 수 (버텍스 밀도)
+    const rows = 70; // 추출할 세로 픽셀 수
+    sampleCanvas.width = cols;
+    sampleCanvas.height = rows;
+
+    const numParticles = 2500; // 형태를 뚜렷하게 잡기 위해 파티클 수 대폭 증가
+    const moveSpeed = 0.15;    // 영상 프레임을 빠르게 따라가도록 속도 증가
+    const friction = 0.75;
+
+    // 초기 형태: 정지 시 화면 중앙에 재생(▶) 버튼 모양
+    function getPlayShape() {
+      const pts = [];
+      for(let i=0; i<numParticles; i++) {
+        let r1 = Math.random();
+        let r2 = Math.random();
+        if(r1 + r2 > 1) { r1 = 1 - r1; r2 = 1 - r2; }
+        pts.push({
+          x: width / 2 - 20 + r1 * 0 + r2 * 60,
+          y: height / 2 - 35 + r1 * 70 + r2 * 35
+        });
+      }
+      return pts;
+    }
+
+    let initialTargets = getPlayShape();
+    let particles = [];
+    
+    for(let i=0; i<numParticles; i++) {
+      particles.push({
+        x: width / 2, 
+        y: height / 2, 
+        tx: initialTargets[i].x, 
+        ty: initialTargets[i].y,
+        vx: (Math.random() - 0.5) * 10, 
+        vy: (Math.random() - 0.5) * 10,
+        alpha: Math.random()
+      });
+    }
+
+    // 💡 실시간 텍스처 데이터 추출 및 타겟 좌표 매핑 함수
+    function updateTargets() {
+      if (video.paused || video.ended) return;
+      
+      // 비디오 프레임을 그려 픽셀 데이터 추출
+      sCtx.drawImage(video, 0, 0, cols, rows);
+      const imgData = sCtx.getImageData(0, 0, cols, rows).data;
+      
+      const targets = [];
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          const i = (y * cols + x) * 4;
+          const r = imgData[i];
+          const g = imgData[i+1];
+          const b = imgData[i+2];
+          
+          // 밝은 부분만 픽업 (알파 채널 또는 명도 기준)
+          const brightness = (r + g + b) / 3;
+          if (brightness > 60) { 
+            const scale = Math.min(width, height) / cols * 0.9;
+            const offsetX = (width - cols * scale) / 2;
+            const offsetY = (height - rows * scale) / 2;
+            
+            targets.push({
+              x: offsetX + x * scale,
+              y: offsetY + y * scale
+            });
+          }
+        }
+      }
+
+      // 파티클들을 새로운 목표 좌표로 분배
+      if (targets.length > 0) {
+        particles.forEach((p, i) => {
+          const target = targets[i % targets.length];
+          // 외곽선이 너무 픽셀처럼 딱딱해보이지 않게 미세한 노이즈 분산
+          p.tx = target.x + (Math.random() - 0.5) * 3;
+          p.ty = target.y + (Math.random() - 0.5) * 3;
+        });
+      }
+    }
+
+    // 캔버스 터치 이벤트 (비디오 시작/정지 제어)
+    canvas.addEventListener('click', () => {
+      const guideText = $('#videoGuideText');
+      if (guideText) guideText.style.display = 'none';
+
+      const bgm = document.getElementById('bgm');
+      
+      if (video.paused) {
+        video.muted = true; // 형태 추출용이므로 비디오 원본 소스 음소거
+        video.play();
+        
+        if (bgm) {
+          bgm.play().catch(e => console.log("오디오 재생 에러:", e));
+        }
+      } else {
+        video.pause();
+        if (bgm) bgm.pause();
+        
+        // 일시정지 시 다시 재생(▶) 버튼 모양으로 복귀
+        const playTargets = getPlayShape();
+        particles.forEach((p, i) => {
+          p.tx = playTargets[i].x;
+          p.ty = playTargets[i].y;
+        });
+      }
+    });
+
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+
+      // 매 프레임마다 영상에서 타겟 좌표를 뽑아옴
+      updateTargets();
+
+      particles.forEach(p => {
+        p.vx += (p.tx - p.x) * moveSpeed;
+        p.vy += (p.ty - p.y) * moveSpeed;
+        p.vx *= friction;
+        p.vy *= friction;
+        p.x += p.vx;
+        p.y += p.vy;
+
+        ctx.fillStyle = `rgba(255, 255, 255, ${0.3 + p.alpha * 0.7})`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 1.2, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      requestAnimationFrame(animate);
+    }
+    animate();
+}
 
     // ==========================================
     // 🛠️ 파티클 커스텀 설정 (여기 수치들을 변경하세요) 🛠️
@@ -665,7 +810,7 @@ function initParticles() {
     const scatterAmount = 2.5;    // 2. 모여있는 형태의 불규칙성 (높을수록 외곽선이 흐트러짐)
     const jitter = 2.2;           // 3. 꿈틀거리는 진동 폭 (높을수록 요동침)
     const particleSize = 0.9;     // 4. 파티클 알갱이 하나의 크기 (기본 1.2)
-    const explosionPower = 15;    // 5. 터치 시 퍼져나가는 폭발력
+    const explosionPower = 20;    // 5. 터치 시 퍼져나가는 폭발력
     const opacitySpeed = 0.08;    // 6. 투명도(깜빡임) 변화 속도
     const moveSpeed = 0.04;       // 7. 목적지로 모여드는 속도 (기본 0.08 / 높을수록 확 뭉치고, 낮을수록 스르륵 모임)
     const friction = 0.82;        // 8. 도착 시 튕기는 정도 (기본 0.82 / 0.7 이하면 딱딱하게 멈추고, 0.9 이상이면 젤리처럼 크게 요동침)
