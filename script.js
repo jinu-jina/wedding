@@ -179,7 +179,7 @@ envelopeOpening.addEventListener('click', () => {
     const setStartTime = () => {
       // 터치하여 이미 재생 중인 상태가 아닐 때만 3초로 세팅 (멈춰 있을 때만)
       if (video.paused) {
-        video.currentTime = 3.0; // 💡 3초로 설정 (예: 3.5초를 원하시면 3.5로 수정 가능)
+        video.currentTime = 3.5; // 💡 3초로 설정 (예: 3.5초를 원하시면 3.5로 수정 가능)
       }
     };
 
