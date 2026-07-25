@@ -643,7 +643,7 @@ envelopeOpening.addEventListener('click', () => {
   }
 
 /* ═══════════════════════════════════════════
-     Particle Interaction (Unified Engine - Explosion Added to Video)
+     Particle Interaction (Layout Adjusted to Match Image)
      ═══════════════════════════════════════════ */
 function initParticles() {
     const canvas = $('#particleCanvas');
@@ -668,8 +668,8 @@ function initParticles() {
     const friction = 0.82;        
 
     // 카세트 파티클 개수
-    const vCols = 130; 
-    const vRows = 130; 
+    const vCols = 140; 
+    const vRows = 140; 
     sCanvas.width = vCols;
     sCanvas.height = vRows;
 
@@ -696,7 +696,8 @@ function initParticles() {
       const finalScale = Math.min(scale, maxW / vCols);
       
       const offsetX = (width - vCols * finalScale) / 2;
-      const offsetY = (height - vRows * finalScale) / 2; 
+      // 💡 [카세트 테이프 위치] 화면 중앙에서 아주 살짝 위쪽으로 배치
+      const offsetY = (height - vRows * finalScale) / 2 - (height * 0.02); 
 
       videoParticles.forEach(p => {
          p.tx = offsetX + p.gridX * finalScale + p.scatterX;
@@ -708,7 +709,8 @@ function initParticles() {
     function getPlayShape() {
       const pts = [];
       const offsetX = width / 2 - 50;
-      const offsetY = height * 0.72 - 50; 
+      // 💡 [재생 버튼 위치] 0.72 -> 0.82로 더 아래로 쭉 내림
+      const offsetY = height * 0.82 - 50; 
       
       for(let i=0; i<numPlayParticles; i++) {
         let r1 = Math.random();
@@ -727,7 +729,8 @@ function initParticles() {
     function getPauseShape() {
       const pts = [];
       const offsetX = width / 2 - 50;
-      const offsetY = height * 0.72 - 50; 
+      // 💡 [일시정지 버튼 위치] 재생 버튼과 동일하게 하단 고정
+      const offsetY = height * 0.82 - 50; 
       
       for(let i=0; i<numPlayParticles; i++) {
         const isLeft = Math.random() < 0.5;
@@ -765,11 +768,10 @@ function initParticles() {
     }
     
     resize(); 
-    playParticles.forEach(p => { p.x = width / 2; p.y = height * 0.72; });
+    // 초기화 시 재생 버튼 위치도 0.82로 일치시킴
+    playParticles.forEach(p => { p.x = width / 2; p.y = height * 0.82; });
 
-    // 💡 재생 버튼과 테이프 파티클 모두 터치 시 폭발하도록 통합한 함수
     function explodeAllParticles() {
-      // 1. 재생 버튼 폭발
       playParticles.forEach(p => {
         const angle = Math.random() * Math.PI * 2;
         const power = 5 + Math.random() * explosionPower;
@@ -777,7 +779,6 @@ function initParticles() {
         p.vy = Math.sin(angle) * power;
       });
 
-      // 2. 카세트테이프 폭발 (화면에 보이고 있는 형태만 튀도록 조건 추가)
       videoParticles.forEach(p => {
         if (p.targetAlpha > 0.05) {
           const angle = Math.random() * Math.PI * 2;
@@ -810,7 +811,7 @@ function initParticles() {
     }
 
     canvas.addEventListener('click', () => {
-      explodeAllParticles(); // 💡 터치 시 모든 파티클이 폭발하도록 함수명 변경 반영
+      explodeAllParticles();
       
       const guideText = $('#videoGuideText');
       if (guideText) guideText.style.display = 'none';
