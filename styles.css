@@ -1340,7 +1340,10 @@ html, body {
   background-color: #000000;
   
 position: relative;
-  margin-left: calc(-50vw + 50%);
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
   
   display: flex;
   justify-content: center;
