@@ -166,7 +166,7 @@ a {
   width: 92%;
   z-index: 2;
   /* 5. 카드를 아래로 깊숙이 내려서 두 번째 이미지처럼 쏙 들어가게 세팅 */
-  transform: translateY(24%);
+  transform: translateY(22%);
   transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
   will-change: transform;
 }
