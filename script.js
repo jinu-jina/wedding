@@ -643,7 +643,7 @@ envelopeOpening.addEventListener('click', () => {
   }
 
 /* ═══════════════════════════════════════════
-     Particle Interaction (Unified Particle Engine - Fixed Jitter & Initial Frame)
+     Particle Interaction (Unified Engine - Fixed Grid & Opacity Mapping)
      ═══════════════════════════════════════════ */
 function initParticles() {
     const canvas = $('#particleCanvas');
@@ -657,29 +657,27 @@ function initParticles() {
     let width, height;
     const dpr = window.devicePixelRatio || 1;
 
-    // 🛠️ 파티클 커스텀 설정
+    // 🛠️ 파티클 커스텀 설정 (재생 버튼과 테이프 파티클에 동일하게 적용됨)
     const numPlayParticles = 400;     
-    const scatterAmount = 2.5;    
-    const jitter = 2.2;           
-    const particleSize = 0.9;     
+    const scatterAmount = 2.5;    // 불규칙하게 흩뿌리는 정도
+    const jitter = 2.2;           // 파티클 자체의 떨림 정도
+    const particleSize = 0.9;     // 알갱이 크기
     const explosionPower = 20;    
     const opacitySpeed = 0.08;    
     const moveSpeed = 0.04;       
     const friction = 0.82;        
 
-    const numVideoParticles = 4000; // 💡비디오 파티클 총 개수를 조절합니다
-    const vCols = 70; // 💡 가로 픽셀 추출 밀도 (해상도)
-    const vRows = 70; // 💡 세로 픽셀 추출 밀도 (해상도)
+    // 비디오 해상도 및 파티클 설정
+    const vCols = 70; 
+    const vRows = 70;
     sCanvas.width = vCols;
     sCanvas.height = vRows;
 
     let playParticles = [];
     let videoParticles = [];
     let currentPlayTarget = [];
-    
-    // 💡 첫 프레임(3.5초)이 그려졌는지 체크하는 변수
-    let firstFrameCaptured = false;
 
+    // 화면 리사이즈 및 타겟 좌표 재계산
     function resize() {
       width = window.innerWidth;
       height = window.innerHeight;
@@ -687,10 +685,24 @@ function initParticles() {
       canvas.height = height * dpr;
       ctx.scale(dpr, dpr);
 
+      // 1. 재생 버튼 타겟 업데이트
       currentPlayTarget = video.paused ? getPlayShape() : getPauseShape();
       playParticles.forEach((p, i) => {
           p.tx = currentPlayTarget[i].x;
           p.ty = currentPlayTarget[i].y;
+      });
+
+      // 2. 비디오 테이프 타겟 고정 좌표 업데이트
+      const scale = Math.min(width, height) / vCols * 0.9;
+      const maxW = Math.min(750, width); 
+      const finalScale = Math.min(scale, maxW / vCols);
+      const offsetX = (width - vCols * finalScale) / 2;
+      const offsetY = (height - vRows * finalScale) / 2 - (height * 0.1); 
+
+      videoParticles.forEach(p => {
+         // 바둑판 배열을 깨기 위해 각자의 scatter 값 추가 (재생 버튼과 동일한 흩뿌림)
+         p.tx = offsetX + p.gridX * finalScale + p.scatterX;
+         p.ty = offsetY + p.gridY * finalScale + p.scatterY;
       });
     }
     window.addEventListener('resize', resize);
@@ -730,30 +742,33 @@ function initParticles() {
     }
 
     // 재생 버튼 파티클 생성
-    resize(); 
     for(let i=0; i<numPlayParticles; i++) {
       playParticles.push({
-        x: width / 2, 
-        y: height * 0.85, 
-        tx: currentPlayTarget[i].x,   
-        ty: currentPlayTarget[i].y,
+        x: 0, y: 0, tx: 0, ty: 0,
         vx: (Math.random() - 0.5) * explosionPower, 
         vy: (Math.random() - 0.5) * explosionPower,
         alpha: 0.2 + Math.random() * 0.8 
       });
     }
 
-    // 비디오(카세트테이프) 파티클 생성
-    for(let i=0; i<numVideoParticles; i++) {
-        videoParticles.push({
-            x: width / 2,
-            y: height / 2,
-            tx: width / 2,
-            ty: height / 2,
-            vx: 0, vy: 0,
-            alpha: 0, targetAlpha: 0
-        });
+    // 비디오(카세트테이프) 고정 파티클 생성
+    for (let y = 0; y < vRows; y++) {
+        for (let x = 0; x < vCols; x++) {
+            videoParticles.push({
+                x: 0, y: 0, tx: 0, ty: 0,
+                gridX: x, gridY: y,
+                // 재생 버튼과 똑같이 불규칙한 느낌을 주는 개별 난수 부여
+                scatterX: (Math.random() - 0.5) * scatterAmount,
+                scatterY: (Math.random() - 0.5) * scatterAmount,
+                vx: 0, vy: 0,
+                alpha: 0, targetAlpha: 0,
+                initialized: false // 첫 프레임 강제 렌더링용 플래그
+            });
+        }
     }
+    
+    resize(); // 최초 좌표 세팅 (여기서 0으로 세팅된 x, y를 초기화)
+    playParticles.forEach(p => { p.x = width / 2; p.y = height * 0.85; });
 
     function explodePlayParticles() {
       playParticles.forEach(p => {
@@ -764,55 +779,27 @@ function initParticles() {
       });
     }
 
+    // 비디오 파티클 업데이트 (좌표 이동 금지, 오직 투명도만 업데이트)
     function updateVideoTargets() {
         if (video.readyState < 2) return; 
         
         sCtx.drawImage(video, 0, 0, vCols, vRows);
         const imgData = sCtx.getImageData(0, 0, vCols, vRows).data;
         
-        const targets = [];
-        for (let y = 0; y < vRows; y++) {
-            for (let x = 0; x < vCols; x++) {
-                const i = (y * vCols + x) * 4;
-                const brightness = (imgData[i] + imgData[i+1] + imgData[i+2]) / 3;
-                
-                if (brightness > 45) { 
-                    const scale = Math.min(width, height) / vCols * 0.9;
-                    const maxW = Math.min(750, width); 
-                    const finalScale = Math.min(scale, maxW / vCols);
-                    
-                    const offsetX = (width - vCols * finalScale) / 2;
-                    const offsetY = (height - vRows * finalScale) / 2 - (height * 0.1); 
-                    
-                    // 💡 형태가 뭉개지지 않도록 불필요한 랜덤(Scatter) 값을 제거했습니다.
-                    targets.push({
-                        x: offsetX + x * finalScale,
-                        y: offsetY + y * finalScale,
-                        alpha: 0.2 + (brightness/255) * 0.8 
-                    });
-                }
-            }
-        }
-
-        videoParticles.forEach((p, i) => {
-            if (i < targets.length) {
-                p.tx = targets[i].x;
-                p.ty = targets[i].y;
-                p.targetAlpha = targets[i].alpha;
-            } else {
-                p.targetAlpha = 0; 
-            }
-        });
-
-        // 💡 페이지 로드 시 3.5초 형태를 파티클에 즉시 고정시킵니다.
-        if (!firstFrameCaptured && targets.length > 0) {
-            videoParticles.forEach(p => {
+        videoParticles.forEach(p => {
+            const i = (p.gridY * vCols + p.gridX) * 4;
+            const brightness = (imgData[i] + imgData[i+1] + imgData[i+2]) / 3;
+            
+            p.targetAlpha = brightness > 45 ? 0.2 + (brightness/255) * 0.8 : 0;
+            
+            // 💡 페이지 로드 시 3.5초 형태를 파티클에 즉시 고정시킵니다.
+            if (!p.initialized) {
                 p.x = p.tx;
                 p.y = p.ty;
                 p.alpha = p.targetAlpha;
-            });
-            firstFrameCaptured = true;
-        }
+                p.initialized = true;
+            }
+        });
     }
 
     canvas.addEventListener('click', () => {
@@ -836,8 +823,8 @@ function initParticles() {
       playParticles.forEach((p, i) => { p.tx = currentPlayTarget[i].x; p.ty = currentPlayTarget[i].y; });
     });
 
-    // 🌟 파티클 렌더링 함수 (비디오 파티클은 떨림을 대폭 줄였습니다)
-    function drawParticle(p, isVideoParticle = false) {
+    // 🌟 테이프 파티클과 재생버튼 모두에 100% 동일하게 들어가는 물리 엔진
+    function drawParticle(p) {
         p.vx += (p.tx - p.x) * moveSpeed;
         p.vy += (p.ty - p.y) * moveSpeed;
         p.vx *= friction;
@@ -845,10 +832,9 @@ function initParticles() {
         p.x += p.vx;
         p.y += p.vy;
 
-        // 💡 비디오 파티클은 형태 유지를 위해 진동(jitter)을 80% 감소시켰습니다.
-        const currentJitter = isVideoParticle ? jitter * 0.2 : jitter;
-        const drawX = p.x + (Math.random() - 0.5) * currentJitter;
-        const drawY = p.y + (Math.random() - 0.5) * currentJitter;
+        // 동일한 떨림(jitter) 효과
+        const drawX = p.x + (Math.random() - 0.5) * jitter;
+        const drawY = p.y + (Math.random() - 0.5) * jitter;
 
         ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha})`;
         ctx.beginPath();
@@ -864,19 +850,26 @@ function initParticles() {
           p.alpha += (Math.random() - 0.5) * opacitySpeed;
           if(p.alpha > 1) p.alpha = 1;
           if(p.alpha < 0.2) p.alpha = 0.2;
-          drawParticle(p, false);
+          drawParticle(p);
       });
 
-      // 2. 카세트테이프 타겟 업데이트 (첫 프레임이 안 그려졌을 때도 강제 실행)
-      if (!video.paused || !firstFrameCaptured) {
-          updateVideoTargets(); 
-      }
+      // 2. 카세트테이프 타겟 업데이트
+      updateVideoTargets(); 
       
       // 3. 카세트테이프 파티클 렌더링
       videoParticles.forEach(p => {
-          p.alpha += (p.targetAlpha - p.alpha) * 0.1;
+          p.alpha += (p.targetAlpha - p.alpha) * 0.15; // 부드러운 페이드 인/아웃
+          
           if (p.alpha > 0.05) {
-              drawParticle(p, true);
+              // 재생 버튼과 똑같이 빛이 깜빡거리는 효과 부여
+              let displayAlpha = p.alpha + (Math.random() - 0.5) * opacitySpeed;
+              if(displayAlpha > 1) displayAlpha = 1;
+              if(displayAlpha < 0.2 && p.targetAlpha > 0) displayAlpha = 0.2;
+              
+              const temp = p.alpha;
+              p.alpha = displayAlpha;
+              drawParticle(p);
+              p.alpha = temp;
           }
       });
 
@@ -884,6 +877,7 @@ function initParticles() {
     }
     animate();
 }
+  
   /* ═══════════════════════════════════════════
      Init
      ═══════════════════════════════════════════ */
