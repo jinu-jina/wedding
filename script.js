@@ -170,15 +170,32 @@ envelopeOpening.addEventListener('click', () => {
   /* ═══════════════════════════════════════════
      Top Video (터치 시 멈춤/재생)
      ═══════════════════════════════════════════ */
-  function initTopVideo() {
-    // 💡 비디오 재생/정지 제어는 파티클 변화와 0초의 오차도 없이
-    // 완벽하게 동시에 작동하도록 아래 initParticles() 내부로 통합되었습니다.
+  
+ function initTopVideo() {
+    const video = $('#topVideo');
+    if (!video) return;
+
+    // 비디오 데이터가 로드되면 3초 지점으로 이동시키는 함수
+    const setStartTime = () => {
+      // 터치하여 이미 재생 중인 상태가 아닐 때만 3초로 세팅 (멈춰 있을 때만)
+      if (video.paused) {
+        video.currentTime = 3.0; // 💡 3초로 설정 (예: 3.5초를 원하시면 3.5로 수정 가능)
+      }
+    };
+
+    // 브라우저에 이미 비디오 정보가 로딩된 상태라면 바로 실행
+    if (video.readyState >= 1) {
+      setStartTime();
+    } else {
+      // 아직 로딩 전이라면, 로딩이 완료되는 순간(loadedmetadata) 바로 실행
+      video.addEventListener('loadedmetadata', setStartTime);
+    }
   }
 
   /* ═══════════════════════════════════════════
      Hero Section
      ═══════════════════════════════════════════ */
-
+  
   function initHero() {
     $('#heroPhoto').src = 'images/hero/1.jpg';
     $('#heroNames').textContent = `${CONFIG.groom.name}  ·  ${CONFIG.bride.name}`;
