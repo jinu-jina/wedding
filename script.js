@@ -658,6 +658,10 @@ envelopeOpening.addEventListener('click', () => {
     const particleSize = 1.2;     // 4. 파티클 알갱이 하나의 크기
     const explosionPower = 15;    // 5. 터치 시 퍼져나가는 폭발력
     const opacitySpeed = 0.08;    // 6. 투명도(깜빡임) 변화 속도
+    
+    // 👇 새로 추가된 이동 속도 조절 설정 👇
+    const moveSpeed = 0.08;       // 7. 목적지로 모여드는 속도 (기본 0.08 / 높을수록 확 뭉치고, 낮을수록 스르륵 모임)
+    const friction = 0.82;        // 8. 도착 시 튕기는 정도 (기본 0.82 / 0.7 이하면 딱딱하게 멈추고, 0.9 이상이면 젤리처럼 크게 요동침)
     // ==========================================
 
     let particles = [];
@@ -670,7 +674,6 @@ envelopeOpening.addEventListener('click', () => {
         let r2 = Math.random();
         if(r1 + r2 > 1) { r1 = 1 - r1; r2 = 1 - r2; }
         
-        // scatterAmount를 더해 형태를 흩뿌림
         const scatterX = (Math.random() - 0.5) * scatterAmount;
         const scatterY = (Math.random() - 0.5) * scatterAmount;
         
@@ -709,7 +712,6 @@ envelopeOpening.addEventListener('click', () => {
         ty: currentTarget[i].y,
         vx: (Math.random() - 0.5) * explosionPower, 
         vy: (Math.random() - 0.5) * explosionPower,
-        // 오퍼시티 불규칙성 부여 (초기 랜덤 투명도 설정 0.2 ~ 1.0)
         alpha: 0.2 + Math.random() * 0.8 
       });
     }
@@ -742,24 +744,22 @@ envelopeOpening.addEventListener('click', () => {
       ctx.clearRect(0, 0, size, size);
 
       particles.forEach(p => {
-        // 물리 엔진 (원래 자리로 쫀득하게 돌아감)
-        const spring = 0.08;
-        const friction = 0.82;
-        p.vx += (p.tx - p.x) * spring;
-        p.vy += (p.ty - p.y) * spring;
+        // 물리 엔진 (커스텀 설정의 moveSpeed와 friction 적용)
+        p.vx += (p.tx - p.x) * moveSpeed;
+        p.vy += (p.ty - p.y) * moveSpeed;
         p.vx *= friction;
         p.vy *= friction;
         p.x += p.vx;
         p.y += p.vy;
 
-        // 꿈틀거림 (설정한 jitter 값 반영)
+        // 꿈틀거림
         const drawX = p.x + (Math.random() - 0.5) * jitter;
         const drawY = p.y + (Math.random() - 0.5) * jitter;
 
         // 투명도(Opacity) 무작위 깜빡임 
         p.alpha += (Math.random() - 0.5) * opacitySpeed;
         if(p.alpha > 1) p.alpha = 1;
-        if(p.alpha < 0.2) p.alpha = 0.2; // 최소 투명도 방어선
+        if(p.alpha < 0.2) p.alpha = 0.2; 
 
         // 색상 및 렌더링
         ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha})`;
