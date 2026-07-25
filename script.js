@@ -735,6 +735,8 @@ function initParticles() {
       // 👇 터치하는 순간 안내 문구가 즉시 완전히 사라지게 만듭니다 👇
       const guideText = $('#videoGuideText');
       if (guideText) guideText.style.display = 'none';
+
+      const bgm = document.getElementById('bgm');
       
       if (video.paused) {
         video.muted = false; 
