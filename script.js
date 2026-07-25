@@ -727,18 +727,20 @@ function initParticles() {
         p.vy = Math.sin(angle) * power;
       });
     }
-
-    // 터치 시 동작 로직 (비디오와 파티클 동기화)
+      
+    // 비디오 터치 시 이벤트 (안내 문구 숨기기 추가)
     video.addEventListener('click', () => {
       explodeParticles(); 
       
+      // 👇 터치하는 순간 안내 문구가 즉시 완전히 사라지게 만듭니다 👇
+      const guideText = $('#videoGuideText');
+      if (guideText) guideText.style.display = 'none';
+      
       if (video.paused) {
-        // 비디오가 멈춰있으면 -> 소리를 켜고 재생 (파티클은 ❚❚로 변신)
         video.muted = false; 
         video.play(); 
         currentTarget = getPauseShape(); 
       } else {
-        // 비디오가 재생중이면 -> 비디오 멈춤 (파티클은 ▶로 변신)
         video.pause(); 
         currentTarget = getPlayShape(); 
       }
