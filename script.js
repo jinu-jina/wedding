@@ -643,7 +643,7 @@ envelopeOpening.addEventListener('click', () => {
   }
 
 /* ═══════════════════════════════════════════
-     Particle Interaction (Unified Engine - Position & Density Adjusted)
+     Particle Interaction (Unified Engine - Explosion Added to Video)
      ═══════════════════════════════════════════ */
 function initParticles() {
     const canvas = $('#particleCanvas');
@@ -667,10 +667,9 @@ function initParticles() {
     const moveSpeed = 0.04;       
     const friction = 0.82;        
 
-    // 💡 [카세트 파티클 개수 조절하는 곳] 💡
-    // 숫자를 높일수록(예: 100) 점이 촘촘해져서 형체가 뚜렷해지고, 낮출수록(예: 50) 듬성듬성해집니다.
-    const vCols = 90; // 가로 파티클 개수 (기존 70 -> 90으로 올려서 선명하게 만듦)
-    const vRows = 90; // 세로 파티클 개수 (가로와 같은 숫자로 맞춰주세요)
+    // 카세트 파티클 개수
+    const vCols = 130; 
+    const vRows = 130; 
     sCanvas.width = vCols;
     sCanvas.height = vRows;
 
@@ -686,23 +685,17 @@ function initParticles() {
       canvas.height = height * dpr;
       ctx.scale(dpr, dpr);
 
-      // 재생 버튼 타겟 업데이트
       currentPlayTarget = video.paused ? getPlayShape() : getPauseShape();
       playParticles.forEach((p, i) => {
           p.tx = currentPlayTarget[i].x;
           p.ty = currentPlayTarget[i].y;
       });
 
-      // 비디오 테이프 타겟 고정 좌표 업데이트
       const scale = Math.min(width, height) / vCols * 0.9;
       const maxW = Math.min(750, width); 
       const finalScale = Math.min(scale, maxW / vCols);
       
       const offsetX = (width - vCols * finalScale) / 2;
-      
-      // 💡 [카세트 테이프 위/아래 위치 조절하는 곳] 💡
-      // 기존에 위로 쏠리게 만들던 수식을 지우고 화면 정중앙에 오도록 수정했습니다.
-      // 더 내리고 싶다면 뒤에 + (height * 0.05) 처럼 더해주시면 됩니다.
       const offsetY = (height - vRows * finalScale) / 2; 
 
       videoParticles.forEach(p => {
@@ -715,9 +708,6 @@ function initParticles() {
     function getPlayShape() {
       const pts = [];
       const offsetX = width / 2 - 50;
-      
-      // 💡 [재생 버튼 위/아래 위치 조절하는 곳] 💡
-      // 기존 0.85(화면 맨 밑)에서 0.72로 줄여서 버튼을 위로 끌어올렸습니다.
       const offsetY = height * 0.72 - 50; 
       
       for(let i=0; i<numPlayParticles; i++) {
@@ -737,8 +727,6 @@ function initParticles() {
     function getPauseShape() {
       const pts = [];
       const offsetX = width / 2 - 50;
-      
-      // 💡 [일시정지 버튼 위/아래 위치 조절하는 곳] (위 재생버튼과 동일한 숫자로 맞춰주세요)
       const offsetY = height * 0.72 - 50; 
       
       for(let i=0; i<numPlayParticles; i++) {
@@ -753,7 +741,6 @@ function initParticles() {
       return pts;
     }
 
-    // 재생 버튼 파티클 생성
     for(let i=0; i<numPlayParticles; i++) {
       playParticles.push({
         x: 0, y: 0, tx: 0, ty: 0,
@@ -763,7 +750,6 @@ function initParticles() {
       });
     }
 
-    // 비디오 고정 파티클 생성
     for (let y = 0; y < vRows; y++) {
         for (let x = 0; x < vCols; x++) {
             videoParticles.push({
@@ -779,20 +765,29 @@ function initParticles() {
     }
     
     resize(); 
-    
-    // 💡 초기화 시 재생 버튼 위치 세팅 (위의 offsetY 비율 0.72와 동일하게 맞춰줌)
     playParticles.forEach(p => { p.x = width / 2; p.y = height * 0.72; });
 
-    function explodePlayParticles() {
+    // 💡 재생 버튼과 테이프 파티클 모두 터치 시 폭발하도록 통합한 함수
+    function explodeAllParticles() {
+      // 1. 재생 버튼 폭발
       playParticles.forEach(p => {
         const angle = Math.random() * Math.PI * 2;
         const power = 5 + Math.random() * explosionPower;
         p.vx = Math.cos(angle) * power;
         p.vy = Math.sin(angle) * power;
       });
+
+      // 2. 카세트테이프 폭발 (화면에 보이고 있는 형태만 튀도록 조건 추가)
+      videoParticles.forEach(p => {
+        if (p.targetAlpha > 0.05) {
+          const angle = Math.random() * Math.PI * 2;
+          const power = 5 + Math.random() * explosionPower;
+          p.vx = Math.cos(angle) * power;
+          p.vy = Math.sin(angle) * power;
+        }
+      });
     }
 
-    // 비디오 파티클 투명도 업데이트
     function updateVideoTargets() {
         if (video.readyState < 2) return; 
         
@@ -815,7 +810,7 @@ function initParticles() {
     }
 
     canvas.addEventListener('click', () => {
-      explodePlayParticles();
+      explodeAllParticles(); // 💡 터치 시 모든 파티클이 폭발하도록 함수명 변경 반영
       
       const guideText = $('#videoGuideText');
       if (guideText) guideText.style.display = 'none';
