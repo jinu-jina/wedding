@@ -1329,41 +1329,20 @@ html, body {
   overflow: visible !important;
 }
 
-/* 👇 2. 안정적인 전체 화면 덮기 공식 */
-.top-video-section {
-  width: 100vw; 
-  height: 100vh;
-  height: 100dvh;
-  background-color: #000000;
-  
-  position: relative;
-  left: 50%;
-  transform: translateX(-50%);
-  
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  
-  -webkit-tap-highlight-color: transparent;
-  -webkit-user-select: none;
-  user-select: none;
-}
-
 /* ═══════════════════════════════════════════
    Top Video Section
    ═══════════════════════════════════════════ */
+/* 👇 2. 안정적인 전체 화면 덮기 공식 (중복된 코드 삭제 후 하나로 통합) */
 .top-video-section {
   width: 100vw; 
   height: 100vh;
   height: 100dvh;
   background-color: #000000;
   
-  /* 👇 3. 부모 박스(480px) 안에서도 모니터 전체(100vw)를 완벽하게 덮는 공식 */
+  /* 👇 3. 부모 박스(480px) 안에서 화면 정중앙에 100% 꽉 차게 맞추는 공식 */
   position: relative;
   left: 50%;
-  right: 50%;
-  margin-left: -50vw;
-  margin-right: -50vw;
+  transform: translateX(-50%);
   
   display: flex;
   justify-content: center;
