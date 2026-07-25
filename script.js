@@ -652,10 +652,10 @@ envelopeOpening.addEventListener('click', () => {
     // ==========================================
     // 🛠️ 파티클 커스텀 설정 (여기 수치들을 변경하세요) 🛠️
     // ==========================================
-    const numParticles = 350;     // 1. 파티클 양 (기존 250 -> 350 증가)
+    const numParticles = 400;     // 1. 파티클 양 (기존 250 -> 350 증가)
     const scatterAmount = 2.5;    // 2. 모여있는 형태의 불규칙성 (높을수록 외곽선이 흐트러짐)
     const jitter = 1.8;           // 3. 꿈틀거리는 진동 폭 (높을수록 요동침)
-    const particleSize = 1.2;     // 4. 파티클 알갱이 하나의 크기
+    const particleSize = 0.9;     // 4. 파티클 알갱이 하나의 크기 (기본 1.2)
     const explosionPower = 15;    // 5. 터치 시 퍼져나가는 폭발력
     const opacitySpeed = 0.08;    // 6. 투명도(깜빡임) 변화 속도
     
