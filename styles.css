@@ -409,10 +409,16 @@ a {
 .fluid-blur-container {
   position: absolute;
   inset: 0;
-  z-index: 2; /* 이미지 위로 레이어 배치 */
+  z-index: 2; 
   overflow: hidden;
   pointer-events: none;
-  mix-blend-mode: hard-light; /* 영상처럼 강렬하게 섞이는 모드 */
+  
+  /* 💡 1. 섞이는 모드 제거 후, 푸른빛 베이스를 깔아줍니다 */
+  background-color: rgba(100, 150, 210, 0.4); 
+  
+  /* 💡 2. 배경 사진(1.jpg)의 형체를 완전히 날려버리는 강력한 백드롭 필터 */
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
 }
 
 .blob-wrapper {
@@ -427,30 +433,34 @@ a {
 .blur-blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(140px); /* 풍부하고 몽환적인 블러 */
-  opacity: 0.8;
+  /* 💡 덩어리의 경계를 아주 부드럽게 뭉갬 */
+  filter: blur(90px); 
+  opacity: 0.9;
   will-change: transform;
 }
 
 /* 💡 각 색상 덩어리의 크기, 색상, 위치 설정 */
 .blob-1 {
-  width: 450px; height: 450px;
+  width: 55vw; height: 55vw;
+  max-width: 400px; max-height: 400px;
   background: #0f3d34; /* 진한 초록 */
   top: -10%; left: -10%;
-  animation: float1 8s infinite alternate ease-in-out;
+  animation: float1 10s infinite alternate ease-in-out;
 }
 
 .blob-2 {
-  width: 550px; height: 550px;
+  width: 75vw; height: 75vw;
+  max-width: 500px; max-height: 500px;
   background: #9fa95f; /* 올리브 그린 */
-  bottom: -20%; right: -10%;
-  animation: float2 11s infinite alternate ease-in-out;
+  bottom: -10%; right: -15%;
+  animation: float2 12s infinite alternate ease-in-out;
 }
 
 .blob-3 {
-  width: 400px; height: 400px;
+  width: 50vw; height: 50vw;
+  max-width: 350px; max-height: 350px;
   background: #51718c; /* 블루 */
-  top: 40%; left: 15%;
+  top: 5%; left: 15%;
   animation: float3 14s infinite alternate ease-in-out;
 }
 
