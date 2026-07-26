@@ -1341,7 +1341,7 @@ html, body {
   width: 100vw; 
   height: 100vh;
   height: 100dvh;
-  background-color: #000000;
+  background-color: #26140a;
 
   margin-left: calc(-50vw + 50%);
   
