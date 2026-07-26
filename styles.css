@@ -379,7 +379,7 @@ a {
 }
 
 /* ═══════════════════════════════════════════
-   Hero Section - Traditional Frame
+   Hero Section
    ═══════════════════════════════════════════ */
 .hero {
   position: relative;
@@ -394,233 +394,73 @@ a {
   background-color: var(--color-text);
 }
 
-/* Traditional frame border overlay */
-.hero__frame {
-  position: absolute;
-  inset: 12px;
-  z-index: 3;
-  pointer-events: none;
-  border: 1px solid rgba(201, 169, 110, 0.35);
-}
-
-.hero__frame-corner {
-  position: absolute;
-  width: 20px;
-  height: 20px;
-}
-
-.hero__frame-corner::before,
-.hero__frame-corner::after {
-  content: '';
-  position: absolute;
-  background: var(--color-gold);
-  opacity: 0.5;
-}
-
-.hero__frame-corner--tl {
-  top: -1px;
-  left: -1px;
-}
-
-.hero__frame-corner--tl::before {
-  top: 0;
-  left: 0;
-  width: 20px;
-  height: 1px;
-}
-
-.hero__frame-corner--tl::after {
-  top: 0;
-  left: 0;
-  width: 1px;
-  height: 20px;
-}
-
-.hero__frame-corner--tr {
-  top: -1px;
-  right: -1px;
-}
-
-.hero__frame-corner--tr::before {
-  top: 0;
-  right: 0;
-  width: 20px;
-  height: 1px;
-}
-
-.hero__frame-corner--tr::after {
-  top: 0;
-  right: 0;
-  width: 1px;
-  height: 20px;
-}
-
-.hero__frame-corner--bl {
-  bottom: -1px;
-  left: -1px;
-}
-
-.hero__frame-corner--bl::before {
-  bottom: 0;
-  left: 0;
-  width: 20px;
-  height: 1px;
-}
-
-.hero__frame-corner--bl::after {
-  bottom: 0;
-  left: 0;
-  width: 1px;
-  height: 20px;
-}
-
-.hero__frame-corner--br {
-  bottom: -1px;
-  right: -1px;
-}
-
-.hero__frame-corner--br::before {
-  bottom: 0;
-  right: 0;
-  width: 20px;
-  height: 1px;
-}
-
-.hero__frame-corner--br::after {
-  bottom: 0;
-  right: 0;
-  width: 1px;
-  height: 20px;
-}
-
-.hero__overlay {
+/* ═══════════════════════════════════════════
+   Hero Section - Fluid Blur Effect (오로라 이펙트)
+   ═══════════════════════════════════════════ */
+.fluid-blur-container {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    to bottom,
-    rgba(44, 36, 32, 0.15) 0%,
-    transparent 30%,
-    transparent 45%,
-    rgba(44, 36, 32, 0.25) 60%,
-    rgba(44, 36, 32, 0.7) 80%,
-    rgba(44, 36, 32, 0.9) 100%
-  );
-  z-index: 1;
+  z-index: 2; /* 배경 사진(1)보다는 위, 글자(3)보다는 아래에 배치 */
+  overflow: hidden;
+  pointer-events: none; /* 터치를 방해하지 않도록 설정 */
+  
+  /* 첫 번째 첨부 이미지(종이 질감)와 자연스럽게 섞이게 하려면 mix-blend-mode 사용 */
+  mix-blend-mode: multiply; /* overlay나 normal로 바꿔보며 취향껏 선택하세요 */
 }
 
-.hero__photo {
+/* JS가 위치를 조작할 껍데기 레이어 */
+.blob-wrapper {
   position: absolute;
-  inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: center 30%;
+  top: 0;
+  left: 0;
+  will-change: transform;
 }
 
-.hero__content {
-  position: relative;
-  z-index: 2;
-  text-align: center;
-  color: var(--color-white);
-  padding: 0 var(--spacing-md) var(--spacing-lg);
-  width: 100%;
+/* CSS가 스스로 애니메이션을 줄 색상 덩어리 */
+.blur-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px); /* 💡 영상처럼 뽀얗게 번지는 핵심 효과 */
+  opacity: 0.65;      /* 💡 색상의 진하기 조절 */
+  will-change: transform;
 }
 
-.hero__label {
-  font-family: var(--font-serif);
-  font-size: 0.8125rem;
-  font-weight: 400;
-  letter-spacing: 8px;
-  margin-bottom: var(--spacing-sm);
-  opacity: 0.85;
-  color: var(--color-gold-light);
+/* 💡 각 색상 덩어리의 크기, 색상, 위치 설정 */
+.blob-1 {
+  width: 450px; height: 450px;
+  background: #0f3d34; /* 진한 초록 */
+  top: -10%; left: -10%;
+  animation: float1 8s infinite alternate ease-in-out;
 }
 
-.hero__names {
-  font-family: var(--font-serif);
-  font-size: 2rem;
-  font-weight: 700;
-  letter-spacing: 8px;
-  margin-bottom: var(--spacing-md);
-  line-height: 1.4;
+.blob-2 {
+  width: 550px; height: 550px;
+  background: #9fa95f; /* 올리브 그린 */
+  bottom: -20%; right: -10%;
+  animation: float2 11s infinite alternate ease-in-out;
 }
 
-.hero__divider {
-  width: 36px;
-  height: 1px;
-  background: var(--color-gold);
-  margin: 0 auto var(--spacing-md);
-  opacity: 0.6;
+.blob-3 {
+  width: 400px; height: 400px;
+  background: #51718c; /* 블루 */
+  top: 40%; left: 15%;
+  animation: float3 14s infinite alternate ease-in-out;
 }
 
-.hero__date,
-.hero__venue {
-  font-size: 0.8125rem;
-  font-weight: 400;
-  letter-spacing: 2px;
-  opacity: 0.85;
-  line-height: 1.6;
+/* 💡 알아서 흐물거리며 움직이는 CSS 키프레임 */
+@keyframes float1 {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(15%, 15%) scale(1.15); }
 }
-
-.hero__venue {
-  margin-top: 0.25rem;
+@keyframes float2 {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(-10%, -20%) scale(1.2); }
 }
-
-/* ─── Countdown ─── */
-.countdown {
-  position: relative;
-  z-index: 2;
-  padding: var(--spacing-lg) var(--spacing-md) calc(var(--spacing-lg) + var(--safe-bottom));
-  text-align: center;
-  color: var(--color-white);
-}
-
-.countdown__label {
-  font-size: 0.75rem;
-  font-weight: 400;
-  letter-spacing: 3px;
-  opacity: 0.7;
-  margin-bottom: var(--spacing-sm);
-  color: var(--color-gold-light);
-}
-
-.countdown__timer {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.countdown__item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-width: 3.5rem;
-}
-
-.countdown__number {
-  font-family: var(--font-serif);
-  font-size: 2rem;
-  font-weight: 400;
-  line-height: 1;
-  letter-spacing: 2px;
-}
-
-.countdown__unit {
-  font-size: 0.625rem;
-  font-weight: 400;
-  letter-spacing: 2px;
-  opacity: 0.6;
-  margin-top: 0.25rem;
-}
-
-.countdown__sep {
-  font-family: var(--font-serif);
-  font-size: 1.5rem;
-  font-weight: 400;
-  opacity: 0.4;
-  margin-top: -1rem;
-  color: var(--color-gold);
+@keyframes float3 {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(20%, -10%) scale(0.9); }
 }
 
 /* ═══════════════════════════════════════════
