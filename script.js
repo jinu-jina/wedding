@@ -662,14 +662,14 @@ function initParticles() {
     const scatterAmount = 2.5;    
     const jitter = 2.2;           
     const particleSize = 0.9;     
-    const explosionPower = 20;    
+    const explosionPower = 37;    
     const opacitySpeed = 0.08;    
     const moveSpeed = 0.04;       
     const friction = 0.82;        
 
     // 카세트 파티클 개수
-    const vCols = 140; 
-    const vRows = 140; 
+    const vCols = 150; 
+    const vRows = 150; 
     sCanvas.width = vCols;
     sCanvas.height = vRows;
 
