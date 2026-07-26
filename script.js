@@ -195,9 +195,9 @@ envelopeOpening.addEventListener('click', () => {
   /* ═══════════════════════════════════════════
      Hero Section
      ═══════════════════════════════════════════ */
-  
-  function initHero() {
-    $('#heroPhoto').src = 'images/hero/1.jpg';
+function initHero() {
+    const heroPhoto = $('#heroPhoto');
+    if (heroPhoto) heroPhoto.src = 'images/hero/1.jpg';
   }
 
   /* ═══════════════════════════════════════════
