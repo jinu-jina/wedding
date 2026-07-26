@@ -693,11 +693,15 @@ function initParticles() {
 
       const scale = Math.min(width, height) / vCols * 0.9;
       const maxW = Math.min(750, width); 
-      const finalScale = Math.min(scale, maxW / vCols);
+      let finalScale = Math.min(scale, maxW / vCols);
+
+      /* 👇 [카세트 테이프 전체 크기 조절] 👇 */
+      /* 1.2는 20% 확대, 1.3은 30% 확대, 1.5는 50% 확대를 의미합니다. */
+      finalScale = finalScale * 1.2;
       
       const offsetX = (width - vCols * finalScale) / 2;
       // 💡 [카세트 테이프 위치] 화면 중앙에서 아주 살짝 위쪽으로 배치
-      const offsetY = (height - vRows * finalScale) / 2 - (height * 0.02); 
+      const offsetY = (height - vRows * finalScale) / 2 - (height * 0.01); 
 
       videoParticles.forEach(p => {
          p.tx = offsetX + p.gridX * finalScale + p.scatterX;
