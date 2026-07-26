@@ -1386,10 +1386,10 @@ html, body {
 .video-guide-text {
   position: absolute;
   z-index: 20;
-  top: 10%; /* 첨부하신 이미지처럼 위쪽으로 배치 */
+  top: 4%; /* 숫자 높일수록 아래로 내려감 */
   left: 50%;
   transform: translateX(-50%);
-  width: 75%; /* 이미지 가로 크기 조절 */
+  width: 85%; /* 이미지 가로 크기 조절 */
   max-width: 320px;
   pointer-events: none; 
   
@@ -1401,19 +1401,19 @@ html, body {
 @keyframes blinkFiveTimes {
   0%   { opacity: 0; }     /* 처음엔 투명하게 시작 */
   
-  10%  { opacity: 1; }     /* 1번째 켜짐 */
+  10%  { opacity: 0.8; }     /* 1번째 켜짐 */
   18%  { opacity: 0.2; }   /* 1번째 꺼짐 */
   
-  28%  { opacity: 1; }     /* 2번째 켜짐 */
+  28%  { opacity: 0.8; }     /* 2번째 켜짐 */
   36%  { opacity: 0.2; }   /* 2번째 꺼짐 */
   
-  46%  { opacity: 1; }     /* 3번째 켜짐 */
+  46%  { opacity: 0.8; }     /* 3번째 켜짐 */
   54%  { opacity: 0.2; }   /* 3번째 꺼짐 */
   
-  64%  { opacity: 1; }     /* 4번째 켜짐 */
+  64%  { opacity: 0.8; }     /* 4번째 켜짐 */
   72%  { opacity: 0.2; }   /* 4번째 꺼짐 */
   
-  82%  { opacity: 1; }     /* 5번째 켜짐 */
+  82%  { opacity: 0.8; }     /* 5번째 켜짐 */
   90%  { opacity: 0; }     /* 5번째 완전히 꺼짐 (투명) */
   
   100% { opacity: 0; }     /* 끝까지 투명 상태 유지 */
