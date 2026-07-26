@@ -710,7 +710,7 @@ function initParticles() {
       const pts = [];
       const offsetX = width / 2 - 50;
       // 💡 [재생 버튼 위치] 0.72 -> 0.82로 더 아래로 쭉 내림
-      const offsetY = height * 0.82 - 50; 
+      const offsetY = height * 0.72 - 50; 
       
       for(let i=0; i<numPlayParticles; i++) {
         let r1 = Math.random();
@@ -730,7 +730,7 @@ function initParticles() {
       const pts = [];
       const offsetX = width / 2 - 50;
       // 💡 [일시정지 버튼 위치] 재생 버튼과 동일하게 하단 고정
-      const offsetY = height * 0.82 - 50; 
+      const offsetY = height * 0.72 - 50; 
       
       for(let i=0; i<numPlayParticles; i++) {
         const isLeft = Math.random() < 0.5;
