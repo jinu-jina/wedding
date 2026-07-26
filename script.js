@@ -198,49 +198,6 @@ envelopeOpening.addEventListener('click', () => {
   
   function initHero() {
     $('#heroPhoto').src = 'images/hero/1.jpg';
-    $('#heroNames').textContent = `${CONFIG.groom.name}  ·  ${CONFIG.bride.name}`;
-    $('#heroDate').textContent = formatDate(CONFIG.wedding.date, CONFIG.wedding.time);
-    $('#heroVenue').textContent = CONFIG.wedding.venue;
-  }
-
-  /* ═══════════════════════════════════════════
-     Countdown (D-day)
-     ═══════════════════════════════════════════ */
-
-  function initCountdown() {
-    const target = getWeddingDateTime();
-
-    function update() {
-      const now = new Date();
-      const diff = target - now;
-
-      const labelEl = $('#countdownLabel');
-
-      if (diff <= 0) {
-        $('#countDays').textContent = '0';
-        $('#countHours').textContent = '0';
-        $('#countMinutes').textContent = '0';
-        $('#countSeconds').textContent = '0';
-        labelEl.textContent = '결혼식이 시작되었습니다';
-        return;
-      }
-
-      const totalDays = Math.ceil(diff / (1000 * 60 * 60 * 24));
-      labelEl.textContent = `결혼식까지 D-${totalDays}`;
-
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-      const minutes = Math.floor((diff / (1000 * 60)) % 60);
-      const seconds = Math.floor((diff / 1000) % 60);
-
-      $('#countDays').textContent = days;
-      $('#countHours').textContent = String(hours).padStart(2, '0');
-      $('#countMinutes').textContent = String(minutes).padStart(2, '0');
-      $('#countSeconds').textContent = String(seconds).padStart(2, '0');
-    }
-
-    update();
-    setInterval(update, 1000);
   }
 
   /* ═══════════════════════════════════════════
