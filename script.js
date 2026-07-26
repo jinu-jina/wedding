@@ -882,6 +882,58 @@ function initParticles() {
     }
     animate();
 }
+
+/* ═══════════════════════════════════════════
+   Fluid Blur Interaction (터치 & 핸드폰 기울기 센서)
+   ═══════════════════════════════════════════ */
+function initFluidBlur() {
+    const wrappers = document.querySelectorAll('.blob-wrapper');
+    if (wrappers.length === 0) return;
+
+    let targetX = 0; let targetY = 0;
+    let currentX = 0; let currentY = 0;
+    
+    // 💡 터치/기울일 때 색상이 따라 움직이는 강도 (숫자가 클수록 많이 움직임)
+    const strength = 60; 
+
+    // 1. 터치 및 마우스 이동 감지
+    function handleMove(clientX, clientY) {
+        const x = (clientX / window.innerWidth - 0.5) * 2;
+        const y = (clientY / window.innerHeight - 0.5) * 2;
+        targetX = x * strength;
+        targetY = y * strength;
+    }
+    document.addEventListener('mousemove', (e) => handleMove(e.clientX, e.clientY));
+    document.addEventListener('touchmove', (e) => handleMove(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
+
+    // 2. 모바일 자이로스코프(기기 기울기) 감지
+    window.addEventListener('deviceorientation', (e) => {
+        if (e.gamma === null || e.beta === null) return;
+        
+        let x = e.gamma / 45; // 좌우 기울기
+        let y = (e.beta - 45) / 45; // 앞뒤 기울기
+        
+        x = Math.max(-1, Math.min(1, x));
+        y = Math.max(-1, Math.min(1, y));
+
+        targetX = x * strength * 1.5;
+        targetY = y * strength * 1.5;
+    });
+
+    // 3. 미끄러지듯 부드럽게 위치 업데이트 (Lerp 알고리즘)
+    function animateFluid() {
+        currentX += (targetX - currentX) * 0.05; // 0.05는 부드러움의 정도 (낮을수록 스무스함)
+        currentY += (targetY - currentY) * 0.05;
+
+        // 색상 덩어리마다 반대 방향이나 다른 속도로 움직이게 하여 입체감을 줍니다.
+        if(wrappers[0]) wrappers[0].style.transform = `translate(${currentX}px, ${currentY}px)`;
+        if(wrappers[1]) wrappers[1].style.transform = `translate(${-currentX * 0.8}px, ${-currentY * 0.8}px)`;
+        if(wrappers[2]) wrappers[2].style.transform = `translate(${currentX * 0.5}px, ${-currentY * 1.2}px)`;
+
+        requestAnimationFrame(animateFluid);
+    }
+    animateFluid();
+}
   
   /* ═══════════════════════════════════════════
      Init
@@ -892,9 +944,8 @@ function initParticles() {
     initEnvelopeOpening();
     initTopVideo(); 
     initParticles();
+    initFluidBlur();
     initHero();
-    initCountdown();
-    // 💡 중복되었던 initHero()와 initCountdown() 삭제 완료
     initGreeting();
     initCalendar();
 
