@@ -383,15 +383,24 @@ a {
    ═══════════════════════════════════════════ */
 .hero {
   position: relative;
-  min-height: 100vh;
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  padding: 0;
+  width: 100%;
   overflow: hidden;
-  background-color: var(--color-text);
+  display: block;
+  padding: 0;
+}
+
+.hero__photo {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+.hero__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
 }
 
 /* ═══════════════════════════════════════════
@@ -400,15 +409,12 @@ a {
 .fluid-blur-container {
   position: absolute;
   inset: 0;
-  z-index: 2; /* 배경 사진(1)보다는 위, 글자(3)보다는 아래에 배치 */
+  z-index: 2; /* 이미지 위로 레이어 배치 */
   overflow: hidden;
-  pointer-events: none; /* 터치를 방해하지 않도록 설정 */
-  
-  /* 첫 번째 첨부 이미지(종이 질감)와 자연스럽게 섞이게 하려면 mix-blend-mode 사용 */
-  mix-blend-mode: multiply; /* overlay나 normal로 바꿔보며 취향껏 선택하세요 */
+  pointer-events: none;
+  mix-blend-mode: hard-light; /* 영상처럼 강렬하게 섞이는 모드 */
 }
 
-/* JS가 위치를 조작할 껍데기 레이어 */
 .blob-wrapper {
   position: absolute;
   width: 100%;
@@ -418,12 +424,11 @@ a {
   will-change: transform;
 }
 
-/* CSS가 스스로 애니메이션을 줄 색상 덩어리 */
 .blur-blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(70px); /* 💡 영상처럼 뽀얗게 번지는 핵심 효과 */
-  opacity: 0.65;      /* 💡 색상의 진하기 조절 */
+  filter: blur(140px); /* 풍부하고 몽환적인 블러 */
+  opacity: 0.8;
   will-change: transform;
 }
 
@@ -452,15 +457,15 @@ a {
 /* 💡 알아서 흐물거리며 움직이는 CSS 키프레임 */
 @keyframes float1 {
   0% { transform: translate(0, 0) scale(1); }
-  100% { transform: translate(15%, 15%) scale(1.15); }
+  100% { transform: translate(10%, 10%) scale(1.2); }
 }
 @keyframes float2 {
   0% { transform: translate(0, 0) scale(1); }
-  100% { transform: translate(-10%, -20%) scale(1.2); }
+  100% { transform: translate(-10%, -10%) scale(1.1); }
 }
 @keyframes float3 {
   0% { transform: translate(0, 0) scale(1); }
-  100% { transform: translate(20%, -10%) scale(0.9); }
+  100% { transform: translate(15%, -10%) scale(1.3); }
 }
 
 /* ═══════════════════════════════════════════
