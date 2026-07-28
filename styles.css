@@ -544,96 +544,92 @@ a {
 }
 
 /* =========================================
-   [그룹 A] 첨부 이미지 색상 (짙은 초록 & 연두)
+   [그룹 A] 첨부 이미지 색상 (짙은 초록 & 연두) - 선명도 UP
    ========================================= */
 .blob-1, .blob-2, .blob-3 {
-  filter: blur(55px); 
+  /* 💡 1, 2. 색상이 옅어지지 않도록 블러를 살짝 줄이고 뭉침을 강화했습니다 */
+  filter: blur(45px); 
 }
 
-/* 짙은 초록색 */
+/* 💡 1. '진한 초록' 느낌이 확실히 나도록 색상과 투명도를 대폭 진하게 수정했습니다 */
 .blob-1 {
   width: 60vw; height: 60vw;
   max-width: 350px; max-height: 350px;
-  background: rgba(110, 150, 70, 0.6); 
+  background: rgba(80, 130, 50, 0.85); /* 짙고 뚜렷한 올리브 그린 */
   border-radius: 40% 60% 70% 30%;
   top: 10%; left: -10%;
-  animation: float1 14s infinite alternate ease-in-out;
+  /* 💡 3. 애니메이션 시간을 절반으로 줄여 속도를 2배 빠르게 했습니다 */
+  animation: float1 7s infinite alternate ease-in-out;
 }
 
-/* 밝은 연두색 (옐로우그린) */
 .blob-2 {
   width: 55vw; height: 70vw;
   max-width: 320px; max-height: 400px;
-  background: rgba(175, 210, 90, 0.55); 
+  background: rgba(160, 210, 60, 0.8); /* 선명한 라임 연두색 */
   border-radius: 60% 40% 30% 70%;
   bottom: 15%; right: -5%;
-  animation: float2 16s infinite alternate-reverse ease-in-out;
+  animation: float2 8s infinite alternate-reverse ease-in-out;
 }
 
-/* 은은한 밝은 빛 (화이트/그린 혼합) */
 .blob-3 {
   width: 50vw; height: 50vw;
   max-width: 300px; max-height: 300px;
-  background: rgba(220, 240, 180, 0.4); 
+  background: rgba(230, 250, 190, 0.7); 
   border-radius: 50% 70% 40% 60%;
   top: 40%; left: 20%;
-  animation: float3 12s infinite alternate ease-in-out;
+  animation: float3 6s infinite alternate ease-in-out;
 }
 
 /* =========================================
    [그룹 B] 투명 렌즈 (푸른/흰색 배경을 흐리게)
    ========================================= */
-/* 동영상처럼 배경을 부드럽게 뭉개는 투명 블러 */
 .blob-4, .blob-5, .blob-6 {
   background: transparent; 
   backdrop-filter: blur(35px);
   -webkit-backdrop-filter: blur(35px);
-  /* 가장자리를 부드럽게 페이드아웃 (유리판처럼 뚝 끊기지 않게) */
   -webkit-mask-image: radial-gradient(circle, black 30%, transparent 70%);
   mask-image: radial-gradient(circle, black 30%, transparent 70%);
 }
 
-/* 투명 렌즈 1 */
 .blob-4 {
   width: 75vw; height: 60vw;
   max-width: 450px; max-height: 350px;
   border-radius: 70% 30% 50% 50%;
   bottom: 5%; left: -15%;
-  animation: float2 15s infinite alternate ease-in-out;
+  animation: float2 8s infinite alternate ease-in-out;
 }
 
-/* 투명 렌즈 2 */
 .blob-5 {
   width: 65vw; height: 80vw;
   max-width: 380px; max-height: 480px;
   border-radius: 30% 70% 60% 40%;
   top: -5%; right: -10%;
-  animation: float3 17s infinite alternate-reverse ease-in-out;
+  animation: float3 9s infinite alternate-reverse ease-in-out;
 }
 
-/* 투명 렌즈 3 */
 .blob-6 {
   width: 55vw; height: 55vw;
   max-width: 320px; max-height: 320px;
   border-radius: 50% 50% 30% 70%;
   top: 50%; right: 10%;
-  animation: float1 13s infinite alternate ease-in-out;
+  animation: float1 7s infinite alternate ease-in-out;
 }
 
 /* =========================================
-   애니메이션 (동영상처럼 여유롭고 유려하게)
+   애니메이션 (동영상처럼 움직임 반경을 2배 확대)
    ========================================= */
 @keyframes float1 {
   0% { transform: translate(0, 0) scale(1) rotate(0deg); }
-  100% { transform: translate(35%, 25%) scale(1.1) rotate(15deg); }
+  /* 💡 3. 25%였던 이동 범위를 50%까지 대폭 늘려 역동적으로 움직이게 했습니다 */
+  100% { transform: translate(50%, 40%) scale(1.1) rotate(15deg); }
 }
 @keyframes float2 {
   0% { transform: translate(0, 0) scale(1) rotate(0deg); }
-  100% { transform: translate(-30%, -35%) scale(1.15) rotate(-10deg); }
+  100% { transform: translate(-45%, -50%) scale(1.15) rotate(-10deg); }
 }
 @keyframes float3 {
   0% { transform: translate(0, 0) scale(1) rotate(0deg); }
-  100% { transform: translate(25%, -25%) scale(1.05) rotate(20deg); }
+  100% { transform: translate(40%, -40%) scale(1.05) rotate(20deg); }
 }
 
 /* ═══════════════════════════════════════════
