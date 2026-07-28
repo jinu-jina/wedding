@@ -133,6 +133,24 @@ a {
   overflow: hidden;
   cursor: pointer;
   transition: opacity 0.8s ease;
+  
+  /* 👇 1. 터치 시 파랗게 깜빡이는 하이라이트 완벽 제거 👇 */
+  -webkit-tap-highlight-color: transparent;
+  
+  /* 👇 2. 텍스트나 전체 영역이 드래그(선택)되는 것 방지 👇 */
+  -webkit-user-select: none;
+  user-select: none;
+  
+  /* 👇 3. 아이폰(iOS)에서 꾹 눌렀을 때 돋보기나 메뉴 뜨는 것 방지 👇 */
+  -webkit-touch-callout: none;
+}
+
+/* 💡 추가: 봉투를 구성하는 이미지 요소들도 선택되지 않도록 보호 */
+.envelope-opening img {
+  -webkit-user-drag: none; /* PC/모바일에서 이미지 드래그 방지 */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 /* 1. 이미지 전체를 아래로 내림 */
