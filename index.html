@@ -70,15 +70,19 @@
 <section class="section hero" id="hero">
       <div class="hero__overlay"></div>
       <img class="hero__photo" id="heroPhoto" src="images/hero/1.jpg" alt="웨딩 사진" loading="eager">
-      <!-- 오로라 블러 이펙트 컨테이너 -->
-      <div class="fluid-blur-container">
-        <div class="blob-wrapper blob-w1"><div class="blur-blob blob-1"></div></div>
-        <div class="blob-wrapper blob-w2"><div class="blur-blob blob-2"></div></div>
-        <div class="blob-wrapper blob-w3"><div class="blur-blob blob-3"></div></div>
-        <div class="blob-wrapper blob-w4"><div class="blur-blob blob-4"></div></div>
-        <div class="blob-wrapper blob-w5"><div class="blur-blob blob-5"></div></div>
-        <div class="blob-wrapper blob-w4"><div class="blur-blob blob-6"></div></div>
-        <div class="blob-wrapper blob-w5"><div class="blur-blob blob-7"></div></div>
+   <!-- 오로라 블러 이펙트 컨테이너 -->
+      <div class="fluid-blur-container" id="fluidBlurContainer">
+        <!-- 💡 자이로스코프(폰 기울기)에 의해 전체가 흐르는 방향이 바뀌는 레이어 -->
+        <div class="blob-drift-layer" id="blobDriftLayer">
+          
+          <!-- 💡 물감처럼 완벽히 섞이는 3가지 거대 색상 덩어리 (포스터 색상 완벽 매칭) -->
+          <div class="blur-blob color-dark-green"></div>
+          <div class="blur-blob color-lime"></div>
+          <div class="blur-blob color-white"></div>
+          
+          <!-- 💡 뒷배경 글씨와 사진을 흐리게 뭉개주는 투명 유리 레이어 -->
+          <div class="blur-blob color-glass"></div>
+        </div>
       </div>
     </section>
 
