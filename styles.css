@@ -379,11 +379,18 @@ a {
 }
 
 /* ═══════════════════════════════════════════
-   Hero Section
+   Hero Section (이미지 화면 꽉 차게 풀스크린 세팅)
    ═══════════════════════════════════════════ */
 .hero {
   position: relative;
-  width: 100%;
+  /* 👇 가로, 세로를 뷰포트(화면) 크기에 100% 맞춥니다 */
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh; /* 모바일 브라우저 주소창 영역까지 완벽하게 고려 */
+  
+  /* 👇 컨테이너의 기본 여백을 무시하고 좌우로 꽉 차게 확장합니다 */
+  margin-left: calc(-50vw + 50%); 
+  
   overflow: hidden;
   display: block;
   padding: 0;
@@ -392,8 +399,9 @@ a {
 .hero__photo {
   display: block;
   width: 100%;
-  height: auto;
-  object-fit: cover;
+  /* 👇 이미지 높이도 부모(100vh)에 맞춰 100%로 꽉 채웁니다 */
+  height: 100%; 
+  object-fit: cover; /* 이미지가 찌그러지지 않고 남는 부분만 잘리면서 꽉 차게 설정 */
 }
 
 .hero__overlay {
