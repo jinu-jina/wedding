@@ -457,28 +457,28 @@ a {
    ========================================= */
 .blob-1, .blob-6, .blob-7 {
   background: rgba(168, 204, 69, 0.45); 
-  filter: blur(85px); 
+  filter: blur(95px); 
 }
 
 .blob-1 {
   width: 90vw; height: 60vw; /* 타원형 */
   border-radius: 40% 60% 70% 30%; /* 찌그러진 모양 */
   top: -10%; left: 0%;
-  animation: float1 11s infinite alternate ease-in-out;
+  animation: float1 5s infinite alternate ease-in-out;
 }
 
 .blob-6 {
   width: 60vw; height: 80vw; 
   border-radius: 60% 40% 30% 70%;
   bottom: 10%; right: -10%;
-  animation: float2 14s infinite alternate-reverse ease-in-out;
+  animation: float2 5s infinite alternate-reverse ease-in-out;
 }
 
 .blob-7 {
   width: 75vw; height: 75vw;
   border-radius: 50% 70% 40% 60%;
   top: 40%; left: 30%;
-  animation: float3 16s infinite alternate ease-in-out;
+  animation: float3 5s infinite alternate ease-in-out;
 }
 
 /* =========================================
@@ -486,8 +486,8 @@ a {
    ========================================= */
 .blob-2, .blob-3, .blob-4, .blob-5 {
   background: transparent; 
-  backdrop-filter: blur(80px);
-  -webkit-backdrop-filter: blur(80px);
+  backdrop-filter: blur(90px);
+  -webkit-backdrop-filter: blur(90px);
   -webkit-mask-image: radial-gradient(circle, black 30%, transparent 70%);
   mask-image: radial-gradient(circle, black 30%, transparent 70%);
 }
@@ -496,28 +496,28 @@ a {
   width: 110vw; height: 80vw;
   border-radius: 70% 30% 50% 50%;
   bottom: -20%; right: -10%;
-  animation: float2 13s infinite alternate ease-in-out;
+  animation: float2 5s infinite alternate ease-in-out;
 }
 
 .blob-3 {
   width: 70vw; height: 90vw;
   border-radius: 30% 70% 60% 40%;
   top: 10%; left: -20%;
-  animation: float3 15s infinite alternate-reverse ease-in-out;
+  animation: float3 5s infinite alternate-reverse ease-in-out;
 }
 
 .blob-4 {
   width: 85vw; height: 85vw;
   border-radius: 50% 50% 30% 70%;
   top: 50%; right: 20%;
-  animation: float1 17s infinite alternate ease-in-out;
+  animation: float1 5s infinite alternate ease-in-out;
 }
 
 .blob-5 {
   width: 60vw; height: 60vw;
   border-radius: 40% 60% 70% 30%;
   top: -5%; right: 40%;
-  animation: float2 12s infinite alternate-reverse ease-in-out;
+  animation: float2 5s infinite alternate-reverse ease-in-out;
 }
 
 /* =========================================
@@ -525,15 +525,15 @@ a {
    ========================================= */
 @keyframes float1 {
   0% { transform: translate(0, 0) scale(1) rotate(0deg); }
-  100% { transform: translate(25%, 20%) scale(1.15) rotate(15deg); }
+  100% { transform: translate(15%, 8%) scale(1.15) rotate(15deg); }
 }
 @keyframes float2 {
   0% { transform: translate(0, 0) scale(1) rotate(0deg); }
-  100% { transform: translate(-25%, -30%) scale(1.1) rotate(-10deg); }
+  100% { transform: translate(-10%, -20%) scale(1.1) rotate(-10deg); }
 }
 @keyframes float3 {
   0% { transform: translate(0, 0) scale(1) rotate(0deg); }
-  100% { transform: translate(30%, -20%) scale(1.25) rotate(20deg); }
+  100% { transform: translate(10%, -15%) scale(1.25) rotate(20deg); }
 }
 
 /* ═══════════════════════════════════════════
