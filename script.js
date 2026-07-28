@@ -841,64 +841,85 @@ function initParticles() {
 }
 
 /* ═══════════════════════════════════════════
-   Fluid Blur Interaction (터치 & 핸드폰 기울기 센서 민감도 UP)
+   Fluid Blur Interaction (터치 시 걷힘 & 자이로스코프 방향 간섭)
    ═══════════════════════════════════════════ */
 function initFluidBlur() {
-    const wrappers = document.querySelectorAll('.blob-wrapper');
-    if (wrappers.length === 0) return;
+    const container = document.getElementById('fluidBlurContainer');
+    const driftLayer = document.getElementById('blobDriftLayer');
+    if (!container || !driftLayer) return;
 
-    let targetX = 0; let targetY = 0;
-    let currentX = 0; let currentY = 0;
+    // 1. 터치 시 블러가 걷히는(지워지는) 효과 관련 변수
+    let mouseX = window.innerWidth / 2;
+    let mouseY = window.innerHeight / 2;
+    let targetMaskRadius = 0; // 평소엔 0 (블러로 덮여있음)
+    let currentMaskRadius = 0;
     
-    // 💡 4. 터치/기울일 때 움직이는 [절대 강도]를 60 -> 150으로 대폭 올렸습니다
-    const strength = 150; 
+    // 화면 크기를 기준으로 터치 좌표 보정
+    const updateCoords = (clientX, clientY) => {
+        const rect = container.getBoundingClientRect();
+        mouseX = clientX - rect.left;
+        mouseY = clientY - rect.top;
+    };
 
-    // 1. 터치 및 마우스 이동 감지
-    function handleMove(clientX, clientY) {
-        const x = (clientX / window.innerWidth - 0.5) * 2;
-        const y = (clientY / window.innerHeight - 0.5) * 2;
-        targetX = x * strength;
-        targetY = y * strength;
-    }
+    // 터치/마우스 시작: 반경 200px 만큼 블러를 걷어냄
+    const handleInteract = (e) => {
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        updateCoords(clientX, clientY);
+        targetMaskRadius = 250; 
+    };
+
+    // 터치/마우스 뗌: 다시 블러로 덮임
+    const handleLeave = () => {
+        targetMaskRadius = 0; 
+    };
+
+    document.addEventListener('touchstart', handleInteract, { passive: true });
+    document.addEventListener('touchmove', handleInteract, { passive: true });
+    document.addEventListener('touchend', handleLeave);
     
-    // 💡 4. 손을 떼고 있을 때 화면을 딱 누르기만 해도(touchstart) 즉각 반응하도록 이벤트를 추가했습니다
-    document.addEventListener('touchstart', (e) => handleMove(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
-    document.addEventListener('touchmove', (e) => handleMove(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
-    document.addEventListener('mousemove', (e) => handleMove(e.clientX, e.clientY));
+    document.addEventListener('mousemove', handleInteract);
+    document.addEventListener('mouseleave', handleLeave);
 
-    // 2. 모바일 자이로스코프(기기 기울기) 감지
+    // 2. 자이로스코프: 애니메이션 위에 얹어지는 전체적인 '흐름 방향' 보정
+    let gyroX = 0;
+    let gyroY = 0;
+    let currentGyroX = 0;
+    let currentGyroY = 0;
+
     window.addEventListener('deviceorientation', (e) => {
         if (e.gamma === null || e.beta === null) return;
-        
-        // 💡 5. 기존에는 45도를 기울여야 최대치였으나, 이제 20도만 살짝 기울여도 확확 움직이도록 민감도를 2배 이상 높였습니다.
-        let x = e.gamma / 20; 
-        let y = (e.beta - 45) / 20; 
-        
-        x = Math.max(-1, Math.min(1, x));
-        y = Math.max(-1, Math.min(1, y));
-
-        // 💡 5. 기울기에 따른 이동 폭도 더 증폭시켰습니다.
-        targetX = x * strength * 2.5; 
-        targetY = y * strength * 2.5;
+        // 기울기에 따라 전체 레이어가 최대 60px 정도 서서히 쏠림(Drift)
+        let x = Math.max(-1, Math.min(1, e.gamma / 30)); 
+        let y = Math.max(-1, Math.min(1, (e.beta - 45) / 30)); 
+        gyroX = x * 60; 
+        gyroY = y * 60;
     });
 
-    // 3. 미끄러지듯 부드럽게 위치 업데이트
-    function animateFluid() {
-        // 💡 반응 속도(관성)를 0.05 -> 0.08로 올려서 터치 시 굼뜨지 않고 쫀득하게 따라오게 수정
-        currentX += (targetX - currentX) * 0.08; 
-        currentY += (targetY - currentY) * 0.08;
+    // 3. 매 프레임마다 부드럽게 렌더링
+    function animate() {
+        // [터치] 마스크 크기가 스르륵 커지고 작아짐
+        currentMaskRadius += (targetMaskRadius - currentMaskRadius) * 0.1;
+        
+        if (currentMaskRadius > 2) {
+            // 터치한 부분(투명) -> 바깥쪽(검은색=블러보임)으로 부드럽게 뚫림
+            const maskCSS = `radial-gradient(circle at ${mouseX}px ${mouseY}px, transparent 0px, transparent ${currentMaskRadius * 0.3}px, black ${currentMaskRadius}px)`;
+            container.style.webkitMaskImage = maskCSS;
+            container.style.maskImage = maskCSS;
+        } else {
+            // 손 뗐을 때 뚫린 부분 초기화
+            container.style.webkitMaskImage = 'none';
+            container.style.maskImage = 'none';
+        }
 
-        // 6개의 덩어리가 모두 터치/기울기에 입체적으로 제각각 반응하도록 추가
-        if(wrappers[0]) wrappers[0].style.transform = `translate(${currentX}px, ${currentY}px)`;
-        if(wrappers[1]) wrappers[1].style.transform = `translate(${-currentX * 0.8}px, ${-currentY * 0.8}px)`;
-        if(wrappers[2]) wrappers[2].style.transform = `translate(${currentX * 0.5}px, ${-currentY * 1.2}px)`;
-        if(wrappers[3]) wrappers[3].style.transform = `translate(${-currentX * 1.2}px, ${currentY * 0.5}px)`;
-        if(wrappers[4]) wrappers[4].style.transform = `translate(${currentX * 0.9}px, ${currentY * 1.1}px)`;
-        if(wrappers[5]) wrappers[5].style.transform = `translate(${-currentX * 0.6}px, ${-currentY * 0.9}px)`;
+        // [자이로스코프] CSS 애니메이션과는 별개로 전체 레이어가 기기 기울기에 따라 쏠려 흐름
+        currentGyroX += (gyroX - currentGyroX) * 0.02;
+        currentGyroY += (gyroY - currentGyroY) * 0.02;
+        driftLayer.style.transform = `translate(${currentGyroX}px, ${currentGyroY}px)`;
 
-        requestAnimationFrame(animateFluid);
+        requestAnimationFrame(animate);
     }
-    animateFluid();
+    animate();
 }
   
   /* ═══════════════════════════════════════════
