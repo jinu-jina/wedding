@@ -556,35 +556,35 @@ a {
   will-change: transform;
 }
 
-/* 💡 무거운 특수 필터 대신 순수 CSS 블러를 써서 모바일 멈춤(과부하) 완전 해결 */
+/* 💡 네모난 사각형으로 깨지는 현상을 막기 위해 순수 원형 그라데이션 및 블러 최적화 적용 */
 .blur-blob {
   position: absolute;
-  border-radius: 50%;
-  filter: blur(40px); /* 40px 정도면 물감처럼 경계선 없이 아주 예쁘게 섞입니다 */
+  border-radius: 50% !important; /* 강제 원형 고정 */
+  background-repeat: no-repeat;
   will-change: transform;
 }
 
-/* 🎨 1. 짙은 초록 덩어리 */
+/* 🎨 1. 짙은 초록 덩어리 (그라데이션으로 자연스러운 둥근 뭉개짐 효과) */
 .color-dark-green {
-  width: 300px; height: 300px;
-  background: rgba(74, 124, 73, 0.85); 
-  bottom: 10%; right: 10%;
+  width: 320px; height: 320px;
+  background: radial-gradient(circle, rgba(74, 124, 73, 0.9) 0%, rgba(74, 124, 73, 0.4) 50%, transparent 70%);
+  bottom: 5%; right: 5%;
   animation: float1 12s infinite alternate ease-in-out;
 }
 
 /* 🎨 2. 밝은 연두 덩어리 */
 .color-lime {
-  width: 250px; height: 250px;
-  background: rgba(181, 213, 106, 0.85); 
-  top: 30%; left: 10%;
+  width: 280px; height: 280px;
+  background: radial-gradient(circle, rgba(181, 213, 106, 0.9) 0%, rgba(181, 213, 106, 0.4) 50%, transparent 70%);
+  top: 25%; left: 5%;
   animation: float2 14s infinite alternate-reverse ease-in-out;
 }
 
 /* 🎨 3. 흰색 빛 덩어리 */
 .color-white {
-  width: 280px; height: 280px;
-  background: rgba(255, 255, 255, 0.95);
-  top: -5%; left: 40%;
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.4) 50%, transparent 70%);
+  top: -10%; left: 35%;
   animation: float3 15s infinite alternate ease-in-out;
 }
 
@@ -599,18 +599,18 @@ a {
   mask-image: radial-gradient(circle at center, black 30%, transparent 60%);
 }
 
-/* 각 덩어리들이 이리저리 돌아다니는 궤도 */
+/* 각 덩어리들이 부드럽게 움직이는 애니메이션 */
 @keyframes float1 {
   0% { transform: translate(0, 0) scale(1); }
-  100% { transform: translate(-30%, -20%) scale(1.2); }
+  100% { transform: translate(-25%, -15%) scale(1.15); }
 }
 @keyframes float2 {
   0% { transform: translate(0, 0) scale(1); }
-  100% { transform: translate(40%, -10%) scale(1.1); }
+  100% { transform: translate(30%, -10%) scale(1.1); }
 }
 @keyframes float3 {
   0% { transform: translate(0, 0) scale(1); }
-  100% { transform: translate(-20%, 30%) scale(1.3); }
+  100% { transform: translate(-15%, 25%) scale(1.2); }
 }
 
 /* ═══════════════════════════════════════════
