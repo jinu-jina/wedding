@@ -67,33 +67,37 @@
     </section>
 
     <!-- ─── 메인 (히어로) ─── -->
-<section class="section hero" id="hero">
-      <div class="hero__overlay"></div>
-      <img class="hero__photo" id="heroPhoto" src="images/hero/1.jpg" alt="웨딩 사진" loading="eager">
-   <!-- 오로라 블러 이펙트 컨테이너 -->
-      <div class="fluid-blur-container" id="fluidBlurContainer">
-        <!-- 💡 폰을 기울이면 이 레이어 전체가 살짝씩 밀리며 방향을 바꿔줍니다 -->
-        <div class="blob-drift-layer" id="blobDriftLayer">
-          
-          <!-- 💡 이미지 레퍼런스의 3가지 색상 덩어리 + 투명 렌즈 덩어리 -->
-          <div class="blur-blob color-dark-green"></div>
-          <div class="blur-blob color-lime"></div>
-          <div class="blur-blob color-white"></div>
-          <div class="blur-blob color-glass"></div>
-          
-        </div>
-      </div>
-  
-    <section class="hero">
-      <!-- 1. 맨 밑에 깔리는 원본 사진 (기존 코드) -->
+<section class="hero">
+      
+      <!-- 1. 맨 밑에 깔리는 원본 사진 -->
       <img src="images/hero/1.jpg" alt="정진우 & 배진아" class="hero__photo animate-item" data-animate="fade-in">
       
-      <!-- 2. 오로라 블러 이펙트 컨테이너 (기존 코드) -->
+      <!-- 💡 2. 필수! 찰흙처럼 섞이게 만들어주는 특수 SVG 필터 (누락되면 네모난 사각형으로 나옵니다) -->
+      <svg class="sr-only">
+        <defs>
+          <filter id="gooey">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="40" result="blur" />
+            <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 60 -30" result="gooey" />
+            <feGaussianBlur in="gooey" stdDeviation="30" result="final" />
+          </filter>
+        </defs>
+      </svg>
+
+      <!-- 3. 오로라 블러 이펙트 컨테이너 (정확한 클래스명 적용) -->
       <div class="fluid-blur-container" id="fluidBlurContainer">
-        <!-- ... (블러 내용들) ... -->
+        <div class="blob-drift-layer" id="blobDriftLayer">
+          <!-- 끈적한 물감 융합 레이어 -->
+          <div class="gooey-layer">
+            <div class="gooey-blob color-dark-green"></div>
+            <div class="gooey-blob color-lime"></div>
+            <div class="gooey-blob color-white"></div>
+          </div>
+          <!-- 투명 렌즈 -->
+          <div class="glass-lens"></div>
+        </div>
       </div>
       
-      <!-- 💡 3. 새로 추가! 블러 위에 올라가는 맨 상위 투명 PNG 이미지 -->
+      <!-- 4. 새로 추가하신 맨 상위 투명 PNG 이미지 -->
       <img src="images/hero/1_top.png" alt="" class="hero__photo-top">
       
     </section>
