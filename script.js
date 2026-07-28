@@ -844,32 +844,30 @@ function initParticles() {
    Fluid Blur Interaction (터치 시 걷힘 & 자이로스코프 방향 간섭)
    ═══════════════════════════════════════════ */
 function initFluidBlur() {
-    const container = document.getElementById('fluidBlurContainer');
     const driftLayer = document.getElementById('blobDriftLayer');
-    if (!container || !driftLayer) return;
+    if (!driftLayer) return;
 
-    // 1. 터치 시 블러가 걷히는(지워지는) 효과 관련 변수
+    // ─── 1. 터치 시 블러가 살짝 걷히는(지워지는) 효과 ───
     let mouseX = window.innerWidth / 2;
     let mouseY = window.innerHeight / 2;
-    let targetMaskRadius = 0; // 평소엔 0 (블러로 덮여있음)
+    let targetMaskRadius = 0; 
     let currentMaskRadius = 0;
     
-    // 화면 크기를 기준으로 터치 좌표 보정
     const updateCoords = (clientX, clientY) => {
-        const rect = container.getBoundingClientRect();
+        const rect = driftLayer.parentElement.getBoundingClientRect();
         mouseX = clientX - rect.left;
         mouseY = clientY - rect.top;
     };
 
-    // 터치/마우스 시작: 반경 200px 만큼 블러를 걷어냄
+    // 터치/마우스 시작: 반경 120px 만큼만 작게 블러를 걷어냄 (기존 250px에서 대폭 축소)
     const handleInteract = (e) => {
         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
         const clientY = e.touches ? e.touches[0].clientY : e.clientY;
         updateCoords(clientX, clientY);
-        targetMaskRadius = 250; 
+        targetMaskRadius = 60; 
     };
 
-    // 터치/마우스 뗌: 다시 블러로 덮임
+    // 터치/마우스 뗌: 다시 덮임
     const handleLeave = () => {
         targetMaskRadius = 0; 
     };
@@ -877,11 +875,10 @@ function initFluidBlur() {
     document.addEventListener('touchstart', handleInteract, { passive: true });
     document.addEventListener('touchmove', handleInteract, { passive: true });
     document.addEventListener('touchend', handleLeave);
-    
     document.addEventListener('mousemove', handleInteract);
     document.addEventListener('mouseleave', handleLeave);
 
-    // 2. 자이로스코프: 애니메이션 위에 얹어지는 전체적인 '흐름 방향' 보정
+   // ─── 2. 자이로스코프 흐름 방향 간섭 ───
     let gyroX = 0;
     let gyroY = 0;
     let currentGyroX = 0;
@@ -889,34 +886,32 @@ function initFluidBlur() {
 
     window.addEventListener('deviceorientation', (e) => {
         if (e.gamma === null || e.beta === null) return;
-        // 기울기에 따라 전체 레이어가 최대 60px 정도 서서히 쏠림(Drift)
         let x = Math.max(-1, Math.min(1, e.gamma / 30)); 
         let y = Math.max(-1, Math.min(1, (e.beta - 45) / 30)); 
-        gyroX = x * 60; 
-        gyroY = y * 60;
+        gyroX = x * 40; 
+        gyroY = y * 40;
     });
 
-    // 3. 매 프레임마다 부드럽게 렌더링
+    // ─── 3. 애니메이션 렌더링 ───
     function animate() {
-        // [터치] 마스크 크기가 스르륵 커지고 작아짐
-        currentMaskRadius += (targetMaskRadius - currentMaskRadius) * 0.1;
+        // [터치 마스크] 크기가 스르륵 커지고 작아짐
+        currentMaskRadius += (targetMaskRadius - currentMaskRadius) * 0.15;
         
-        if (currentMaskRadius > 2) {
-            // 터치한 부분(투명) -> 바깥쪽(검은색=블러보임)으로 부드럽게 뚫림
-            const maskCSS = `radial-gradient(circle at ${mouseX}px ${mouseY}px, transparent 0px, transparent ${currentMaskRadius * 0.3}px, black ${currentMaskRadius}px)`;
-            container.style.webkitMaskImage = maskCSS;
-            container.style.maskImage = maskCSS;
+        if (currentMaskRadius > 1) {
+            // 터치한 곳을 투명하게 뚫어줌 (그레인 노이즈는 유지되고 색상 덩어리만 뚫림)
+            const maskCSS = `radial-gradient(circle at ${mouseX}px ${mouseY}px, transparent 0px, transparent ${currentMaskRadius * 0.4}px, black ${currentMaskRadius}px)`;
+            driftLayer.style.webkitMaskImage = maskCSS;
+            driftLayer.style.maskImage = maskCSS;
         } else {
-            // 손 뗐을 때 뚫린 부분 초기화
-            container.style.webkitMaskImage = 'none';
-            container.style.maskImage = 'none';
+            driftLayer.style.webkitMaskImage = 'none';
+            driftLayer.style.maskImage = 'none';
         }
 
-        // [자이로스코프] CSS 애니메이션과는 별개로 전체 레이어가 기기 기울기에 따라 쏠려 흐름
-        currentGyroX += (gyroX - currentGyroX) * 0.02;
-        currentGyroY += (gyroY - currentGyroY) * 0.02;
+        // [자이로스코프] 기울기에 따라 흐름 보정
+        currentGyroX += (gyroX - currentGyroX) * 0.05;
+        currentGyroY += (gyroY - currentGyroY) * 0.05;
         driftLayer.style.transform = `translate(${currentGyroX}px, ${currentGyroY}px)`;
-
+        
         requestAnimationFrame(animate);
     }
     animate();
