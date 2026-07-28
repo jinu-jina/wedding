@@ -481,7 +481,7 @@ a {
 }
 
 /* ═══════════════════════════════════════════
-   Fluid Blur Effect 
+   Fluid Blur Effect (동영상 레퍼런스 완벽 재현)
    ═══════════════════════════════════════════ */
 .fluid-blur-container {
   position: absolute;
@@ -489,25 +489,24 @@ a {
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
-  /* 💡 핵심: PC의 드넓은 모니터 전체로 퍼지지 않게, 가운데 사진 영역(500px) 안에 블러를 완벽히 가둡니다! */
-  max-width: 500px; 
+  max-width: 600px; /* 모바일/PC 모두 여백이 생기도록 적당히 가둠 */
   z-index: 2; 
   overflow: hidden;
   pointer-events: none;
   background-color: transparent; 
 }
 
-/* 필름 그레인 (노이즈) */
+/* 💡 동영상 느낌의 섬세하고 자잘한 필름 그레인 */
 .fluid-blur-container::after {
   content: "";
   position: absolute;
   inset: -50%; 
   z-index: 5;
   pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
   background-repeat: repeat;
   background-size: 150px 150px; 
-  opacity: 0.35; 
+  opacity: 0.22; /* 굵지 않고 은은하게 */
   mix-blend-mode: overlay;
 }
 
@@ -520,96 +519,103 @@ a {
   will-change: transform;
 }
 
+/* 유기적이고 찌그러진 기본 물방울 형태 */
 .blur-blob {
   position: absolute;
   will-change: transform;
 }
 
 /* =========================================
-   [그룹 A] 색상이 있는 덩어리 (라임 그린)
+   [그룹 A] 첨부 이미지 색상 (짙은 초록 & 연두)
    ========================================= */
-.blob-1, .blob-6, .blob-7 {
-  background: rgba(168, 204, 69, 0.45); 
-  /* 💡 PC와 모바일의 완벽한 중간 세기 (너무 옅지도, 뭉개지지도 않는 황금비율 55px) */
+.blob-1, .blob-2, .blob-3 {
   filter: blur(55px); 
 }
 
-/* 💡 화면 크기(vw) 대신 비율(%)을 사용하여 PC에서도 크기가 일정하게 유지됨 */
+/* 짙은 초록색 */
 .blob-1 {
-  width: 120%; height: 80%; 
-  border-radius: 40% 60% 70% 30%; 
-  top: -10%; left: -10%;
-  animation: float1 11s infinite alternate ease-in-out;
+  width: 60vw; height: 60vw;
+  max-width: 350px; max-height: 350px;
+  background: rgba(110, 150, 70, 0.6); 
+  border-radius: 40% 60% 70% 30%;
+  top: 10%; left: -10%;
+  animation: float1 14s infinite alternate ease-in-out;
 }
 
-.blob-6 {
-  width: 80%; height: 110%; 
+/* 밝은 연두색 (옐로우그린) */
+.blob-2 {
+  width: 55vw; height: 70vw;
+  max-width: 320px; max-height: 400px;
+  background: rgba(175, 210, 90, 0.55); 
   border-radius: 60% 40% 30% 70%;
-  bottom: 10%; right: -10%;
-  animation: float2 14s infinite alternate-reverse ease-in-out;
+  bottom: 15%; right: -5%;
+  animation: float2 16s infinite alternate-reverse ease-in-out;
 }
 
-.blob-7 {
-  width: 100%; height: 100%;
+/* 은은한 밝은 빛 (화이트/그린 혼합) */
+.blob-3 {
+  width: 50vw; height: 50vw;
+  max-width: 300px; max-height: 300px;
+  background: rgba(220, 240, 180, 0.4); 
   border-radius: 50% 70% 40% 60%;
-  top: 40%; left: 30%;
-  animation: float3 16s infinite alternate ease-in-out;
+  top: 40%; left: 20%;
+  animation: float3 12s infinite alternate ease-in-out;
 }
 
 /* =========================================
-   [그룹 B] 투명 렌즈 덩어리 (배경만 뭉갬)
+   [그룹 B] 투명 렌즈 (푸른/흰색 배경을 흐리게)
    ========================================= */
-.blob-2, .blob-3, .blob-4, .blob-5 {
+/* 동영상처럼 배경을 부드럽게 뭉개는 투명 블러 */
+.blob-4, .blob-5, .blob-6 {
   background: transparent; 
-  /* 💡 PC와 모바일의 완벽한 중간 세기 (적당한 왜곡 35px) */
   backdrop-filter: blur(35px);
   -webkit-backdrop-filter: blur(35px);
+  /* 가장자리를 부드럽게 페이드아웃 (유리판처럼 뚝 끊기지 않게) */
   -webkit-mask-image: radial-gradient(circle, black 30%, transparent 70%);
   mask-image: radial-gradient(circle, black 30%, transparent 70%);
 }
 
-.blob-2 {
-  width: 140%; height: 100%;
-  border-radius: 70% 30% 50% 50%;
-  bottom: -20%; right: -10%;
-  animation: float2 13s infinite alternate ease-in-out;
-}
-
-.blob-3 {
-  width: 90%; height: 120%;
-  border-radius: 30% 70% 60% 40%;
-  top: 10%; left: -20%;
-  animation: float3 15s infinite alternate-reverse ease-in-out;
-}
-
+/* 투명 렌즈 1 */
 .blob-4 {
-  width: 110%; height: 110%;
-  border-radius: 50% 50% 30% 70%;
-  top: 50%; right: 20%;
-  animation: float1 17s infinite alternate ease-in-out;
+  width: 75vw; height: 60vw;
+  max-width: 450px; max-height: 350px;
+  border-radius: 70% 30% 50% 50%;
+  bottom: 5%; left: -15%;
+  animation: float2 15s infinite alternate ease-in-out;
 }
 
+/* 투명 렌즈 2 */
 .blob-5 {
-  width: 80%; height: 80%;
-  border-radius: 40% 60% 70% 30%;
-  top: -5%; right: 40%;
-  animation: float2 12s infinite alternate-reverse ease-in-out;
+  width: 65vw; height: 80vw;
+  max-width: 380px; max-height: 480px;
+  border-radius: 30% 70% 60% 40%;
+  top: -5%; right: -10%;
+  animation: float3 17s infinite alternate-reverse ease-in-out;
+}
+
+/* 투명 렌즈 3 */
+.blob-6 {
+  width: 55vw; height: 55vw;
+  max-width: 320px; max-height: 320px;
+  border-radius: 50% 50% 30% 70%;
+  top: 50%; right: 10%;
+  animation: float1 13s infinite alternate ease-in-out;
 }
 
 /* =========================================
-   애니메이션 (이동 경로)
+   애니메이션 (동영상처럼 여유롭고 유려하게)
    ========================================= */
 @keyframes float1 {
   0% { transform: translate(0, 0) scale(1) rotate(0deg); }
-  100% { transform: translate(15%, 15%) scale(1.15) rotate(15deg); }
+  100% { transform: translate(35%, 25%) scale(1.1) rotate(15deg); }
 }
 @keyframes float2 {
   0% { transform: translate(0, 0) scale(1) rotate(0deg); }
-  100% { transform: translate(-15%, -20%) scale(1.1) rotate(-10deg); }
+  100% { transform: translate(-30%, -35%) scale(1.15) rotate(-10deg); }
 }
 @keyframes float3 {
   0% { transform: translate(0, 0) scale(1) rotate(0deg); }
-  100% { transform: translate(20%, -10%) scale(1.25) rotate(20deg); }
+  100% { transform: translate(25%, -25%) scale(1.05) rotate(20deg); }
 }
 
 /* ═══════════════════════════════════════════
