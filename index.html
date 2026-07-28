@@ -67,32 +67,20 @@
       <!-- 1. 맨 밑에 깔리는 원본 사진 -->
       <img src="images/hero/1.jpg" alt="정진우 & 배진아" class="hero__photo animate-item" data-animate="fade-in">
       
-      <!-- 💡 2. 필수! 찰흙처럼 섞이게 만들어주는 특수 SVG 필터 (누락되면 네모난 사각형으로 나옵니다) -->
-      <svg class="sr-only">
-        <defs>
-          <filter id="gooey">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="40" result="blur" />
-            <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 60 -30" result="gooey" />
-            <feGaussianBlur in="gooey" stdDeviation="30" result="final" />
-          </filter>
-        </defs>
-      </svg>
+      <!-- 💡 모바일 멈춤을 유발하던 무거운 SVG 필터는 삭제했습니다! -->
 
-      <!-- 3. 오로라 블러 이펙트 컨테이너 (정확한 클래스명 적용) -->
+      <!-- 3. 오로라 블러 이펙트 컨테이너 (순수 CSS 렌더링 최적화 버전) -->
       <div class="fluid-blur-container" id="fluidBlurContainer">
         <div class="blob-drift-layer" id="blobDriftLayer">
-          <!-- 끈적한 물감 융합 레이어 -->
-          <div class="gooey-layer">
-            <div class="gooey-blob color-dark-green"></div>
-            <div class="gooey-blob color-lime"></div>
-            <div class="gooey-blob color-white"></div>
-          </div>
-          <!-- 투명 렌즈 -->
+          <!-- 💡 gooey-blob 대신 blur-blob 사용 -->
+          <div class="blur-blob color-dark-green"></div>
+          <div class="blur-blob color-lime"></div>
+          <div class="blur-blob color-white"></div>
           <div class="glass-lens"></div>
         </div>
       </div>
       
-      <!-- 4. 새로 추가하신 맨 상위 투명 PNG 이미지 -->
+      <!-- 4. 맨 상위 투명 PNG 이미지 -->
       <img src="images/hero/1_top.png" alt="" class="hero__photo-top">
       
     </section>
