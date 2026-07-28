@@ -499,137 +499,94 @@ a {
 }
 
 /* ═══════════════════════════════════════════
-   Fluid Blur Effect (동영상 레퍼런스 완벽 재현)
+   Fluid Blur Effect (메쉬 그라디언트 & 물감 섞임 효과)
    ═══════════════════════════════════════════ */
 .fluid-blur-container {
   position: absolute;
-  top: 0; bottom: 0;
-  left: 50%;
+  top: 0; bottom: 0; left: 50%;
   transform: translateX(-50%);
   width: 100%;
-  max-width: 600px; /* 모바일/PC 모두 여백이 생기도록 적당히 가둠 */
+  max-width: 500px; 
   z-index: 2; 
   overflow: hidden;
   pointer-events: none;
-  background-color: transparent; 
+  /* 터치 시 지워지는 효과는 JS에서 Mask-Image로 실시간 제어합니다 */
 }
 
-/* 💡 동영상 느낌의 섬세하고 자잘한 필름 그레인 */
+/* 필름 그레인 (노이즈) */
 .fluid-blur-container::after {
   content: "";
   position: absolute;
   inset: -50%; 
   z-index: 5;
   pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
   background-repeat: repeat;
   background-size: 150px 150px; 
-  opacity: 0.22; /* 굵지 않고 은은하게 */
+  opacity: 0.35; 
   mix-blend-mode: overlay;
 }
 
-.blob-wrapper {
+.blob-drift-layer {
   position: absolute;
   width: 100%;
   height: 100%;
-  top: 0;
-  left: 0;
   will-change: transform;
 }
 
-/* 유기적이고 찌그러진 기본 물방울 형태 */
+/* 공통: 덩어리들의 경계를 완전히 없애서 물감처럼 섞이게 만듦 */
 .blur-blob {
   position: absolute;
+  border-radius: 50%;
+  filter: blur(120px); 
   will-change: transform;
 }
 
-/* =========================================
-   [그룹 A] 첨부 이미지 색상 (짙은 초록 & 연두) - 선명도 UP
-   ========================================= */
-.blob-1, .blob-2, .blob-3 {
-  /* 💡 1, 2. 색상이 옅어지지 않도록 블러를 살짝 줄이고 뭉침을 강화했습니다 */
-  filter: blur(45px); 
+/* 1. 짙은 초록 (포스터 우측 하단 베이스) */
+.color-dark-green {
+  width: 180%; height: 180%;
+  background: #4a7c49; 
+  bottom: -30%; right: -30%;
+  animation: mixFlow1 15s infinite alternate ease-in-out;
 }
 
-/* 💡 1. '진한 초록' 느낌이 확실히 나도록 색상과 투명도를 대폭 진하게 수정했습니다 */
-.blob-1 {
-  width: 60vw; height: 60vw;
-  max-width: 350px; max-height: 350px;
-  background: rgba(80, 130, 50, 0.85); /* 짙고 뚜렷한 올리브 그린 */
-  border-radius: 40% 60% 70% 30%;
-  top: 10%; left: -10%;
-  /* 💡 3. 애니메이션 시간을 절반으로 줄여 속도를 2배 빠르게 했습니다 */
-  animation: float1 7s infinite alternate ease-in-out;
+/* 2. 밝은 연두 (포스터 중앙 좌측 베이스) */
+.color-lime {
+  width: 160%; height: 160%;
+  background: #b5d56a; 
+  top: 10%; left: -20%;
+  animation: mixFlow2 18s infinite alternate-reverse ease-in-out;
 }
 
-.blob-2 {
-  width: 55vw; height: 70vw;
-  max-width: 320px; max-height: 400px;
-  background: rgba(160, 210, 60, 0.8); /* 선명한 라임 연두색 */
-  border-radius: 60% 40% 30% 70%;
-  bottom: 15%; right: -5%;
-  animation: float2 8s infinite alternate-reverse ease-in-out;
+/* 3. 흰색 빛 (포스터 상단, 자연스러운 그라데이션) */
+.color-white {
+  width: 130%; height: 130%;
+  background: rgba(255, 255, 255, 0.95);
+  top: -20%; left: 10%;
+  animation: mixFlow3 14s infinite alternate ease-in-out;
 }
 
-.blob-3 {
-  width: 50vw; height: 50vw;
-  max-width: 300px; max-height: 300px;
-  background: rgba(230, 250, 190, 0.7); 
-  border-radius: 50% 70% 40% 60%;
-  top: 40%; left: 20%;
-  animation: float3 6s infinite alternate ease-in-out;
+/* 4. 투명 렌즈 (색상 외에 전체 글씨를 왜곡/뭉갬) */
+.color-glass {
+  width: 200%; height: 200%;
+  background: transparent;
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  top: -50%; left: -50%;
 }
 
-/* =========================================
-   [그룹 B] 투명 렌즈 (푸른/흰색 배경을 흐리게)
-   ========================================= */
-.blob-4, .blob-5, .blob-6 {
-  background: transparent; 
-  backdrop-filter: blur(35px);
-  -webkit-backdrop-filter: blur(35px);
-  -webkit-mask-image: radial-gradient(circle, black 30%, transparent 70%);
-  mask-image: radial-gradient(circle, black 30%, transparent 70%);
+/* 자체적으로 끊임없이 흐르는 애니메이션 */
+@keyframes mixFlow1 {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(-10%, -10%) scale(1.05); }
 }
-
-.blob-4 {
-  width: 75vw; height: 60vw;
-  max-width: 450px; max-height: 350px;
-  border-radius: 70% 30% 50% 50%;
-  bottom: 5%; left: -15%;
-  animation: float2 8s infinite alternate ease-in-out;
+@keyframes mixFlow2 {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(15%, 10%) scale(1.1); }
 }
-
-.blob-5 {
-  width: 65vw; height: 80vw;
-  max-width: 380px; max-height: 480px;
-  border-radius: 30% 70% 60% 40%;
-  top: -5%; right: -10%;
-  animation: float3 9s infinite alternate-reverse ease-in-out;
-}
-
-.blob-6 {
-  width: 55vw; height: 55vw;
-  max-width: 320px; max-height: 320px;
-  border-radius: 50% 50% 30% 70%;
-  top: 50%; right: 10%;
-  animation: float1 7s infinite alternate ease-in-out;
-}
-
-/* =========================================
-   애니메이션 (동영상처럼 움직임 반경을 2배 확대)
-   ========================================= */
-@keyframes float1 {
-  0% { transform: translate(0, 0) scale(1) rotate(0deg); }
-  /* 💡 3. 25%였던 이동 범위를 50%까지 대폭 늘려 역동적으로 움직이게 했습니다 */
-  100% { transform: translate(50%, 40%) scale(1.1) rotate(15deg); }
-}
-@keyframes float2 {
-  0% { transform: translate(0, 0) scale(1) rotate(0deg); }
-  100% { transform: translate(-45%, -50%) scale(1.15) rotate(-10deg); }
-}
-@keyframes float3 {
-  0% { transform: translate(0, 0) scale(1) rotate(0deg); }
-  100% { transform: translate(40%, -40%) scale(1.05) rotate(20deg); }
+@keyframes mixFlow3 {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(-10%, 15%) scale(1.05); }
 }
 
 /* ═══════════════════════════════════════════
