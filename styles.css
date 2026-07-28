@@ -412,13 +412,20 @@ a {
   z-index: 2; 
   overflow: hidden;
   pointer-events: none;
-  
-  /* 💡 1. 섞이는 모드 제거 후, 푸른빛 베이스를 깔아줍니다 */
-  background-color: rgba(100, 150, 210, 0.4); 
-  
-  /* 💡 2. 배경 사진(1.jpg)의 형체를 완전히 날려버리는 강력한 백드롭 필터 */
-  backdrop-filter: blur(40px);
-  -webkit-backdrop-filter: blur(40px);
+  background-color: transparent; /* 전체 블러/배경색 제거 (가독성 확보) */
+}
+
+/* 💡 감성적인 필름 그레인(노이즈) 효과 추가 */
+.fluid-blur-container::after {
+  content: "";
+  position: absolute;
+  inset: -50%; /* 화면을 기울여도 경계가 보이지 않게 넉넉히 덮음 */
+  z-index: 5;
+  pointer-events: none;
+  /* SVG 코드를 이용한 실시간 노이즈 텍스처 */
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.25; /* 그레인 강도 조절 (높을수록 거칠어짐) */
+  mix-blend-mode: overlay;
 }
 
 .blob-wrapper {
@@ -433,9 +440,9 @@ a {
 .blur-blob {
   position: absolute;
   border-radius: 50%;
-  /* 💡 덩어리의 경계를 아주 부드럽게 뭉갬 */
-  filter: blur(90px); 
-  opacity: 0.9;
+  filter: blur(45px); /* 덩어리 경계를 부드럽게 */
+  opacity: 0.55; /* 💡 뒤에 있는 포스터 글씨가 비치도록 투명도 낮춤 */
+  mix-blend-mode: hard-light; /* 색상이 자연스럽게 섞이게 */
   will-change: transform;
 }
 
@@ -459,7 +466,7 @@ a {
 .blob-3 {
   width: 50vw; height: 50vw;
   max-width: 350px; max-height: 350px;
-  background: #51718c; /* 블루 */
+  background: #dfea50; /* 연두 */
   top: 5%; left: 15%;
   animation: float3 14s infinite alternate ease-in-out;
 }
