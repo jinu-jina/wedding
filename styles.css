@@ -499,26 +499,22 @@ a {
 }
 
 /* ═══════════════════════════════════════════
-   Fluid Blur Effect (메쉬 그라디언트 & 물감 섞임 효과)
+   Fluid Blur Effect (슬라임 융합 & 물감 섞임)
    ═══════════════════════════════════════════ */
 .fluid-blur-container {
   position: absolute;
-  top: 0; bottom: 0; left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 500px; 
+  inset: 0;
   z-index: 2; 
   overflow: hidden;
   pointer-events: none;
 }
 
-/* 필름 그레인 (노이즈) */
+/* 필름 그레인 */
 .fluid-blur-container::after {
   content: "";
   position: absolute;
   inset: -50%; 
   z-index: 5;
-  pointer-events: none;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
   background-repeat: repeat;
   background-size: 150px 150px; 
@@ -533,67 +529,69 @@ a {
   will-change: transform;
 }
 
-/* 💡 핵심: 화면 전체가 아닌, "덩어리가 있는 영역"만 배경이 흐려지게 세팅 */
-.blur-blob {
+/* 💡 HTML에서 만든 융합 필터를 덮어씌우는 핵심 레이어 */
+.gooey-layer {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  filter: url('#gooey'); /* 쫀득하게 합쳐지는 필터 적용 */
+}
+
+/* 덩어리 공통 기본 형태 */
+.gooey-blob {
   position: absolute;
   border-radius: 50%;
-  /* 덩어리 뒤쪽의 배경(사진/글씨)을 뭉갬 */
-  backdrop-filter: blur(25px);
-  -webkit-backdrop-filter: blur(25px);
-  /* 덩어리의 테두리를 부드럽게 지워서 물감처럼 자연스럽게 섞이게 만듦 */
-  -webkit-mask-image: radial-gradient(circle, black 30%, transparent 70%);
-  mask-image: radial-gradient(circle, black 30%, transparent 70%);
   will-change: transform;
 }
 
-/* 1. 짙은 초록 (레퍼런스 하단 색상) */
+/* 🎨 1. 짙은 초록 덩어리 */
 .color-dark-green {
-  width: 70vw; height: 70vw;
-  max-width: 400px; max-height: 400px;
-  background: rgba(77, 122, 61, 0.55); 
-  bottom: 10%; right: -10%;
-  animation: flow1 14s infinite alternate ease-in-out;
+  width: 300px; height: 300px;
+  background: #4a7c49; 
+  bottom: 10%; right: 10%;
+  animation: float1 12s infinite alternate ease-in-out;
 }
 
-/* 2. 밝은 연두 (레퍼런스 중앙 색상) */
+/* 🎨 2. 밝은 연두 덩어리 */
 .color-lime {
-  width: 65vw; height: 80vw;
-  max-width: 350px; max-height: 450px;
-  background: rgba(166, 201, 83, 0.5); 
-  top: 15%; left: -10%;
-  animation: flow2 16s infinite alternate-reverse ease-in-out;
+  width: 250px; height: 250px;
+  background: #b5d56a; 
+  top: 30%; left: 10%;
+  animation: float2 14s infinite alternate-reverse ease-in-out;
 }
 
-/* 3. 흰색 빛 (레퍼런스 상단 색상) */
+/* 🎨 3. 흰색 빛 덩어리 */
 .color-white {
-  width: 75vw; height: 75vw;
-  max-width: 450px; max-height: 450px;
-  background: rgba(255, 255, 255, 0.6);
-  top: -15%; right: 10%;
-  animation: flow3 15s infinite alternate ease-in-out;
+  width: 280px; height: 280px;
+  background: rgba(255, 255, 255, 0.9);
+  top: -5%; left: 40%;
+  animation: float3 15s infinite alternate ease-in-out;
 }
 
-/* 4. 투명 렌즈 (동영상처럼 색상 없이 배경만 일렁이게 왜곡) */
-.color-glass {
-  width: 60vw; height: 60vw;
-  max-width: 350px; max-height: 350px;
-  background: transparent;
-  top: 45%; left: 20%;
-  animation: flow1 18s infinite alternate-reverse ease-in-out;
+/* 🔍 4. 투명 렌즈 (색상 외의 전체 배경 글씨를 왜곡/뭉갬) */
+.glass-lens {
+  position: absolute;
+  width: 150%; height: 150%;
+  top: -25%; left: -25%;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  /* 렌즈 가장자리를 부드럽게 지워서 자연스럽게 녹아들게 함 */
+  -webkit-mask-image: radial-gradient(circle at center, black 30%, transparent 60%);
+  mask-image: radial-gradient(circle at center, black 30%, transparent 60%);
 }
 
-/* 동영상처럼 천천히, 유유히 흘러가는 애니메이션 */
-@keyframes flow1 {
+/* 각 덩어리들이 이리저리 돌아다니는 궤도 */
+@keyframes float1 {
   0% { transform: translate(0, 0) scale(1); }
-  100% { transform: translate(-20%, -20%) scale(1.1); }
+  100% { transform: translate(-30%, -20%) scale(1.2); }
 }
-@keyframes flow2 {
+@keyframes float2 {
   0% { transform: translate(0, 0) scale(1); }
-  100% { transform: translate(25%, 15%) scale(1.05); }
+  100% { transform: translate(40%, -10%) scale(1.1); }
 }
-@keyframes flow3 {
+@keyframes float3 {
   0% { transform: translate(0, 0) scale(1); }
-  100% { transform: translate(-15%, 25%) scale(1.15); }
+  100% { transform: translate(-20%, 30%) scale(1.3); }
 }
 
 /* ═══════════════════════════════════════════
