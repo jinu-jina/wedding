@@ -55,6 +55,17 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  
+  /* 👇 화면 터치 시 파랗게 번쩍이는 현상 사이트 전체에서 완벽 제거 */
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* 👇 이미지나 히어로 섹션을 꾹 눌렀을 때 파랗게 칠해지거나 메뉴 뜨는 것 방지 */
+img, .hero {
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+  -webkit-user-drag: none !important;
 }
 
 html {
@@ -525,12 +536,12 @@ a {
   pointer-events: none;
 }
 
-/* 필름 그레인 */
 .fluid-blur-container::after {
   content: "";
   position: absolute;
   inset: -50%; 
   z-index: 5;
+  pointer-events: none;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
   background-repeat: repeat;
   background-size: 150px 150px; 
@@ -545,25 +556,18 @@ a {
   will-change: transform;
 }
 
-/* 💡 HTML에서 만든 융합 필터를 덮어씌우는 핵심 레이어 */
-.gooey-layer {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  filter: url('#gooey'); /* 쫀득하게 합쳐지는 필터 적용 */
-}
-
-/* 덩어리 공통 기본 형태 */
-.gooey-blob {
+/* 💡 무거운 특수 필터 대신 순수 CSS 블러를 써서 모바일 멈춤(과부하) 완전 해결 */
+.blur-blob {
   position: absolute;
   border-radius: 50%;
+  filter: blur(40px); /* 40px 정도면 물감처럼 경계선 없이 아주 예쁘게 섞입니다 */
   will-change: transform;
 }
 
 /* 🎨 1. 짙은 초록 덩어리 */
 .color-dark-green {
   width: 300px; height: 300px;
-  background: #4a7c49; 
+  background: rgba(74, 124, 73, 0.85); 
   bottom: 10%; right: 10%;
   animation: float1 12s infinite alternate ease-in-out;
 }
@@ -571,7 +575,7 @@ a {
 /* 🎨 2. 밝은 연두 덩어리 */
 .color-lime {
   width: 250px; height: 250px;
-  background: #b5d56a; 
+  background: rgba(181, 213, 106, 0.85); 
   top: 30%; left: 10%;
   animation: float2 14s infinite alternate-reverse ease-in-out;
 }
@@ -579,19 +583,18 @@ a {
 /* 🎨 3. 흰색 빛 덩어리 */
 .color-white {
   width: 280px; height: 280px;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.95);
   top: -5%; left: 40%;
   animation: float3 15s infinite alternate ease-in-out;
 }
 
-/* 🔍 4. 투명 렌즈 (색상 외의 전체 배경 글씨를 왜곡/뭉갬) */
+/* 🔍 4. 투명 렌즈 */
 .glass-lens {
   position: absolute;
   width: 150%; height: 150%;
   top: -25%; left: -25%;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  /* 렌즈 가장자리를 부드럽게 지워서 자연스럽게 녹아들게 함 */
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
   -webkit-mask-image: radial-gradient(circle at center, black 30%, transparent 60%);
   mask-image: radial-gradient(circle at center, black 30%, transparent 60%);
 }
