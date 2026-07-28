@@ -404,7 +404,7 @@ a {
 }
 
 /* ═══════════════════════════════════════════
-   Fluid Blur Effect (정밀한 필름 그레인 + 투명 블러 렌즈 효과)
+   Fluid Blur Effect (정밀한 필름 그레인 + 다중 투명/색상 덩어리)
    ═══════════════════════════════════════════ */
 .fluid-blur-container {
   position: absolute;
@@ -415,7 +415,7 @@ a {
   background-color: transparent; 
 }
 
-/* 💡 1. 픽셀 사이즈를 고정하여 자잘하고 예쁘게 깔리는 찐 필름 그레인 */
+/* 필름 그레인 (노이즈) */
 .fluid-blur-container::after {
   content: "";
   position: absolute;
@@ -423,11 +423,9 @@ a {
   z-index: 5;
   pointer-events: none;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-  
-  /* 화면 크기에 맞춰 늘어나는 것을 방지하고 150px 단위로 촘촘하게 반복시킴 */
   background-repeat: repeat;
   background-size: 150px 150px; 
-  opacity: 0.35; /* 그레인 농도 */
+  opacity: 0.35; 
   mix-blend-mode: overlay;
 }
 
@@ -440,62 +438,94 @@ a {
   will-change: transform;
 }
 
-/* 공통 둥근 형태 */
+/* 💡 공통: 덩어리들을 물방울처럼 제각각 찌그러뜨리는 형태 적용 */
 .blur-blob {
   position: absolute;
-  border-radius: 50%;
   will-change: transform;
 }
 
-/* 💡 2. 레퍼런스 이미지의 초록/라임빛 색상이 덮이는 블러 덩어리 */
+/* =========================================
+   [그룹 A] 색상이 있는 덩어리 (라임 그린)
+   ========================================= */
+.blob-1, .blob-6, .blob-7 {
+  background: rgba(168, 204, 69, 0.45); 
+  filter: blur(85px); 
+}
+
 .blob-1 {
-  width: 80vw; height: 80vw;
-  max-width: 600px; max-height: 600px;
-  background: rgba(168, 204, 69, 0.45); /* 은은한 라임 그린 */
-  filter: blur(60px); /* 색상 자체를 뭉갬 */
-  top: -5%; left: 5%;
+  width: 90vw; height: 60vw; /* 타원형 */
+  border-radius: 40% 60% 70% 30%; /* 찌그러진 모양 */
+  top: -10%; left: 0%;
   animation: float1 11s infinite alternate ease-in-out;
 }
 
-/* 💡 3. 색상 없이 뒷배경(이미지)만 흐리게 뭉개버리는 투명 렌즈 덩어리 */
-.blob-2, .blob-3 {
-  background: transparent; /* 색상 투명 */
-  
-  /* 뒷 배경을 흐리게 만듦 */
-  backdrop-filter: blur(25px);
-  -webkit-backdrop-filter: blur(25px);
-  
-  /* 유리판처럼 네모나게 잘리지 않도록 테두리를 그라데이션으로 부드럽게 지워줌 */
+.blob-6 {
+  width: 60vw; height: 80vw; 
+  border-radius: 60% 40% 30% 70%;
+  bottom: 10%; right: -10%;
+  animation: float2 14s infinite alternate-reverse ease-in-out;
+}
+
+.blob-7 {
+  width: 75vw; height: 75vw;
+  border-radius: 50% 70% 40% 60%;
+  top: 40%; left: 30%;
+  animation: float3 16s infinite alternate ease-in-out;
+}
+
+/* =========================================
+   [그룹 B] 투명 렌즈 덩어리 (배경만 뭉갬)
+   ========================================= */
+.blob-2, .blob-3, .blob-4, .blob-5 {
+  background: transparent; 
+  backdrop-filter: blur(80px);
+  -webkit-backdrop-filter: blur(80px);
   -webkit-mask-image: radial-gradient(circle, black 30%, transparent 70%);
   mask-image: radial-gradient(circle, black 30%, transparent 70%);
 }
 
 .blob-2 {
-  width: 90vw; height: 90vw;
-  max-width: 700px; max-height: 700px;
-  bottom: -15%; right: -15%;
+  width: 110vw; height: 80vw;
+  border-radius: 70% 30% 50% 50%;
+  bottom: -20%; right: -10%;
   animation: float2 13s infinite alternate ease-in-out;
 }
 
 .blob-3 {
-  width: 70vw; height: 70vw;
-  max-width: 500px; max-height: 500px;
-  top: 30%; left: -20%;
-  animation: float3 15s infinite alternate ease-in-out;
+  width: 70vw; height: 90vw;
+  border-radius: 30% 70% 60% 40%;
+  top: 10%; left: -20%;
+  animation: float3 15s infinite alternate-reverse ease-in-out;
 }
 
-/* 💡 4. 동영상 레퍼런스처럼 넓은 반경으로 유려하게 흘러가도록 이동 거리 복구 */
+.blob-4 {
+  width: 85vw; height: 85vw;
+  border-radius: 50% 50% 30% 70%;
+  top: 50%; right: 20%;
+  animation: float1 17s infinite alternate ease-in-out;
+}
+
+.blob-5 {
+  width: 60vw; height: 60vw;
+  border-radius: 40% 60% 70% 30%;
+  top: -5%; right: 40%;
+  animation: float2 12s infinite alternate-reverse ease-in-out;
+}
+
+/* =========================================
+   애니메이션 (이동 경로)
+   ========================================= */
 @keyframes float1 {
-  0% { transform: translate(0, 0) scale(1); }
-  100% { transform: translate(25%, 20%) scale(1.15); }
+  0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+  100% { transform: translate(25%, 20%) scale(1.15) rotate(15deg); }
 }
 @keyframes float2 {
-  0% { transform: translate(0, 0) scale(1); }
-  100% { transform: translate(-25%, -25%) scale(1.1); }
+  0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+  100% { transform: translate(-25%, -30%) scale(1.1) rotate(-10deg); }
 }
 @keyframes float3 {
-  0% { transform: translate(0, 0) scale(1); }
-  100% { transform: translate(30%, -15%) scale(1.25); }
+  0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+  100% { transform: translate(30%, -20%) scale(1.25) rotate(20deg); }
 }
 
 /* ═══════════════════════════════════════════
