@@ -1308,15 +1308,3 @@ a {
     transform: none !important;
   }
 }
-
-/* 👇 1. 화면 전체 가로 스크롤 및 밀림 현상 원천 차단 */
-html, body {
-  overflow-x: hidden !important;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-}
-
-.main-content {
-  overflow: visible !important;
-}
