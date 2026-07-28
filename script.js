@@ -841,7 +841,7 @@ function initParticles() {
 }
 
 /* ═══════════════════════════════════════════
-   Fluid Blur Interaction (터치 & 핸드폰 기울기 센서)
+   Fluid Blur Interaction (터치 & 핸드폰 기울기 센서 민감도 UP)
    ═══════════════════════════════════════════ */
 function initFluidBlur() {
     const wrappers = document.querySelectorAll('.blob-wrapper');
@@ -850,8 +850,8 @@ function initFluidBlur() {
     let targetX = 0; let targetY = 0;
     let currentX = 0; let currentY = 0;
     
-    // 💡 터치/기울일 때 색상이 따라 움직이는 강도 (숫자가 클수록 많이 움직임)
-    const strength = 60; 
+    // 💡 4. 터치/기울일 때 움직이는 [절대 강도]를 60 -> 150으로 대폭 올렸습니다
+    const strength = 150; 
 
     // 1. 터치 및 마우스 이동 감지
     function handleMove(clientX, clientY) {
@@ -860,32 +860,41 @@ function initFluidBlur() {
         targetX = x * strength;
         targetY = y * strength;
     }
-    document.addEventListener('mousemove', (e) => handleMove(e.clientX, e.clientY));
+    
+    // 💡 4. 손을 떼고 있을 때 화면을 딱 누르기만 해도(touchstart) 즉각 반응하도록 이벤트를 추가했습니다
+    document.addEventListener('touchstart', (e) => handleMove(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
     document.addEventListener('touchmove', (e) => handleMove(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
+    document.addEventListener('mousemove', (e) => handleMove(e.clientX, e.clientY));
 
     // 2. 모바일 자이로스코프(기기 기울기) 감지
     window.addEventListener('deviceorientation', (e) => {
         if (e.gamma === null || e.beta === null) return;
         
-        let x = e.gamma / 45; // 좌우 기울기
-        let y = (e.beta - 45) / 45; // 앞뒤 기울기
+        // 💡 5. 기존에는 45도를 기울여야 최대치였으나, 이제 20도만 살짝 기울여도 확확 움직이도록 민감도를 2배 이상 높였습니다.
+        let x = e.gamma / 20; 
+        let y = (e.beta - 45) / 20; 
         
         x = Math.max(-1, Math.min(1, x));
         y = Math.max(-1, Math.min(1, y));
 
-        targetX = x * strength * 1.5;
-        targetY = y * strength * 1.5;
+        // 💡 5. 기울기에 따른 이동 폭도 더 증폭시켰습니다.
+        targetX = x * strength * 2.5; 
+        targetY = y * strength * 2.5;
     });
 
-    // 3. 미끄러지듯 부드럽게 위치 업데이트 (Lerp 알고리즘)
+    // 3. 미끄러지듯 부드럽게 위치 업데이트
     function animateFluid() {
-        currentX += (targetX - currentX) * 0.05; // 0.05는 부드러움의 정도 (낮을수록 스무스함)
-        currentY += (targetY - currentY) * 0.05;
+        // 💡 반응 속도(관성)를 0.05 -> 0.08로 올려서 터치 시 굼뜨지 않고 쫀득하게 따라오게 수정
+        currentX += (targetX - currentX) * 0.08; 
+        currentY += (targetY - currentY) * 0.08;
 
-        // 색상 덩어리마다 반대 방향이나 다른 속도로 움직이게 하여 입체감을 줍니다.
+        // 6개의 덩어리가 모두 터치/기울기에 입체적으로 제각각 반응하도록 추가
         if(wrappers[0]) wrappers[0].style.transform = `translate(${currentX}px, ${currentY}px)`;
         if(wrappers[1]) wrappers[1].style.transform = `translate(${-currentX * 0.8}px, ${-currentY * 0.8}px)`;
         if(wrappers[2]) wrappers[2].style.transform = `translate(${currentX * 0.5}px, ${-currentY * 1.2}px)`;
+        if(wrappers[3]) wrappers[3].style.transform = `translate(${-currentX * 1.2}px, ${currentY * 0.5}px)`;
+        if(wrappers[4]) wrappers[4].style.transform = `translate(${currentX * 0.9}px, ${currentY * 1.1}px)`;
+        if(wrappers[5]) wrappers[5].style.transform = `translate(${-currentX * 0.6}px, ${-currentY * 0.9}px)`;
 
         requestAnimationFrame(animateFluid);
     }
