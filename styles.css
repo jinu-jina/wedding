@@ -379,29 +379,36 @@ a {
 }
 
 /* ═══════════════════════════════════════════
-   Hero Section (이미지 화면 꽉 차게 풀스크린 세팅)
+   Hero Section (이미지 잘림 방지 및 여백 색상 채움)
    ═══════════════════════════════════════════ */
 .hero {
   position: relative;
-  /* 👇 가로, 세로를 뷰포트(화면) 크기에 100% 맞춥니다 */
   width: 100vw;
   height: 100vh;
-  height: 100dvh; /* 모바일 브라우저 주소창 영역까지 완벽하게 고려 */
+  height: 100dvh;
   
-  /* 👇 컨테이너의 기본 여백을 무시하고 좌우로 꽉 차게 확장합니다 */
+  /* PC 환경에서도 양옆으로 화면을 꽉 채우도록 확장 */
   margin-left: calc(-50vw + 50%); 
   
+  /* 💡 요청하신 빈 공간 및 PC 양옆 배경색 채움 */
+  background-color: #ececde; 
+  
   overflow: hidden;
-  display: block;
+  
+  /* 이미지가 항상 정중앙에 오도록 정렬 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
   padding: 0;
 }
 
 .hero__photo {
   display: block;
   width: 100%;
-  /* 👇 이미지 높이도 부모(100vh)에 맞춰 100%로 꽉 채웁니다 */
-  height: 100%; 
-  object-fit: cover; /* 이미지가 찌그러지지 않고 남는 부분만 잘리면서 꽉 차게 설정 */
+  height: 100%;
+  
+  /* 💡 이미지를 자르지 않고 원본 비율 그대로 화면 안에 쏙 들어가게 세팅 */
+  object-fit: contain; 
 }
 
 .hero__overlay {
@@ -457,7 +464,7 @@ a {
    ========================================= */
 .blob-1, .blob-6, .blob-7 {
   background: rgba(168, 204, 69, 0.45); 
-  filter: blur(95px); 
+  filter: blur(120px); 
 }
 
 .blob-1 {
@@ -486,8 +493,8 @@ a {
    ========================================= */
 .blob-2, .blob-3, .blob-4, .blob-5 {
   background: transparent; 
-  backdrop-filter: blur(90px);
-  -webkit-backdrop-filter: blur(90px);
+  backdrop-filter: blur(110px);
+  -webkit-backdrop-filter: blur(110px);
   -webkit-mask-image: radial-gradient(circle, black 30%, transparent 70%);
   mask-image: radial-gradient(circle, black 30%, transparent 70%);
 }
