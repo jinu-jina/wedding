@@ -559,58 +559,54 @@ a {
 /* 💡 네모난 사각형으로 깨지는 현상을 막기 위해 순수 원형 그라데이션 및 블러 최적화 적용 */
 .blur-blob {
   position: absolute;
-  border-radius: 50% !important; /* 강제 원형 고정 */
+  border-radius: 50%;
   background-repeat: no-repeat;
   will-change: transform;
+ /* 1. 덩어리 안쪽의 배경(1.jpg)을 흐리게 만듭니다 */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  
+  /* 👇 2. 칼같이 잘린 테두리 전체를 안개처럼 뽀얗게 뭉개버립니다 (핵심) */
+  filter: blur(25px);
+  -webkit-filter: blur(25px);
 }
 
-/* 🎨 1. 짙은 초록 덩어리 (그라데이션으로 자연스러운 둥근 뭉개짐 효과) */
-.color-dark-green {
-  width: 320px; height: 320px;
-  background: radial-gradient(circle, rgba(74, 124, 73, 0.9) 0%, rgba(74, 124, 73, 0.4) 50%, transparent 70%);
-  bottom: 5%; right: 5%;
-  animation: float1 12s infinite alternate ease-in-out;
+/* 🎨 1. green radial gradient */
+.color-green-01 {
+  /* 💡  크기 */
+  width: 250px; height: 250px;
+
+   /* 💡  색상 */
+  background: linear-gradient(135deg, rgba(48, 95, 51, 0.9) 0%, rgba(146, 175, 83, 0.8) 100%);
+
+  /* 💡  왼쪽 위치(left)를 지우고, 화면 오른쪽 바깥(-300px)에 대기시킵니다 */
+  bottom: 0%; right: -40%;
+
+  /* 💡  속도 조절은 여기서 합니다! (15s = 15초 동안 한 번 지나감) */
+  animation: liquid-flow 20s linear infinite;
 }
 
-/* 🎨 2. 밝은 연두 덩어리 */
-.color-lime {
-  width: 280px; height: 280px;
-  background: radial-gradient(circle, rgba(181, 213, 106, 0.9) 0%, rgba(181, 213, 106, 0.4) 50%, transparent 70%);
-  top: 25%; left: 5%;
-  animation: float2 14s infinite alternate-reverse ease-in-out;
-}
-
-/* 🎨 3. 흰색 빛 덩어리 */
-.color-white {
-  width: 300px; height: 300px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.4) 50%, transparent 70%);
-  top: -10%; left: 35%;
-  animation: float3 15s infinite alternate ease-in-out;
-}
-
-/* 🔍 4. 투명 렌즈 */
-.glass-lens {
-  position: absolute;
-  width: 150%; height: 150%;
-  top: -25%; left: -25%;
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
-  -webkit-mask-image: radial-gradient(circle at center, black 30%, transparent 60%);
-  mask-image: radial-gradient(circle at center, black 30%, transparent 60%);
-}
-
-/* 각 덩어리들이 부드럽게 움직이는 애니메이션 */
-@keyframes float1 {
-  0% { transform: translate(0, 0) scale(1); }
-  100% { transform: translate(-25%, -15%) scale(1.15); }
-}
-@keyframes float2 {
-  0% { transform: translate(0, 0) scale(1); }
-  100% { transform: translate(30%, -10%) scale(1.1); }
-}
-@keyframes float3 {
-  0% { transform: translate(0, 0) scale(1); }
-  100% { transform: translate(-15%, 25%) scale(1.2); }
+/* 흘러가는 궤도 및 액체 애니메이션 */
+@keyframes liquid-flow {
+  0% {
+    /* 출발: 오른쪽 바깥, 기본 원형 */
+    transform: translateX(0) rotate(0deg);
+    border-radius: 50% 50% 50% 50%;
+  }
+  33% {
+    /* 1/3 지점: 한쪽으로 심하게 찌그러짐 (일렁임 효과) */
+    border-radius: 60% 40% 70% 30%;
+  }
+  66% {
+    /* 2/3 지점: 반대쪽으로 찌그러짐 */
+    border-radius: 40% 60% 30% 70%;
+  }
+  100% {
+    /* 도착: 화면 왼쪽 끝 너머로 완전히 이동 (-120vw) */
+    /* 360도 회전까지 더해져서 진짜 액체가 굴러가는 것처럼 보입니다 */
+    transform: translateX(-120vw) rotate(360deg); 
+    border-radius: 50% 50% 50% 50%;
+  }
 }
 
 /* ═══════════════════════════════════════════
