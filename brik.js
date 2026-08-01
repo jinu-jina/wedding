@@ -924,8 +924,8 @@ window.addEventListener('deviceorientation', (e) => {
   
   // 💡 [흐르는 속도 조절] 
   // 이 숫자가 커질수록 기울였을 때 물감이 훨씬 더 빨리 흘러내립니다. (기본 0.015 추천)
-  targetVelocityX = x * 0.015; 
-  targetVelocityY = -y * 0.015; 
+  targetVelocityX = x * 0.15; 
+  targetVelocityY = -y * 0.15; 
 });
 
 let time = 0; let last = performance.now();
