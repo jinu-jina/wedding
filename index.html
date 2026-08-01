@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="format-detection" content="telephone=no">
 
-  <!-- Meta / OG tags - config.js 값으로 script에서 동적 설정 -->
   <meta property="og:type" content="website">
   <meta property="og:title" content="">
   <meta property="og:description" content="">
@@ -14,7 +13,6 @@
 
   <title>Wedding Invitation</title>
 
-  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -23,25 +21,19 @@
   <script src="config.js"></script>
 </head>
 <body>
-
-  <!-- ═══ 초대장 열기 (편지 봉투) ═══ -->
-<div id="envelopeOpening" class="envelope-opening">
+  
+  <div id="envelopeOpening" class="envelope-opening">
     <div class="envelope">
       <img src="images/envelope/flap.png" class="envelope__flap" alt="">
- 
       <img src="images/envelope/card.png" class="envelope__card" id="envelopeCard" alt="초대장">
- 
       <img src="images/envelope/pocket.png" class="envelope__pocket" alt="">
- 
       <div class="envelope__mask"></div>
     </div>
     <p class="envelope__guide" id="envelopeGuide">[ 화면을 터치해 주세요 ]</p>
   </div>
  
-  <!-- ═══ Toast Notification ═══ -->
   <div id="toast" class="toast" aria-live="polite"></div>
 
-  <!-- ═══ Photo Viewer Modal ═══ -->
   <div id="photoModal" class="photo-modal" role="dialog" aria-modal="true" aria-label="사진 보기">
     <button class="photo-modal__close" id="modalClose" aria-label="닫기">&times;</button>
     <button class="photo-modal__nav photo-modal__nav--prev" id="modalPrev" aria-label="이전 사진">&#8249;</button>
@@ -52,47 +44,29 @@
     <div class="photo-modal__counter" id="modalCounter"></div>
   </div>
 
-  <!-- ═══ 메인 (음악재생) ═══ -->
+  <main class="main-content">
+
     <section class="top-video-section">
       <video id="topVideo" src="images/video/main.mp4" loop muted playsinline></video>
       <canvas id="particleCanvas"></canvas>
       <audio id="bgm" src="images/video/song.mp3" loop preload="auto"></audio>
-      
       <img src="images/video/tex.png" id="videoGuideText" class="video-guide-text" alt="화면 터치 시 배경음악 재생">
     </section>
 
-    <!-- ─── 메인 (히어로) ─── -->
-<section class="hero">
-      
-      <!-- 1. 맨 밑에 깔리는 원본 사진 -->
-      <img src="images/hero/1.jpg" alt="정진우 & 배진아" class="hero__photo animate-item" data-animate="fade-in">
-      
-      <!-- 💡 모바일 멈춤을 유발하던 무거운 SVG 필터는 삭제했습니다! -->
-
-      <!-- 3. 오로라 블러 이펙트 컨테이너 (순수 CSS 렌더링 최적화 버전) -->
-      <div class="fluid-blur-container" id="fluidBlurContainer">
-        <div class="blob-drift-layer" id="blobDriftLayer">
-          <!-- 💡 gooey-blob 대신 blur-blob 사용 -->
-          <div class="blur-blob color-green-01"></div>
-          <div class="blur-blob color-green-02"></div>
-          <div class="blur-blob color-green-03"></div>
-          <div class="blur-blob color-green-04"></div>
-          <div class="blur-blob color-green-05"></div>
-          <div class="blur-blob color-white-01"></div>
-          <div class="blur-blob color-white-02"></div>
-          <div class="blur-blob color-white-03"></div>
-          <div class="glass-lens-01"></div>
-          <div class="glass-lens-02"></div>
-          <div class="glass-lens-03"></div>
-        </div>
+    <section class="hero">
+      <div class="hero__frame">
+        
+        <img src="images/hero/1.jpg" class="layer-1-bg" alt="배경 사진">
+        
+        <div class="tool-canvas-area" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2;">
+          <canvas id="canvas"></canvas>
+        </div> 
+        
+        <img src="images/hero/1_top.png" class="layer-4-top" alt="메인 텍스트">
+        
       </div>
-      
-      <!-- 4. 맨 상위 투명 PNG 이미지 -->
-      <img src="images/hero/1_top.png" alt="" class="hero__photo-top">
-      
     </section>
 
-    <!-- ─── 인사말 ─── -->
     <section class="section greeting" id="greeting">
       <div class="section__inner">
         <div class="trad-divider animate-item" data-animate="fade-in">
@@ -106,7 +80,6 @@
       </div>
     </section>
 
-    <!-- ─── 예식 일시 (달력) ─── -->
     <section class="section calendar-section" id="calendarSection">
       <div class="section__inner">
         <h2 class="section__title animate-item" data-animate="fade-up">예식 일시</h2>
@@ -124,7 +97,6 @@
       </div>
     </section>
 
-    <!-- ─── 우리의 이야기 ─── -->
     <section class="section story" id="story">
       <div class="section__inner">
         <div class="trad-divider animate-item" data-animate="fade-in">
@@ -138,7 +110,6 @@
       </div>
     </section>
 
-    <!-- ─── 갤러리 ─── -->
     <section class="section gallery" id="gallery">
       <div class="section__inner">
         <h2 class="section__title animate-item" data-animate="fade-up">갤러리</h2>
@@ -146,7 +117,6 @@
       </div>
     </section>
 
-    <!-- ─── 오시는 길 ─── -->
     <section class="section location" id="location">
       <div class="section__inner">
         <div class="trad-divider animate-item" data-animate="fade-in">
@@ -175,13 +145,11 @@
       </div>
     </section>
 
-    <!-- ─── 마음 전하실 곳 (축의금) ─── -->
     <section class="section account" id="account">
       <div class="section__inner">
         <h2 class="section__title animate-item" data-animate="fade-up">마음 전하실 곳</h2>
         <p class="account__desc animate-item" data-animate="fade-up">축하의 마음을 담아 축의금을 전달해 보세요.</p>
 
-        <!-- 신랑측 계좌 -->
         <div class="accordion animate-item" data-animate="fade-up">
           <button class="accordion__trigger" id="groomAccordion" aria-expanded="false">
             <span class="accordion__icon">&#9670;</span>
@@ -193,7 +161,6 @@
           </div>
         </div>
 
-        <!-- 신부측 계좌 -->
         <div class="accordion animate-item" data-animate="fade-up">
           <button class="accordion__trigger" id="brideAccordion" aria-expanded="false">
             <span class="accordion__icon">&#9670;</span>
@@ -207,7 +174,6 @@
       </div>
     </section>
 
-    <!-- ─── Footer ─── -->
     <footer class="footer">
       <div class="trad-divider trad-divider--footer">
         <span class="trad-divider__line"></span>
@@ -217,8 +183,7 @@
       <p class="footer__text" id="footerText"></p>
     </footer>
 
-  </main>
-
+  </main> <script src="brik.js"></script> 
   <script src="script.js"></script>
 </body>
 </html>
