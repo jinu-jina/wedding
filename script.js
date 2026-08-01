@@ -109,6 +109,7 @@
      ═══════════════════════════════════════════ */
 
   function setMetaTags() {
+    if (!CONFIG.meta) return;
     const m = CONFIG.meta;
     document.title = m.title;
     const setMeta = (attr, val, content) => {
@@ -839,83 +840,6 @@ function initParticles() {
     }
     animate();
 }
-
-/* ═══════════════════════════════════════════
-   Fluid Blur Interaction (터치 시 걷힘 & 자이로스코프 방향 간섭)
-   ═══════════════════════════════════════════ */
-function initFluidBlur() {
-    const driftLayer = document.getElementById('blobDriftLayer');
-    if (!driftLayer) return;
-
-    // ─── 1. 터치 시 블러가 살짝 걷히는(지워지는) 효과 ───
-    let mouseX = window.innerWidth / 2;
-    let mouseY = window.innerHeight / 2;
-    let targetMaskRadius = 0; 
-    let currentMaskRadius = 0;
-    
-    const updateCoords = (clientX, clientY) => {
-        const rect = driftLayer.parentElement.getBoundingClientRect();
-        mouseX = clientX - rect.left;
-        mouseY = clientY - rect.top;
-    };
-
-    // 터치/마우스 시작: 반경 120px 만큼만 작게 블러를 걷어냄 (기존 250px에서 대폭 축소)
-    const handleInteract = (e) => {
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        updateCoords(clientX, clientY);
-        targetMaskRadius = 60; 
-    };
-
-    // 터치/마우스 뗌: 다시 덮임
-    const handleLeave = () => {
-        targetMaskRadius = 0; 
-    };
-
-    document.addEventListener('touchstart', handleInteract, { passive: true });
-    document.addEventListener('touchmove', handleInteract, { passive: true });
-    document.addEventListener('touchend', handleLeave);
-    document.addEventListener('mousemove', handleInteract);
-    document.addEventListener('mouseleave', handleLeave);
-
-   // ─── 2. 자이로스코프 흐름 방향 간섭 ───
-    let gyroX = 0;
-    let gyroY = 0;
-    let currentGyroX = 0;
-    let currentGyroY = 0;
-
-    window.addEventListener('deviceorientation', (e) => {
-        if (e.gamma === null || e.beta === null) return;
-        let x = Math.max(-1, Math.min(1, e.gamma / 30)); 
-        let y = Math.max(-1, Math.min(1, (e.beta - 45) / 30)); 
-        gyroX = x * 40; 
-        gyroY = y * 40;
-    });
-
-    // ─── 3. 애니메이션 렌더링 ───
-    function animate() {
-        // [터치 마스크] 크기가 스르륵 커지고 작아짐
-        currentMaskRadius += (targetMaskRadius - currentMaskRadius) * 0.15;
-        
-        if (currentMaskRadius > 1) {
-            // 터치한 곳을 투명하게 뚫어줌 (그레인 노이즈는 유지되고 색상 덩어리만 뚫림)
-            const maskCSS = `radial-gradient(circle at ${mouseX}px ${mouseY}px, transparent 0px, transparent ${currentMaskRadius * 0.4}px, black ${currentMaskRadius}px)`;
-            driftLayer.style.webkitMaskImage = maskCSS;
-            driftLayer.style.maskImage = maskCSS;
-        } else {
-            driftLayer.style.webkitMaskImage = 'none';
-            driftLayer.style.maskImage = 'none';
-        }
-
-        // [자이로스코프] 기울기에 따라 흐름 보정
-        currentGyroX += (gyroX - currentGyroX) * 0.05;
-        currentGyroY += (gyroY - currentGyroY) * 0.05;
-        driftLayer.style.transform = `translate(${currentGyroX}px, ${currentGyroY}px)`;
-        
-        requestAnimationFrame(animate);
-    }
-    animate();
-}
   
   /* ═══════════════════════════════════════════
      Init
@@ -957,3 +881,4 @@ function initFluidBlur() {
     init();
   }
 })();
+
