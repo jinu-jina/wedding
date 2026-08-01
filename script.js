@@ -606,11 +606,15 @@ function initHero() {
 function initParticles() {
     const canvas = $('#particleCanvas');
     const video = $('#topVideo');
+    const textImg = $('#videoGuideText'); 
     if (!canvas || !video) return;
 
     const ctx = canvas.getContext('2d');
     const sCanvas = document.createElement('canvas');
     const sCtx = sCanvas.getContext('2d', { willReadFrequently: true });
+    
+    const tCanvas = document.createElement('canvas');
+    const tCtx = tCanvas.getContext('2d', { willReadFrequently: true });
 
     let width, height;
     const dpr = window.devicePixelRatio || 1;
@@ -625,7 +629,6 @@ function initParticles() {
     const moveSpeed = 0.04;       
     const friction = 0.82;        
 
-    // 카세트 파티클 개수
     const vCols = 150; 
     const vRows = 150; 
     sCanvas.width = vCols;
@@ -633,9 +636,48 @@ function initParticles() {
 
     let playParticles = [];
     let videoParticles = [];
+    let textParticles = []; 
     let currentPlayTarget = [];
+    
+    let textExploded = false; 
+    let textTimer = 0;        
 
-    // 화면 리사이즈 및 타겟 좌표 재계산
+    function initTextParticles() {
+        if (!textImg || !textImg.complete || textImg.naturalWidth === 0) {
+            setTimeout(initTextParticles, 100);
+            return;
+        }
+        
+        const tCols = 200; // 💡 1. 파티클 개수(밀도) 조절: 숫자를 키울수록 글자가 촘촘해집니다. (150 -> 300)
+        const tRows = Math.floor(tCols * (textImg.naturalHeight / textImg.naturalWidth));
+        tCanvas.width = tCols;
+        tCanvas.height = tRows;
+        tCtx.drawImage(textImg, 0, 0, tCols, tRows);
+        const data = tCtx.getImageData(0, 0, tCols, tRows).data;
+
+        for (let y = 0; y < tRows; y++) {
+            for (let x = 0; x < tCols; x++) {
+                const i = (y * tCols + x) * 4;
+                const alpha = data[i+3];
+                if (alpha > 30) { 
+                    textParticles.push({
+                        x: 0, y: 0, tx: 0, ty: 0,
+                        gridX: x, gridY: y,
+                        gridW: tCols, gridH: tRows,
+                        // 💡 2. 모여짐 정도 조절: scatterAmount 대신 0.2 등 작은 숫자를 직접 입력하여 흩어짐을 방지합니다.
+                        scatterX: (Math.random() - 0.2) * scatterAmount,
+                        scatterY: (Math.random() - 0.2) * scatterAmount,
+                        vx: 0, vy: 0,
+                        alpha: 0, targetAlpha: 0.2 + (alpha/255) * 0.8,
+                        initialized: false 
+                    });
+                }
+            }
+        }
+        resize(); 
+    }
+    if (textImg) initTextParticles();
+
     function resize() {
       width = window.innerWidth;
       height = window.innerHeight;
@@ -651,38 +693,45 @@ function initParticles() {
 
       const scale = Math.min(width, height) / vCols * 0.9;
       const maxW = Math.min(750, width); 
-      let finalScale = Math.min(scale, maxW / vCols);
-
-      /* 👇 [카세트 테이프 전체 크기 조절] 👇 */
-      /* 1.2는 20% 확대, 1.3은 30% 확대, 1.5는 50% 확대를 의미합니다. */
-      finalScale = finalScale * 1.2;
+      let finalScale = Math.min(scale, maxW / vCols) * 1.2;
       
       const offsetX = (width - vCols * finalScale) / 2;
-      // 💡 [카세트 테이프 위치] 화면 중앙에서 아주 살짝 위쪽으로 배치
       const offsetY = (height - vRows * finalScale) / 2 - (height * 0.01); 
 
       videoParticles.forEach(p => {
          p.tx = offsetX + p.gridX * finalScale + p.scatterX;
          p.ty = offsetY + p.gridY * finalScale + p.scatterY;
       });
+
+      if (textImg && textImg.naturalWidth > 0 && textParticles.length > 0) {
+          let textW = Math.min(width * 0.85, 320); 
+          let textH = textW * (textImg.naturalHeight / textImg.naturalWidth);
+          let textOffsetX = (width - textW) / 2; 
+          let textOffsetY = height * 0.04; 
+
+          textParticles.forEach(p => {
+              p.tx = textOffsetX + (p.gridX / p.gridW) * textW + p.scatterX;
+              p.ty = textOffsetY + (p.gridY / p.gridH) * textH + p.scatterY;
+              if (!p.initialized) {
+                  p.x = p.tx; p.y = p.ty;
+                  p.alpha = p.targetAlpha;
+                  p.initialized = true;
+              }
+          });
+      }
     }
     window.addEventListener('resize', resize);
 
     function getPlayShape() {
       const pts = [];
       const offsetX = width / 2 - 50;
-      // 💡 [재생 버튼 위치] 0.72 -> 0.82로 더 아래로 쭉 내림
       const offsetY = height * 0.76 - 50; 
-      
       for(let i=0; i<numPlayParticles; i++) {
-        let r1 = Math.random();
-        let r2 = Math.random();
+        let r1 = Math.random(); let r2 = Math.random();
         if(r1 + r2 > 1) { r1 = 1 - r1; r2 = 1 - r2; }
-        const scatterX = (Math.random() - 0.5) * scatterAmount;
-        const scatterY = (Math.random() - 0.5) * scatterAmount;
         pts.push({
-          x: offsetX + 20 + r1 * 0 + r2 * 65 + scatterX,
-          y: offsetY + 15 + r1 * 70 + r2 * 35 + scatterY
+          x: offsetX + 20 + r1 * 0 + r2 * 65 + (Math.random() - 0.5) * scatterAmount,
+          y: offsetY + 15 + r1 * 70 + r2 * 35 + (Math.random() - 0.5) * scatterAmount
         });
       }
       return pts;
@@ -691,16 +740,12 @@ function initParticles() {
     function getPauseShape() {
       const pts = [];
       const offsetX = width / 2 - 50;
-      // 💡 [일시정지 버튼 위치] 재생 버튼과 동일하게 하단 고정
       const offsetY = height * 0.76 - 50; 
-      
       for(let i=0; i<numPlayParticles; i++) {
         const isLeft = Math.random() < 0.5;
-        const scatterX = (Math.random() - 0.5) * scatterAmount;
-        const scatterY = (Math.random() - 0.5) * scatterAmount;
         pts.push({
-          x: offsetX + (isLeft ? 22 : 60) + Math.random() * 18 + scatterX,
-          y: offsetY + 15 + Math.random() * 70 + scatterY
+          x: offsetX + (isLeft ? 22 : 60) + Math.random() * 18 + (Math.random() - 0.5) * scatterAmount,
+          y: offsetY + 15 + Math.random() * 70 + (Math.random() - 0.5) * scatterAmount
         });
       }
       return pts;
@@ -709,8 +754,7 @@ function initParticles() {
     for(let i=0; i<numPlayParticles; i++) {
       playParticles.push({
         x: 0, y: 0, tx: 0, ty: 0,
-        vx: (Math.random() - 0.5) * explosionPower, 
-        vy: (Math.random() - 0.5) * explosionPower,
+        vx: (Math.random() - 0.5) * explosionPower, vy: (Math.random() - 0.5) * explosionPower,
         alpha: 0.2 + Math.random() * 0.8 
       });
     }
@@ -718,70 +762,64 @@ function initParticles() {
     for (let y = 0; y < vRows; y++) {
         for (let x = 0; x < vCols; x++) {
             videoParticles.push({
-                x: 0, y: 0, tx: 0, ty: 0,
-                gridX: x, gridY: y,
-                scatterX: (Math.random() - 0.5) * scatterAmount,
-                scatterY: (Math.random() - 0.5) * scatterAmount,
-                vx: 0, vy: 0,
-                alpha: 0, targetAlpha: 0,
-                initialized: false 
+                x: 0, y: 0, tx: 0, ty: 0, gridX: x, gridY: y,
+                scatterX: (Math.random() - 0.5) * scatterAmount, scatterY: (Math.random() - 0.5) * scatterAmount,
+                vx: 0, vy: 0, alpha: 0, targetAlpha: 0, initialized: false 
             });
         }
     }
     
     resize(); 
-    // 초기화 시 재생 버튼 위치도 0.82로 일치시킴
     playParticles.forEach(p => { p.x = width / 2; p.y = height * 0.82; });
 
     function explodeAllParticles() {
       playParticles.forEach(p => {
-        const angle = Math.random() * Math.PI * 2;
-        const power = 5 + Math.random() * explosionPower;
-        p.vx = Math.cos(angle) * power;
-        p.vy = Math.sin(angle) * power;
+        const angle = Math.random() * Math.PI * 2; const power = 5 + Math.random() * explosionPower;
+        p.vx = Math.cos(angle) * power; p.vy = Math.sin(angle) * power;
       });
 
       videoParticles.forEach(p => {
         if (p.targetAlpha > 0.05) {
-          const angle = Math.random() * Math.PI * 2;
-          const power = 5 + Math.random() * explosionPower;
-          p.vx = Math.cos(angle) * power;
-          p.vy = Math.sin(angle) * power;
+          const angle = Math.random() * Math.PI * 2; const power = 5 + Math.random() * explosionPower;
+          p.vx = Math.cos(angle) * power; p.vy = Math.sin(angle) * power;
         }
       });
+
+      if (!textExploded) {
+          textExploded = true;
+          textParticles.forEach(p => {
+              const angle = Math.random() * Math.PI * 2; 
+              // 💡 텍스트가 화면 밖으로 확실히 날아가도록 힘 조정
+              const power = 10 + Math.random() * 15; 
+              p.vx = Math.cos(angle) * power; 
+              p.vy = Math.sin(angle) * power;
+          });
+      }
     }
 
     function updateVideoTargets() {
         if (video.readyState < 2) return; 
-        
         sCtx.drawImage(video, 0, 0, vCols, vRows);
         const imgData = sCtx.getImageData(0, 0, vCols, vRows).data;
         
         videoParticles.forEach(p => {
             const i = (p.gridY * vCols + p.gridX) * 4;
             const brightness = (imgData[i] + imgData[i+1] + imgData[i+2]) / 3;
-            
             p.targetAlpha = brightness > 45 ? 0.2 + (brightness/255) * 0.8 : 0;
             
             if (!p.initialized) {
-                p.x = p.tx;
-                p.y = p.ty;
-                p.alpha = p.targetAlpha;
-                p.initialized = true;
+                p.x = p.tx; p.y = p.ty;
+                p.alpha = p.targetAlpha; p.initialized = true;
             }
         });
     }
 
     canvas.addEventListener('click', () => {
       explodeAllParticles();
-      
-      const guideText = $('#videoGuideText');
-      if (guideText) guideText.style.display = 'none';
       const bgm = document.getElementById('bgm');
       
       if (video.paused) {
-        video.muted = false; 
-        video.play();
+        video.muted = false; video.play();
         if (bgm) bgm.play().catch(e => console.log(e));
         currentPlayTarget = getPauseShape();
       } else {
@@ -789,16 +827,20 @@ function initParticles() {
         if (bgm) bgm.pause();
         currentPlayTarget = getPlayShape();
       }
-      
       playParticles.forEach((p, i) => { p.tx = currentPlayTarget[i].x; p.ty = currentPlayTarget[i].y; });
     });
 
-    function drawParticle(p) {
-        p.vx += (p.tx - p.x) * moveSpeed;
-        p.vy += (p.ty - p.y) * moveSpeed;
-        p.vx *= friction;
-        p.vy *= friction;
-        p.x += p.vx;
+    // 💡 isExploded 파라미터로 마찰력 및 복원력 차단
+    function drawParticle(p, isExploded = false) {
+        if (!isExploded) {
+            // 평소에는 원래 자리(tx, ty)로 돌아가려 하고 멈춤(마찰력)
+            p.vx += (p.tx - p.x) * moveSpeed; 
+            p.vy += (p.ty - p.y) * moveSpeed;
+            p.vx *= friction; 
+            p.vy *= friction;
+        }
+        // 폭발한 상태면 마찰력 없이 우주처럼 계속 날아감
+        p.x += p.vx; 
         p.y += p.vy;
 
         const drawX = p.x + (Math.random() - 0.5) * jitter;
@@ -810,35 +852,67 @@ function initParticles() {
         ctx.fill();
     }
 
-    function animate() {
+    let lastTime = performance.now();
+    function animate(now) {
+      const dt = now - lastTime; lastTime = now;
       ctx.clearRect(0, 0, width, height);
 
       playParticles.forEach(p => {
           p.alpha += (Math.random() - 0.5) * opacitySpeed;
-          if(p.alpha > 1) p.alpha = 1;
-          if(p.alpha < 0.2) p.alpha = 0.2;
+          if(p.alpha > 1) p.alpha = 1; if(p.alpha < 0.2) p.alpha = 0.2;
           drawParticle(p);
       });
 
       updateVideoTargets(); 
-      
       videoParticles.forEach(p => {
           p.alpha += (p.targetAlpha - p.alpha) * 0.15; 
           if (p.alpha > 0.05) {
               let displayAlpha = p.alpha + (Math.random() - 0.5) * opacitySpeed;
               if(displayAlpha > 1) displayAlpha = 1;
               if(displayAlpha < 0.2 && p.targetAlpha > 0) displayAlpha = 0.2;
-              
+              const temp = p.alpha; p.alpha = displayAlpha;
+              drawParticle(p); p.alpha = temp;
+          }
+      });
+
+      if (!textExploded && textParticles.length > 0) {
+          textTimer += (dt / 1000); 
+          if (textTimer >= 6.0) {  // 💡 텍스트가 멈춰있는 시간 4.0이면 4초
+              textExploded = true;
+              textParticles.forEach(p => {
+                  const angle = Math.random() * Math.PI * 2;
+                  // 💡 화면 밖으로 시원하게 날아가도록 폭발력 부여
+                  const power = 10 + Math.random() * 15; 
+                  p.vx = Math.cos(angle) * power;
+                  p.vy = Math.sin(angle) * power;
+              });
+          }
+      }
+
+      textParticles.forEach(p => {
+          // 💡 투명해지는(alpha 감소) 애니메이션 코드를 완전히 삭제하여 선명도 유지
+          if (!textExploded) {
+              p.alpha += (p.targetAlpha - p.alpha) * 0.15;
+          }
+
+          if (p.alpha > 0.05) {
+              let displayAlpha = p.alpha;
+              if (!textExploded) {
+                  displayAlpha += (Math.random() - 0.5) * opacitySpeed; 
+                  if(displayAlpha > 1) displayAlpha = 1;
+                  if(displayAlpha < 0.2 && p.targetAlpha > 0) displayAlpha = 0.2;
+              }
               const temp = p.alpha;
               p.alpha = displayAlpha;
-              drawParticle(p);
+              // 💡 텍스트가 터졌을 때(textExploded), 마찰력 차단 여부를 함께 전달
+              drawParticle(p, textExploded); 
               p.alpha = temp;
           }
       });
 
       requestAnimationFrame(animate);
     }
-    animate();
+    requestAnimationFrame(animate);
 }
   
   /* ═══════════════════════════════════════════
