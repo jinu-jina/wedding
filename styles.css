@@ -464,17 +464,7 @@ a {
   width: 85%; 
   max-width: 320px;
   pointer-events: none; 
-  animation: blinkFiveTimes 8s ease-in-out forwards;
-}
-
-@keyframes blinkFiveTimes {
-  0%   { opacity: 0; }
-  10%  { opacity: 0.8; } 18%  { opacity: 0.2; }
-  28%  { opacity: 0.8; } 36%  { opacity: 0.2; }
-  46%  { opacity: 0.8; } 54%  { opacity: 0.2; }
-  64%  { opacity: 0.8; } 72%  { opacity: 0.2; }
-  82%  { opacity: 0.8; } 90%  { opacity: 0; }
-  100% { opacity: 0; }
+  opacity: 0; /* 💡 실제 이미지는 숨기고, JS에서 픽셀 데이터만 빼옵니다 */
 }
 
 /* ═══════════════════════════════════════════
