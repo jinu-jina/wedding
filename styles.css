@@ -478,133 +478,69 @@ a {
 }
 
 /* ═══════════════════════════════════════════
-   Hero Section (PC/모바일 사진 안 잘림)
+   Hero Section
    ═══════════════════════════════════════════ */
+/* ==================================
+   1. 히어로 섹션 & 액자(Frame) 구조
+   ================================== */
 .hero {
   position: relative;
-  width: 100vw;
-  height: 100vh;
-  height: 100dvh;
-  margin-left: calc(-50vw + 50%);
-  margin-top: 0; 
-  background-color: #ececde; 
-  overflow: hidden;
+  width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 0;
-  
-  /* 💡 스크롤 자석 도착점 (화면 꽉 차게 고정) */
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
+  /* 양옆 남는 빈 공간의 배경색 (필요시 수정) */
+  background-color: #ececde; 
+  overflow: hidden;
 }
 
-.hero__photo {
+/* 💡 이 액자가 500px 제한과 레이어 순서를 완벽하게 통제합니다 */
+.hero__frame {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  overflow: hidden; /* 덩어리가 500px 밖으로 나가는 것을 칼같이 차단 */
+}
+
+/* [Layer 1] 바닥 1.jpg */
+.layer-1-bg {
   display: block;
   width: 100%;
-  height: 100%;
-  /* 💡 PC 화면에서 사진이 무한정 커져서 잘리는 것을 방지, 가운데 포스터 크기(500px)로 유지 */
-  max-width: 500px; 
-  object-fit: contain; 
+  height: auto; /* 높이가 사진 비율에 맞춰 자동 조절되어 여백/잘림 완벽 해결 */
   z-index: 1;
 }
 
-/* 💡 맨 위에 올라가는 투명 PNG 레이어 (블러 무시) */
-.hero__photo-top {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%); /* 화면 정중앙에 완벽히 고정 */
-  width: 100%;
-  height: 100%;
-  max-width: 500px;     /* 기존 1.jpg(hero__photo)와 크기를 100% 동일하게 맞춤 */
-  object-fit: contain;  /* 이미지가 잘리지 않고 비율 유지 */
-  
-  /* 💡 핵심: 블러 컨테이너(z-index: 2)보다 훨씬 높은 숫자를 주어 맨 위로 끌어올림 */
-  z-index: 20; 
-  pointer-events: none; /* 이 이미지가 스와이프나 터치를 방해하지 않도록 통과시킴 */
+/* [Layer 2+3] 덩어리들이 담긴 통 */
+/* 캔버스 래퍼 및 캔버스 초기화 */
+.tool-canvas-area {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;  /* 💡 필수: 부모(hero__frame) 기준 절대 위치 띄우기 */
+  top: -5%;
+  left: -5%;
+  width: 110%;
+  height: 110%;
+  z-index: 2;          /* 💡 Layer 1과 4 사이에 위치하도록 설정 */
+  pointer-events: auto; 
 }
 
-/* ═══════════════════════════════════════════
-   Fluid Blur Effect (슬라임 융합 & 물감 섞임)
-   ═══════════════════════════════════════════ */
-.fluid-blur-container {
+#canvas {
+  display: block;
+  background: transparent;
+  width: 100%;
+  height: 100%;
+}
+
+/* [Layer 4] 맨 위 1.png */
+.layer-4-top {
   position: absolute;
   inset: 0;
-  z-index: 2; 
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.fluid-blur-container::after {
-  content: "";
-  position: absolute;
-  inset: -50%; 
-  z-index: 5;
-  pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-  background-repeat: repeat;
-  background-size: 150px 150px; 
-  opacity: 0.25; 
-  mix-blend-mode: overlay;
-}
-
-.blob-drift-layer {
-  position: absolute;
   width: 100%;
   height: 100%;
-}
-
-/* 💡 네모난 사각형으로 깨지는 현상을 막기 위해 순수 원형 그라데이션 및 블러 최적화 적용 */
-.blur-blob {
-  position: absolute;
-  border-radius: 50%;
-  background-repeat: no-repeat;
-  /* 🚨 2. 여기서도 will-change를 삭제하여 1.jpg가 완벽히 인식되도록 했습니다! */
-  
-  /* 3. 배경 이미지 흐리게 (유리창 효과) */
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
-  
-  /* 4. 칼같이 잘린 테두리만 부드럽게 안개처럼 뭉개기 */
-  filter: blur(25px);
-  -webkit-filter: blur(25px);
-}
-
-/* 🎨 1. green radial gradient */
-.color-green-01 {
-  /* 🚨 크기, 위치, 애니메이션 절대 수정하지 않음 🚨 */
-  width: 250px; height: 250px;
-  bottom: 0%; right: -40%;
-  animation: liquid-flow 20s linear infinite;
-}
-
-.color-green-01::after {
-  /* 🚨 색상, 그라데이션 절대 수정하지 않음 (충돌을 피하기 위해 여기로 위치만 이동) 🚨 */
-  background: linear-gradient(135deg, rgba(48, 95, 51, 0.9) 0%, rgba(146, 175, 83, 0.8) 100%);
-}
-
-/* 흘러가는 궤도 및 액체 애니메이션 */
-@keyframes liquid-flow {
-  0% {
-    /* 출발: 오른쪽 바깥, 기본 원형 */
-    transform: translateX(0) rotate(0deg);
-    border-radius: 50% 50% 50% 50%;
-  }
-  33% {
-    /* 1/3 지점: 한쪽으로 심하게 찌그러짐 (일렁임 효과) */
-    border-radius: 60% 40% 70% 30%;
-  }
-  66% {
-    /* 2/3 지점: 반대쪽으로 찌그러짐 */
-    border-radius: 40% 60% 30% 70%;
-  }
-  100% {
-    /* 도착: 화면 왼쪽 끝 너머로 완전히 이동 (-120vw) */
-    /* 360도 회전까지 더해져서 진짜 액체가 굴러가는 것처럼 보입니다 */
-    transform: translateX(-120vw) rotate(360deg); 
-    border-radius: 50% 50% 50% 50%;
-  }
+  object-fit: cover;
+  z-index: 10; /* 10층 (절대 덩어리들이 뚫고 올라올 수 없도록 강력 방어) */
+  pointer-events: none;
 }
 
 /* ═══════════════════════════════════════════
