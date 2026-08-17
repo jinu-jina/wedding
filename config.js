@@ -51,8 +51,8 @@ const CONFIG = {
 
   // ── 인사말 ──
   greeting: {
-    title: "소중한 분들을 초대합니다",
-    content: "서로 다른 길을 걸어온 두 사람이\n이제 같은 길을 함께 걸어가려 합니다.\n\n저희의 새로운 시작을\n축복해 주시면 감사하겠습니다."
+    title: "", 
+    content: "<span class='hl'>정</span>해진 운명처럼 서로를 알아본 봄날, <span class='hl'>진</span>심을 다해 사랑할 단 한 사람을 만났습니다.\n<span class='hl'>우</span>연이 겹쳐 필연이 된 우리의 인연이 <span class='hl'>배</span>려와 믿음 속에서 단단하게 뿌리내렸습니다.\n<span class='hl'>진</span>실한 마음으로 서로의 버팀목이 되어주며 <span class='hl'>아</span>름다운 동행을 시작하려 합니다.\n귀한 걸음 하시어 저희의 새로운 시작을 축복해 주시면 감사하겠습니다!"
   },
 
   // ── 우리의 이야기 ──

@@ -34,13 +34,19 @@
  
   <div id="toast" class="toast" aria-live="polite"></div>
 
-  <div id="photoModal" class="photo-modal" role="dialog" aria-modal="true" aria-label="사진 보기">
+ <div id="photoModal" class="photo-modal" role="dialog" aria-modal="true" aria-label="사진 보기">
+    
     <button class="photo-modal__close" id="modalClose" aria-label="닫기">&times;</button>
+    
+    <span class="photo-modal__guide">양쪽 화살표 버튼 터치 혹은 좌우로<br>드래그하여 사진을 넘길 수 있습니다.</span>
+    
     <button class="photo-modal__nav photo-modal__nav--prev" id="modalPrev" aria-label="이전 사진">&#8249;</button>
     <button class="photo-modal__nav photo-modal__nav--next" id="modalNext" aria-label="다음 사진">&#8250;</button>
+    
     <div class="photo-modal__container" id="modalContainer">
       <img class="photo-modal__img" id="modalImg" src="" alt="사진" draggable="false">
     </div>
+    
     <div class="photo-modal__counter" id="modalCounter"></div>
   </div>
 
@@ -67,18 +73,58 @@
       </div>
     </section>
 
+    <!-- ─── 인사말 ─── -->
     <section class="section greeting" id="greeting">
-      <div class="section__inner">
-        <div class="trad-divider animate-item" data-animate="fade-in">
-          <span class="trad-divider__line"></span>
-          <span class="trad-divider__diamond"></span>
-          <span class="trad-divider__line"></span>
-        </div>
-        <h2 class="section__title animate-item" data-animate="fade-up" id="greetingTitle"></h2>
+      <!-- 1. 상단 bg_01 영역 (소개글 텍스트) -->
+      <div class="greeting__part1">
         <p class="greeting__text animate-item" data-animate="fade-up" id="greetingContent"></p>
-        <div class="greeting__parents animate-item" data-animate="fade-up" id="greetingParents"></div>
+      </div>
+
+      <!-- 2. 하단 bg_02 영역 (레이스 장식 및 혼주 정보) -->
+      <div class="greeting__part2">
+        <div class="greeting__lace-wrapper animate-item" data-animate="fade-up">
+          <!-- 베이스 레이스 이미지 -->
+          <img src="images/greeting/lace.png" class="greeting__lace-base" alt="레이스 배경">
+          <!-- 써지는 애니메이션 효과가 들어갈 캘리그라피 이미지 -->
+          <img src="images/greeting/lace_tex.png" class="greeting__lace-tex" alt="레이스 텍스트">
+          
+          <!-- 혼주 정보 (script.js에서 자동으로 들어감) -->
+          <div class="greeting__parents" id="greetingParents"></div>
+        </div>
       </div>
     </section>
+
+    <!-- ─── 갤러리 ─── -->
+    <div class="alet-gallery" id="gallery">
+  
+  <!-- 💡 5번: 새로운 상단 좌측 정렬 타이틀 -->
+  <div class="gallery-header-new">
+    <h2 class="gallery-header-new__title">진우<span class="heart">🤍</span>진아<br>웨딩 앨범</h2>
+    <p class="gallery-header-new__subtitle">
+      좌우로 스크롤하여 이미지를 넘길 수 있습니다.<br>
+      이미지를 터치하면 크게 보실 수 있습니다.
+    </p>
+  </div>
+
+  <!-- 💡 2번: 갤러리 진입 시 중앙에서 커졌다 사라지는 애니메이션 텍스트 -->
+  <div class="gallery-intro" id="galleryIntro">
+    <p>좌우로 스크롤하여 이미지를 넘길 수 있습니다.<br>이미지를 터치하면 크게 보실 수 있습니다.</p>
+  </div>
+
+  <!-- 💡 3번: 라인 컨테이너에 애니메이션 제어를 위한 id="aletLines" 추가 -->
+  <div class="alet-lines" id="aletLines">
+    <div class="alet-line alet-line-h"></div>
+    <div class="alet-line alet-line-v"></div>
+    <div class="alet-line alet-line-d1"></div>
+    <div class="alet-line alet-line-d2"></div>
+  </div>
+
+  <!-- 기존 갤러리 그리드 영역 (절대 건드리지 않음) -->
+  <div class="alet-gallery__field" id="galleryGrid"></div>
+  
+  <!-- 💡 1번: 기존 하단에 있던 alet-gallery__bottom은 삭제되었습니다. -->
+</div>
+</section>
 
     <section class="section calendar-section" id="calendarSection">
       <div class="section__inner">
@@ -107,13 +153,6 @@
         <h2 class="section__title animate-item" data-animate="fade-up" id="storyTitle"></h2>
         <p class="story__text animate-item" data-animate="fade-up" id="storyContent"></p>
         <div class="story__photos" id="storyPhotos"></div>
-      </div>
-    </section>
-
-    <section class="section gallery" id="gallery">
-      <div class="section__inner">
-        <h2 class="section__title animate-item" data-animate="fade-up">갤러리</h2>
-        <div class="gallery__grid" id="galleryGrid"></div>
       </div>
     </section>
 

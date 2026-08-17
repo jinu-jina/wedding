@@ -202,12 +202,17 @@ function initHero() {
   }
 
   /* ═══════════════════════════════════════════
-     Greeting Section
+     Greeting Section (스크롤 양방향 감지 및 애니메이션)
      ═══════════════════════════════════════════ */
-
   function initGreeting() {
-    $('#greetingTitle').textContent = CONFIG.greeting.title;
-    $('#greetingContent').textContent = CONFIG.greeting.content;
+    const titleEl = $('#greetingTitle');
+    if (titleEl) titleEl.textContent = CONFIG.greeting.title;
+
+    const contentEl = $('#greetingContent');
+    if (contentEl) {
+      // 💡 전체 텍스트에 밑줄이 깔리도록 래퍼 처리
+      contentEl.innerHTML = `<span class="greeting__text-line">${CONFIG.greeting.content}</span>`;
+    }
 
     const g = CONFIG.groom;
     const b = CONFIG.bride;
@@ -231,8 +236,185 @@ function initHero() {
       </div>
     `;
 
-    $('#greetingParents').innerHTML = parentsHTML;
+    const parentsEl = $('#greetingParents');
+    if (parentsEl) parentsEl.innerHTML = parentsHTML;
+
+    // 💡 스크롤 진입 감지 (위/아래 스크롤 시 반복 실행)
+    const target = $('#greetingContent');
+    if (!target) return;
+
+    let isAnimating = false;
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && !isAnimating) {
+          isAnimating = true;
+          const hls = target.querySelectorAll('.hl');
+
+          hls.forEach((hl, idx) => {
+            setTimeout(() => {
+              hl.classList.add('is-bounce');
+              
+              setTimeout(() => {
+                hl.classList.remove('is-bounce');
+              }, 1200);
+            }, idx * 620);
+          });
+
+          setTimeout(() => {
+            isAnimating = false;
+          }, hls.length * 220 + 800);
+        }
+      });
+    }, {
+      threshold: 0.2
+    });
+
+    observer.observe(target);
   }
+
+/* ═══════════════════════════════════════════
+   Gallery Section (ALET 100% Flat & Bug Fix)
+   ═══════════════════════════════════════════ */
+function initGallery(galleryImages) {
+  const grid = $('#galleryGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  if (galleryImages.length === 0) {
+    const gallerySection = $('#gallery');
+    if (gallerySection) gallerySection.style.display = 'none';
+    return;
+  }
+
+  // 🛠️ 갤러리 크기 및 간격 설정 (여기서 모든 레이아웃을 조절합니다!) 🛠️
+  const GALLERY_CONFIG = {
+    spacingVW: 20,       // 1. 이미지 간의 가로 간격 (사진이 서로 겹치면 이 숫자를 45, 50으로 늘리세요)
+    minWidthVW: 10,      // 2. 가장 작은 이미지의 가로 크기 (화면 너비의 %)
+    maxWidthVW: 45,      // 3. 가장 큰 이미지의 가로 크기 (화면 너비의 %)
+    scatterY_VH: 50      // 4. 위아래로 흩어지는 범위 (화면 높이의 %)
+  };
+
+  const sticky = document.createElement('div');
+  sticky.className = 'alet-gallery__sticky';
+  grid.appendChild(sticky);
+
+  const spacer = document.createElement('div');
+  spacer.className = 'alet-gallery__spacer';
+  spacer.style.width = '500000px'; 
+  grid.appendChild(spacer);
+
+  const wrapElements = [];
+
+  galleryImages.forEach((src, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'alet-image-wrap'; 
+
+    // 💡 직관적인 사이즈 조절: 최소 크기 ~ 최대 크기 사이에서 랜덤으로 결정됨
+    const widthVW = GALLERY_CONFIG.minWidthVW + Math.random() * (GALLERY_CONFIG.maxWidthVW - GALLERY_CONFIG.minWidthVW);
+    wrap.style.width = `${widthVW}vw`;
+
+    // 💡 겹침(중복) 완벽 방지: 좌우(X축) 랜덤 흔들림은 삭제하고, 상하(Y축) 지그재그 배치 적용
+    const direction = i % 2 === 0 ? -1 : 1; // 짝수 번째는 위로, 홀수 번째는 아래로
+    const randomY = (Math.random() * (GALLERY_CONFIG.scatterY_VH / 2)) * direction;
+    wrap.dataset.offsetYPercent = randomY;
+    
+    // 서로 자연스럽게 포개지도록 z-index 난수 부여
+    wrap.style.zIndex = Math.floor(Math.random() * 100);
+
+    wrap.innerHTML = `<img src="${src}" class="alet-image" alt="갤러리 사진 ${i + 1}" loading="lazy">`;
+
+    wrap.addEventListener('click', (e) => {
+      if (grid.classList.contains('is-dragging')) {
+        e.preventDefault(); return;
+      }
+      openPhotoModal(galleryImages, i);
+    });
+
+    sticky.appendChild(wrap);
+    wrapElements.push(wrap);
+  });
+
+  // 💡 X축 평면 무한 루프 렌더링 엔진
+  function updateCarousel() {
+    const vW = window.innerWidth;
+    const vH = window.innerHeight;
+    
+    const spacing = (vW * GALLERY_CONFIG.spacingVW) / 100;
+    const currentLoopWidth = galleryImages.length * spacing;
+    const scrollX = grid.scrollLeft;
+
+    wrapElements.forEach((wrap, i) => {
+      const virtualX = i * spacing;
+      
+      let distFromCenter = ((virtualX - scrollX) % currentLoopWidth + currentLoopWidth) % currentLoopWidth;
+      if (distFromCenter > currentLoopWidth / 2) {
+        distFromCenter -= currentLoopWidth;
+      }
+      
+      const offsetY = (vH * parseFloat(wrap.dataset.offsetYPercent)) / 100;
+      
+      // 💡 좌우 오프셋(offsetX)을 아예 없애서 사진들이 정해진 차선을 이탈해 겹치는 버그를 막음
+      wrap.style.transform = `translate(-50%, -50%) translate(${distFromCenter}px, ${offsetY}px)`;
+    });
+  }
+
+  grid.addEventListener('scroll', updateCarousel);
+  window.addEventListener('resize', updateCarousel);
+
+  setTimeout(() => {
+    const loopWidth = galleryImages.length * ((window.innerWidth * GALLERY_CONFIG.spacingVW) / 100);
+    const centerStart = Math.floor(250000 / loopWidth) * loopWidth;
+    grid.scrollLeft = centerStart;
+    updateCarousel();
+  }, 50);
+
+  // PC 마우스 드래그 스크롤 기능
+  let isDown = false;
+  let startX, scrollLeft;
+  grid.addEventListener('mousedown', (e) => {
+    isDown = true; grid.classList.add('active');
+    startX = e.pageX - grid.offsetLeft; scrollLeft = grid.scrollLeft;
+  });
+  grid.addEventListener('mouseleave', () => { isDown = false; grid.classList.remove('active'); setTimeout(() => grid.classList.remove('is-dragging'), 100); });
+  grid.addEventListener('mouseup', () => { isDown = false; grid.classList.remove('active'); setTimeout(() => grid.classList.remove('is-dragging'), 100); });
+  grid.addEventListener('mousemove', (e) => {
+    if (!isDown) return;
+    e.preventDefault();
+    const walk = (e.pageX - grid.offsetLeft - startX) * 1.5;
+    if (Math.abs(walk) > 5) grid.classList.add('is-dragging');
+    grid.scrollLeft = scrollLeft - walk;
+  });
+// --- 💡 [추가] 갤러리 섹션 진입 시 ALET 애니메이션 실행 옵저버 ---
+  const gallerySection = $('#gallery');
+  const introEl = $('#galleryIntro');
+  const linesEl = $('#aletLines');
+  
+  if (gallerySection && introEl && linesEl) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        // 화면에 갤러리 섹션이 30% 이상 보이고, 아직 로드되지 않았을 때
+        if (entry.isIntersecting && !gallerySection.classList.contains('is-loaded')) {
+          
+          // 1. 중앙 텍스트 애니메이션 및 라인 회전 시작
+          introEl.classList.add('play-anim');
+          linesEl.classList.add('play-anim');
+          
+          // 💡 2. 기존 1800이었던 숫자를 2800으로 변경!
+          // (텍스트가 75% 지점에서 작아지며 사라지기 시작하므로, 
+          // 2.8초 쯤에 본 갤러리가 나타나면 타이밍이 예술적으로 맞아떨어집니다.)
+          setTimeout(() => {
+            gallerySection.classList.add('is-loaded');
+          }, 3800);
+          
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.3 }); 
+    
+    observer.observe(gallerySection);
+  }
+}
 
   /* ═══════════════════════════════════════════
      Calendar Section
@@ -345,119 +527,99 @@ function initHero() {
   }
 
   /* ═══════════════════════════════════════════
-     Gallery Section
-     ═══════════════════════════════════════════ */
+   Photo Modal (with swipe & bug fix)
+   ═══════════════════════════════════════════ */
 
-  function initGallery(galleryImages) {
-    const grid = $('#galleryGrid');
-    const placeholder = grid.querySelector('.loading-placeholder');
-    if (placeholder) placeholder.remove();
+let modalImages = [];
+let modalIndex = 0;
+let touchStartX = 0;
+let touchEndX = 0;
+let touchStartY = 0;
+let touchEndY = 0;
 
-    if (galleryImages.length === 0) {
-      const gallerySection = $('#gallery');
-      if (gallerySection) gallerySection.style.display = 'none';
-      return;
-    }
+/* 💡 화면 튕김 및 잔상을 유발하던 스크롤 강제 조작 로직 완전히 삭제 */
+function openPhotoModal(images, index) {
+  document.body.classList.add('no-scroll');
+  modalImages = images;
+  modalIndex = index;
+  showModalImage();
+  $('#photoModal').classList.add('is-open');
+}
 
-    galleryImages.forEach((src, i) => {
-      const div = document.createElement('div');
-      div.className = 'gallery__item animate-item';
-      div.setAttribute('data-animate', 'scale-in');
-      div.innerHTML = `<img src="${src}" alt="갤러리 사진 ${i + 1}" loading="lazy">`;
-      div.addEventListener('click', () => openPhotoModal(galleryImages, i));
-      grid.appendChild(div);
-    });
-  }
+function closePhotoModal() {
+  $('#photoModal').classList.remove('is-open');
+  document.body.classList.remove('no-scroll');
+}
 
-  /* ═══════════════════════════════════════════
-     Photo Modal (with swipe)
-     ═══════════════════════════════════════════ */
+function showModalImage() {
+  const img = $('#modalImg');
+  img.src = modalImages[modalIndex];
+  $('#modalCounter').textContent = `${modalIndex + 1} / ${modalImages.length}`;
 
-  let modalImages = [];
-  let modalIndex = 0;
-  let touchStartX = 0;
-  let touchEndX = 0;
-  let touchStartY = 0;
-  let touchEndY = 0;
+  $('#modalPrev').style.display = modalIndex > 0 ? '' : 'none';
+  $('#modalNext').style.display = modalIndex < modalImages.length - 1 ? '' : 'none';
+}
 
-  function openPhotoModal(images, index) {
-    modalImages = images;
-    modalIndex = index;
+function modalNavigate(dir) {
+  const newIndex = modalIndex + dir;
+  if (newIndex >= 0 && newIndex < modalImages.length) {
+    modalIndex = newIndex;
     showModalImage();
-    $('#photoModal').classList.add('is-open');
-    document.body.classList.add('no-scroll');
   }
+}
 
-  function closePhotoModal() {
-    $('#photoModal').classList.remove('is-open');
-    document.body.classList.remove('no-scroll');
-  }
+function initPhotoModal() {
+  $('#modalClose').addEventListener('click', closePhotoModal);
+  $('#modalPrev').addEventListener('click', () => modalNavigate(-1));
+  $('#modalNext').addEventListener('click', () => modalNavigate(1));
 
-  function showModalImage() {
-    const img = $('#modalImg');
-    img.src = modalImages[modalIndex];
-    $('#modalCounter').textContent = `${modalIndex + 1} / ${modalImages.length}`;
-
-    $('#modalPrev').style.display = modalIndex > 0 ? '' : 'none';
-    $('#modalNext').style.display = modalIndex < modalImages.length - 1 ? '' : 'none';
-  }
-
-  function modalNavigate(dir) {
-    const newIndex = modalIndex + dir;
-    if (newIndex >= 0 && newIndex < modalImages.length) {
-      modalIndex = newIndex;
-      showModalImage();
+  const modal = $('#photoModal');
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal || e.target.id === 'modalContainer') {
+      closePhotoModal();
     }
+  });
+
+  // 💡 잔상/튕김 방지: iOS에서 모달창을 띄웠을 때 뒤에 갤러리가 스크롤되는 것을 물리적으로 차단
+  modal.addEventListener('touchmove', (e) => {
+    e.preventDefault(); 
+  }, { passive: false });
+
+  // Keyboard navigation
+  document.addEventListener('keydown', (e) => {
+    if (!modal.classList.contains('is-open')) return;
+    if (e.key === 'Escape') closePhotoModal();
+    if (e.key === 'ArrowLeft') modalNavigate(-1);
+    if (e.key === 'ArrowRight') modalNavigate(1);
+  });
+
+  // Swipe support
+  const container = $('#modalContainer');
+  container.addEventListener('touchstart', (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+    touchStartY = e.changedTouches[0].screenY;
+  }, { passive: true });
+
+  container.addEventListener('touchend', (e) => {
+    touchEndX = e.changedTouches[0].screenX;
+    touchEndY = e.changedTouches[0].screenY;
+    handleSwipe();
+  }, { passive: true });
+}
+
+function handleSwipe() {
+  const diffX = touchStartX - touchEndX;
+  const diffY = touchStartY - touchEndY;
+  const minSwipe = 50;
+
+  if (Math.abs(diffX) < minSwipe || Math.abs(diffX) < Math.abs(diffY)) return;
+
+  if (diffX > 0) {
+    modalNavigate(1);
+  } else {
+    modalNavigate(-1);
   }
-
-  function initPhotoModal() {
-    $('#modalClose').addEventListener('click', closePhotoModal);
-    $('#modalPrev').addEventListener('click', () => modalNavigate(-1));
-    $('#modalNext').addEventListener('click', () => modalNavigate(1));
-
-    const modal = $('#photoModal');
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal || e.target.id === 'modalContainer') {
-        closePhotoModal();
-      }
-    });
-
-    // Keyboard navigation
-    document.addEventListener('keydown', (e) => {
-      if (!modal.classList.contains('is-open')) return;
-      if (e.key === 'Escape') closePhotoModal();
-      if (e.key === 'ArrowLeft') modalNavigate(-1);
-      if (e.key === 'ArrowRight') modalNavigate(1);
-    });
-
-    // Swipe support
-    const container = $('#modalContainer');
-
-    container.addEventListener('touchstart', (e) => {
-      touchStartX = e.changedTouches[0].screenX;
-      touchStartY = e.changedTouches[0].screenY;
-    }, { passive: true });
-
-    container.addEventListener('touchend', (e) => {
-      touchEndX = e.changedTouches[0].screenX;
-      touchEndY = e.changedTouches[0].screenY;
-      handleSwipe();
-    }, { passive: true });
-  }
-
-  function handleSwipe() {
-    const diffX = touchStartX - touchEndX;
-    const diffY = touchStartY - touchEndY;
-    const minSwipe = 50;
-
-    if (Math.abs(diffX) < minSwipe || Math.abs(diffX) < Math.abs(diffY)) return;
-
-    if (diffX > 0) {
-      modalNavigate(1);
-    } else {
-      modalNavigate(-1);
-    }
-  }
+}
 
   /* ═══════════════════════════════════════════
      Location Section
@@ -846,7 +1008,7 @@ function initParticles() {
         const drawX = p.x + (Math.random() - 0.5) * jitter;
         const drawY = p.y + (Math.random() - 0.5) * jitter;
 
-        ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha})`;
+        ctx.fillStyle = `rgba(144, 178, 221, ${p.alpha})`;
         ctx.beginPath();
         ctx.arc(drawX, drawY, particleSize, 0, Math.PI * 2);
         ctx.fill();
@@ -924,7 +1086,6 @@ function initParticles() {
     initEnvelopeOpening();
     initTopVideo(); 
     initParticles();
-    initFluidBlur();
     initHero();
     initGreeting();
     initCalendar();

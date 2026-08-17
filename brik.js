@@ -31,7 +31,7 @@ resizeCanvas();
 
 var controls = (function() {
   // 💡 투명도 조절: "opacity":0.95 
-  var _v = {"sourceImage":"images/hero/1.jpg","color1":"#125622","color2":"#87BD4F","color3":"#C0F083","color4":"#FFFFFF","playing":true,"speed":1.1,"grainSpeed":0,"sharpness":0,"flow":1,"noise":0.01,"opacity":0.80,"backdropBlur":40,"eraserOn":true,"eraseRadius":78,"eraserSoftness":1,"eraserFade":3};
+  var _v = {"sourceImage":"images/hero/1.jpg","color1":"#125622","color2":"#87BD4F","color3":"#C0F083","color4":"#FFFFFF","playing":true,"speed":1.1,"grainSpeed":0,"sharpness":0,"flow":1,"noise":0.01,"opacity":0.80,"backdropBlur":90,"eraserOn":true,"eraseRadius":78,"eraserSoftness":1,"eraserFade":3};
   var _defaults = JSON.parse(JSON.stringify(_v));
   var _listeners = {};
   var _anyListeners = [];
