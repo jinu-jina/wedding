@@ -200,25 +200,16 @@ float snoise(vec3 v){
 vec2 coverUv(vec2 uv){
   vec2 c=uv-0.5; float r=uCanvasAspect/uBgAspect; if(r>1.0) c.x*=r; else c.y/=r; return c+0.5;
 }
-// 💡 골든 앵글 나선형 샘플링 블러 (참고 코드에서 이식). 격자형 샘플링과 달리 texel(해상도
-// 역수)로 오프셋을 직접 보정하므로 화면비와 무관하게 항상 원형으로 퍼지고, 가장자리에서
-// 좌표가 텍스처 범위를 크게 벗어나 반복되며 줄무늬가 생기던 문제도 함께 해결됩니다.
 vec3 blurBg(vec2 uv,float rad){
   if(rad<=0.0) return texture(uBg,coverUv(uv)).rgb;
-  rad=min(rad,0.15);
-  vec2 texel=1.0/uResolution;
-  float radiusPx=rad*max(uResolution.x,uResolution.y);
   vec3 sum=vec3(0.0); float wsum=0.0;
-  const float goldenAngle=2.39996;
-  for(int i=0;i<24;i++){
-    float fi=float(i);
-    float r=sqrt(fi+0.5)/sqrt(24.0);
-    float theta=fi*goldenAngle;
-    vec2 offset=vec2(cos(theta),sin(theta))*r*radiusPx*texel;
-    float w=exp(-2.0*r*r);
-    sum+=texture(uBg,coverUv(uv+offset)).rgb*w; wsum+=w;
+  for(int i=-3;i<=3;i++){
+    for(int j=-3;j<=3;j++){
+      vec2 o=vec2(float(i),float(j))/3.0*rad; float w=exp(-(float(i*i+j*j))*0.35);
+      sum+=texture(uBg,coverUv(uv+o)).rgb*w; wsum+=w;
+    }
   }
-  return wsum>0.0 ? sum/wsum : texture(uBg,coverUv(uv)).rgb;
+  return sum/wsum;
 }
 void main(){
   vec2 uv=vUv; vec2 p=uv*2.0-1.0; p.x*=uResolution.x/uResolution.y; float t=uTime*uSpeed*0.2;
@@ -244,10 +235,10 @@ void main(){
   float mask=texture(uMask,uv).r; mfac*=(1.0-mask); mfac=clamp(mfac,0.0,1.0);
   pc*=mfac; float fa=clamp(a*mfac,0.0,1.0);
 
-  // 💡 캔버스는 페인트 색상만 반투명하게(alpha=fa) 그립니다. 사진은 이 캔버스가 자체적으로
-  // 그리지 않고, 그 아래 깔린 CSS 레이어(원본 사진 + 블러 처리된 사진)에 전적으로 맡깁니다.
-  // 예전에는 uHasBg일 때 캔버스가 항상 alpha=1.0(완전 불투명)으로 사진까지 같이 그려서,
-  // 그 아래 CSS로 아무리 블러를 걸어도 캔버스에 완전히 가려져 전혀 보이지 않았습니다.
+  // 💡 캔버스는 페인트 색상만 반투명(alpha=fa)하게 그립니다. 사진은 캔버스가 그리지 않고
+  // CSS 레이어(원본 1.jpg + 블러 처리된 1_blur.png)에 전적으로 맡깁니다. uHasBg일 때
+  // 캔버스가 alpha=1.0(완전 불투명)으로 사진까지 같이 그리면, 그 아래 CSS 레이어들이
+  // 전부 가려져서 안 보이게 됩니다.
   fragColor=vec4(pc,fa);
 }`;
 
@@ -352,6 +343,47 @@ window.addEventListener('deviceorientation', (e) => {
   targetVelocityY = y * 0.008; 
 });
 
+// 💡 실시간 마스크 동기화: 캔버스가 그리고 있는 유체 모양(알파값)을 그대로 읽어서
+// 블러 레이어(.layer-1-bg-blur)의 CSS mask-image로 사용합니다. 정적인 원형
+// 그라데이션과 달리, 유체가 움직이거나 마우스로 지운 모양이 그대로 반영됩니다.
+const maskSyncCanvas = document.createElement('canvas');
+const maskSyncCtx = maskSyncCanvas.getContext('2d');
+const blurLayerEl = __ctArea ? __ctArea.parentElement.querySelector('.layer-1-bg-blur') : null;
+let lastMaskSyncTime = 0;
+function syncBlurMask(now) {
+  if (!blurLayerEl) return;
+  if (now - lastMaskSyncTime < 120) return; // 약 8fps로 제한 (성능 고려, 유체는 천천히 움직임)
+  lastMaskSyncTime = now;
+  if (maskSyncCanvas.width !== canvas.width || maskSyncCanvas.height !== canvas.height) {
+    maskSyncCanvas.width = canvas.width;
+    maskSyncCanvas.height = canvas.height;
+  }
+  maskSyncCtx.clearRect(0, 0, maskSyncCanvas.width, maskSyncCanvas.height);
+  maskSyncCtx.drawImage(canvas, 0, 0);
+
+  // 💡 마스크 경계를 더 또렷하게 조이기: 옅게 퍼진 알파(예: 0.28 이하)는 아예 0으로 끊어내고,
+  // 어느 정도 진한 부분(0.6 이상)부터 완전히 보이도록 대비를 높입니다.
+  const imgData = maskSyncCtx.getImageData(0, 0, maskSyncCanvas.width, maskSyncCanvas.height);
+  const data = imgData.data;
+  const lo = 0.28, hi = 0.6;
+  for (let i = 3; i < data.length; i += 4) {
+    let a = data[i] / 255;
+    a = Math.min(1, Math.max(0, (a - lo) / (hi - lo)));
+    a = a * a * (3 - 2 * a); // smoothstep으로 경계를 부드럽게 이어줌
+    data[i] = Math.round(a * 255);
+  }
+  maskSyncCtx.putImageData(imgData, 0, 0);
+
+  const url = 'url(' + maskSyncCanvas.toDataURL() + ')';
+  blurLayerEl.style.maskImage = url;
+  blurLayerEl.style.webkitMaskImage = url;
+  blurLayerEl.style.maskMode = 'alpha';
+  blurLayerEl.style.maskSize = '100% 100%';
+  blurLayerEl.style.webkitMaskSize = '100% 100%';
+  blurLayerEl.style.maskRepeat = 'no-repeat';
+  blurLayerEl.style.webkitMaskRepeat = 'no-repeat';
+}
+
 let time = 0; let last = performance.now();
 function render(now) {
   const dt = now - last; last = now;
@@ -390,6 +422,8 @@ function render(now) {
   gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, maskTex[maskRead]); gl.uniform1i(U.mask, 0);
   gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, bgTex); gl.uniform1i(U.bg, 1);
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+  syncBlurMask(now);
 
   requestAnimationFrame(render);
 }

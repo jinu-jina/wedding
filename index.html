@@ -17,21 +17,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=20260828l">
   <script src="config.js"></script>
 </head>
 <body>
 
   <header class="top-nav" id="topNav">
-    <button class="top-nav__menu-btn" type="button" aria-label="메뉴 열기" aria-expanded="false" aria-controls="sideMenu">
-      <svg class="top-nav__menu-icon" width="22" height="16" viewBox="0 0 22 16" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round">
-        <line x1="0" y1="1" x2="22" y2="1"/>
-        <line x1="0" y1="8" x2="22" y2="8"/>
-        <line x1="0" y1="15" x2="22" y2="15"/>
-      </svg>
-      <span class="top-nav__menu-text">메뉴열기</span>
-    </button>
-    <div class="top-nav__section-index">[00]</div>
     <button class="top-nav__sound-btn" type="button" aria-label="배경음악 재생">
       <svg class="top-nav__sound-icon top-nav__sound-icon--on" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round">
         <path d="M4 9v6h4l5 5V4L8 9H4z"/>
@@ -44,21 +35,40 @@
         <line x1="21" y1="9" x2="16" y2="14"/>
       </svg>
     </button>
+    <div class="top-nav__section-index">[00]</div>
+    <button class="top-nav__menu-btn" type="button" aria-label="메뉴 열기" aria-expanded="false" aria-controls="sideMenu">
+      <span class="top-nav__menu-text-wrap" aria-hidden="true">
+        <span class="top-nav__menu-text-inner">
+          <span class="top-nav__menu-text-line">메뉴열기</span>
+          <span class="top-nav__menu-text-line">메뉴닫기</span>
+        </span>
+      </span>
+      <span class="top-nav__menu-icon" aria-hidden="true">
+        <span class="top-nav__menu-icon-line top-nav__menu-icon-line--h"></span>
+        <span class="top-nav__menu-icon-line top-nav__menu-icon-line--v"></span>
+      </span>
+    </button>
   </header>
 
   <nav class="side-menu" id="sideMenu" aria-hidden="true">
-    <button class="side-menu__close" id="sideMenuClose" type="button" aria-label="메뉴 닫기">&times;</button>
+    <button class="side-menu__close" id="sideMenuClose" type="button" aria-label="메뉴 닫기">
+      <span class="side-menu__close-text">메뉴닫기</span>
+      <svg class="side-menu__close-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round">
+        <line x1="1" y1="1" x2="15" y2="15"/>
+        <line x1="15" y1="1" x2="1" y2="15"/>
+      </svg>
+    </button>
     <ul class="side-menu__list">
-      <li><a href="#hero" class="side-menu__link"><span class="side-menu__index">[00]</span> 홈</a></li>
-      <li><a href="#greeting" class="side-menu__link"><span class="side-menu__index">[01]</span> 인사말</a></li>
-      <li><a href="#gallery" class="side-menu__link"><span class="side-menu__index">[02]</span> 웨딩 갤러리</a></li>
-      <li><a href="#location" class="side-menu__link"><span class="side-menu__index">[03]</span> 오시는 길 안내</a></li>
-      <li><a href="#account" class="side-menu__link"><span class="side-menu__index">[04]</span> 축의금 전하실 곳</a></li>
-      <li><a href="#" class="side-menu__link"><span class="side-menu__index">[05]</span> 참석 의사 전달</a></li>
-      <li><a href="#" class="side-menu__link"><span class="side-menu__index">[06]</span> 방명록</a></li>
-      <li><a href="#" class="side-menu__link"><span class="side-menu__index">[07]</span> 게스트 스냅</a></li>
-      <li><a href="#" class="side-menu__link"><span class="side-menu__index">[08]</span> 웨딩 타이머</a></li>
-      <li><a href="#" class="side-menu__link"><span class="side-menu__index">[09]</span> 공유하기</a></li>
+      <li class="side-menu__item"><a href="#hero" class="side-menu__link"><span class="side-menu__label">홈</span><span class="side-menu__index">[00]</span></a></li>
+      <li class="side-menu__item"><a href="#greeting" class="side-menu__link"><span class="side-menu__label">인사말</span><span class="side-menu__index">[01]</span></a></li>
+      <li class="side-menu__item"><a href="#gallery" class="side-menu__link"><span class="side-menu__label">웨딩 갤러리</span><span class="side-menu__index">[02]</span></a></li>
+      <li class="side-menu__item"><a href="#location" class="side-menu__link"><span class="side-menu__label">오시는 길 안내</span><span class="side-menu__index">[03]</span></a></li>
+      <li class="side-menu__item"><a href="#account" class="side-menu__link"><span class="side-menu__label">축의금 전하실 곳</span><span class="side-menu__index">[04]</span></a></li>
+      <li class="side-menu__item"><a href="#" class="side-menu__link"><span class="side-menu__label">참석 의사 전달</span><span class="side-menu__index">[05]</span></a></li>
+      <li class="side-menu__item"><a href="#" class="side-menu__link"><span class="side-menu__label">방명록</span><span class="side-menu__index">[06]</span></a></li>
+      <li class="side-menu__item"><a href="#" class="side-menu__link"><span class="side-menu__label">게스트 스냅</span><span class="side-menu__index">[07]</span></a></li>
+      <li class="side-menu__item"><a href="#" class="side-menu__link"><span class="side-menu__label">웨딩 타이머</span><span class="side-menu__index">[08]</span></a></li>
+      <li class="side-menu__item"><a href="#" class="side-menu__link"><span class="side-menu__label">공유하기</span><span class="side-menu__index">[09]</span></a></li>
     </ul>
   </nav>
   <div class="side-menu__overlay" id="sideMenuOverlay"></div>
@@ -106,7 +116,7 @@
       <div class="hero__frame">
 
         <img src="images/hero/1.jpg" class="layer-1-bg" alt="배경 사진">
-        <img src="images/hero/1.jpg" class="layer-1-bg-blur" alt="" aria-hidden="true">
+        <img src="images/hero/1_blur.png" class="layer-1-bg-blur" alt="" aria-hidden="true">
 
         <div class="tool-canvas-area" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2;">
           <canvas id="canvas"></canvas>
@@ -267,7 +277,7 @@
       <p class="footer__text" id="footerText"></p>
     </footer>
 
-  </main> <script src="brik.js?v=20260828f"></script> 
-  <script src="script.js"></script>
+  </main> <script src="brik.js?v=20260828m"></script> 
+  <script src="script.js?v=20260828b"></script>
 </body>
 </html>

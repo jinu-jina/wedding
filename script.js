@@ -201,10 +201,24 @@ envelopeOpening.addEventListener('click', () => {
       visibilityObserver.observe(topVideoSection);
     }
 
+    // 💡 CSS 클래스 선택자(.is-open)에 의존하지 않고 아이콘/텍스트에 직접 인라인 transform을
+    // 걸어서, 캐시나 특이도 문제로 클래스 기반 애니메이션이 씹히는 경우를 원천 차단합니다.
+    function setToggleVisual(btn, open) {
+      const icon = btn.querySelector('.top-nav__menu-icon');
+      const textInner = btn.querySelector('.top-nav__menu-text-inner');
+      if (icon) icon.style.transform = open ? 'rotate(225deg)' : 'rotate(0deg)';
+      if (textInner) textInner.style.transform = open ? 'translateY(-1.4em)' : 'translateY(0)';
+    }
+
     function openMenu() {
       sideMenu.classList.add('is-open');
       overlay.classList.add('is-open');
-      menuBtns.forEach((btn) => btn.setAttribute('aria-expanded', 'true'));
+      menuBtns.forEach((btn) => {
+        btn.classList.add('is-open');
+        btn.setAttribute('aria-expanded', 'true');
+        btn.setAttribute('aria-label', '메뉴 닫기');
+        setToggleVisual(btn, true);
+      });
       sideMenu.setAttribute('aria-hidden', 'false');
       document.body.classList.add('no-scroll');
     }
@@ -212,7 +226,12 @@ envelopeOpening.addEventListener('click', () => {
     function closeMenu() {
       sideMenu.classList.remove('is-open');
       overlay.classList.remove('is-open');
-      menuBtns.forEach((btn) => btn.setAttribute('aria-expanded', 'false'));
+      menuBtns.forEach((btn) => {
+        btn.classList.remove('is-open');
+        btn.setAttribute('aria-expanded', 'false');
+        btn.setAttribute('aria-label', '메뉴 열기');
+        setToggleVisual(btn, false);
+      });
       sideMenu.setAttribute('aria-hidden', 'true');
       document.body.classList.remove('no-scroll');
     }

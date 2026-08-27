@@ -349,8 +349,61 @@ a {
   cursor: pointer;
 }
 
+.top-nav__menu-text-wrap {
+  position: relative;
+  display: inline-block;
+  /* 💡 1em 정확히 맞추면 한글 글꼴의 위/아래 여백(어센더·디센더)이 잘려서 여유를 둠 */
+  height: 1.4em;
+  overflow: hidden;
+  line-height: 1.4em;
+  white-space: nowrap;
+}
+
+.top-nav__menu-text-inner {
+  display: flex;
+  flex-direction: column;
+  transform: translateY(0);
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.top-nav__menu-text-line {
+  display: block;
+  height: 1.4em;
+  line-height: 1.4em;
+}
+
+/* 💡 메뉴가 열리면 텍스트 줄을 한 칸 위로 밀어 '메뉴열기' -> '메뉴닫기'로 롤링 전환 */
+.top-nav__menu-btn.is-open .top-nav__menu-text-inner {
+  transform: translateY(-1.4em);
+}
+
 .top-nav__menu-icon {
+  position: relative;
+  width: 16px;
+  height: 16px;
   flex-shrink: 0;
+  transform: rotate(0deg);
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.top-nav__menu-icon-line {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100%;
+  height: 1.1px;
+  background: currentColor;
+  border-radius: 2px;
+  transform: translate(-50%, -50%) rotate(0deg);
+}
+
+.top-nav__menu-icon-line--v {
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+
+/* 💡 레퍼런스(spinTween)와 동일하게 225deg 회전시켜 '+' -> 'X'(닫기) 모양으로 전환 */
+.top-nav__menu-btn.is-open .top-nav__menu-icon {
+  transform: rotate(225deg);
 }
 
 .top-nav__section-index {
@@ -383,7 +436,7 @@ a {
 .top-nav__sound-btn.is-playing .top-nav__sound-icon--on { display: block; }
 .top-nav__sound-btn.is-playing .top-nav__sound-icon--off { display: none; }
 
-/* ─── 사이드 메뉴 (좌에서 우로 슬라이드) ─── */
+/* ─── 사이드 메뉴 (우에서 좌로 슬라이드, Staggered Menu 스타일) ─── */
 .side-menu__overlay {
   position: fixed;
   inset: 0;
@@ -402,7 +455,7 @@ a {
 .side-menu {
   position: fixed;
   top: 0;
-  left: 0;
+  right: 0;
   z-index: 700;
   width: min(78%, 320px);
   /* 💡 스크롤 중 잔상 방지가 목적이었던 100svh와 달리, 이 메뉴는 열려있는 동안
@@ -412,8 +465,9 @@ a {
   height: 100dvh;
   background: rgba(24, 20, 18, 0.95);
   padding: calc(4.5rem + var(--safe-top)) 0 calc(2rem + var(--safe-bottom));
-  transform: translateX(-100%);
+  transform: translateX(100%);
   transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  overflow-x: hidden;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   /* 💡 메뉴가 열려있는 동안 body.no-scroll(touch-action: none)이 걸려도
@@ -429,39 +483,98 @@ a {
   position: absolute;
   top: calc(1rem + var(--safe-top));
   right: 1.25rem;
-  width: 32px;
-  height: 32px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 0.4rem;
   background: none;
   border: none;
   color: #fff;
-  font-size: 1.75rem;
+  font-family: 'S-CoreDream-1Thin', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.03em;
   line-height: 1;
+  padding: 0;
   cursor: pointer;
+}
+
+.side-menu__close-icon {
+  flex-shrink: 0;
 }
 
 .side-menu__list {
   list-style: none;
 }
 
+.side-menu__item {
+  overflow: hidden;
+}
+
 .side-menu__link {
-  display: block;
-  padding: 1rem 2rem;
+  display: flex;
+  align-items: flex-start;
+  padding: 0.3rem 2rem;
   color: #fff;
   font-family: 'S-CoreDream-1Thin', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
-  font-size: 1.05rem;
-  letter-spacing: 0.04em;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.side-menu__label {
+  display: inline-block;
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+  /* 💡 레퍼런스(Staggered Menu)와 동일하게 yPercent:140 rotate:10 상태에서 시작,
+     item 자체는 overflow:hidden인 .side-menu__item에 가려져 있다가 위로 올라오며 등장 */
+  transform: translateY(140%) rotate(10deg);
+  transition: transform 1s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .side-menu__index {
   display: inline-block;
-  min-width: 2.6em;
+  flex-shrink: 0;
+  align-self: flex-start;
+  position: relative;
+  top: 0.15em;
+  margin-left: 0.3em;
+  font-size: 0.8rem;
   font-variant-numeric: tabular-nums;
-  opacity: 0.6;
+  letter-spacing: 0.03em;
+  /* 💡 숫자 색상은 여기서 지정합니다 */
+  color: rgba(255, 255, 255, 0.55);
+  opacity: 0;
+  transition: opacity 0.6s cubic-bezier(0.33, 1, 0.68, 1);
 }
+
+/* 💡 메뉴가 열릴 때 항목이 순서대로(staggered) 떠오르며 나타나도록 각 항목마다 transition-delay를 다르게 부여 */
+.side-menu.is-open .side-menu__label {
+  transform: translateY(0) rotate(0deg);
+}
+
+.side-menu.is-open .side-menu__index {
+  opacity: 1;
+}
+
+.side-menu__item:nth-child(1) .side-menu__label { transition-delay: 0s; }
+.side-menu__item:nth-child(2) .side-menu__label { transition-delay: 0.1s; }
+.side-menu__item:nth-child(3) .side-menu__label { transition-delay: 0.2s; }
+.side-menu__item:nth-child(4) .side-menu__label { transition-delay: 0.3s; }
+.side-menu__item:nth-child(5) .side-menu__label { transition-delay: 0.4s; }
+.side-menu__item:nth-child(6) .side-menu__label { transition-delay: 0.5s; }
+.side-menu__item:nth-child(7) .side-menu__label { transition-delay: 0.6s; }
+.side-menu__item:nth-child(8) .side-menu__label { transition-delay: 0.7s; }
+.side-menu__item:nth-child(9) .side-menu__label { transition-delay: 0.8s; }
+.side-menu__item:nth-child(10) .side-menu__label { transition-delay: 0.9s; }
+
+.side-menu__item:nth-child(1) .side-menu__index { transition-delay: 0.10s; }
+.side-menu__item:nth-child(2) .side-menu__index { transition-delay: 0.18s; }
+.side-menu__item:nth-child(3) .side-menu__index { transition-delay: 0.26s; }
+.side-menu__item:nth-child(4) .side-menu__index { transition-delay: 0.34s; }
+.side-menu__item:nth-child(5) .side-menu__index { transition-delay: 0.42s; }
+.side-menu__item:nth-child(6) .side-menu__index { transition-delay: 0.50s; }
+.side-menu__item:nth-child(7) .side-menu__index { transition-delay: 0.58s; }
+.side-menu__item:nth-child(8) .side-menu__index { transition-delay: 0.66s; }
+.side-menu__item:nth-child(9) .side-menu__index { transition-delay: 0.74s; }
+.side-menu__item:nth-child(10) .side-menu__index { transition-delay: 0.82s; }
 
 /* ═══════════════════════════════════════════
    Main Content
@@ -631,10 +744,9 @@ a {
   z-index: 1;
 }
 
-/* 💡 유체 셰이더(브러시 페인트 효과) 영역과 겹치는 부분만 흐리게 보이도록,
-   같은 사진을 복제해 블러 처리한 뒤 그 위에 겹칩니다. WebGL 캔버스 내부 픽셀을
-   실시간으로 읽어 마스킹하는 대신, 유체 효과가 대체로 화면 중앙에 진하게 몰리고
-   가장자리로 갈수록 옅어지는 특성(비네트)에 맞춰 원형 그라데이션으로 근사합니다. */
+/* 💡 미리 블러 처리된 정적 이미지(1_blur.png)를 얹어서, 유체 효과가 진하게 몰리는
+   화면 중앙 부근에서만 보이도록 원형 그라데이션으로 마스킹합니다. 런타임 블러 계산이
+   아니라 이미 완성된 이미지라 렌더링이 항상 동일하고 예측 가능합니다. */
 .layer-1-bg-blur {
   position: absolute;
   inset: 0;
@@ -642,13 +754,8 @@ a {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  /* 💡 블러 강도 80% (기준: 최대 40px → 80% = 32px) */
-  filter: blur(32px);
-  -webkit-filter: blur(32px);
-  /* 블러로 가장자리가 비쳐 보이는 것을 막기 위해 살짝 확대 */
-  transform: scale(1.08);
-  -webkit-mask-image: radial-gradient(ellipse at center, black 0%, black 30%, transparent 70%);
-  mask-image: radial-gradient(ellipse at center, black 0%, black 30%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 0%, black 45%, transparent 85%);
+  mask-image: radial-gradient(ellipse at center, black 0%, black 45%, transparent 85%);
   pointer-events: none;
 }
 
