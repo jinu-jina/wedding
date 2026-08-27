@@ -31,7 +31,7 @@ resizeCanvas();
 
 var controls = (function() {
   // 💡 투명도 조절: "opacity":0.95 
-  var _v = {"sourceImage":"images/hero/1.jpg","color1":"#125622","color2":"#87BD4F","color3":"#C0F083","color4":"#FFFFFF","playing":true,"speed":1.1,"grainSpeed":0,"sharpness":0,"flow":1,"noise":0.01,"opacity":0.80,"backdropBlur":90,"eraserOn":true,"eraseRadius":78,"eraserSoftness":1,"eraserFade":3};
+  var _v = {"sourceImage":"images/hero/1.jpg","color1":"#125622","color2":"#87BD4F","color3":"#C0F083","color4":"#FFFFFF","playing":true,"speed":1.1,"grainSpeed":0,"sharpness":0,"flow":1,"noise":0.05,"opacity":0.80,"backdropBlur":0,"eraserOn":true,"eraseRadius":78,"eraserSoftness":1,"eraserFade":3};
   var _defaults = JSON.parse(JSON.stringify(_v));
   var _listeners = {};
   var _anyListeners = [];
@@ -200,16 +200,25 @@ float snoise(vec3 v){
 vec2 coverUv(vec2 uv){
   vec2 c=uv-0.5; float r=uCanvasAspect/uBgAspect; if(r>1.0) c.x*=r; else c.y/=r; return c+0.5;
 }
+// 💡 골든 앵글 나선형 샘플링 블러 (참고 코드에서 이식). 격자형 샘플링과 달리 texel(해상도
+// 역수)로 오프셋을 직접 보정하므로 화면비와 무관하게 항상 원형으로 퍼지고, 가장자리에서
+// 좌표가 텍스처 범위를 크게 벗어나 반복되며 줄무늬가 생기던 문제도 함께 해결됩니다.
 vec3 blurBg(vec2 uv,float rad){
   if(rad<=0.0) return texture(uBg,coverUv(uv)).rgb;
+  rad=min(rad,0.15);
+  vec2 texel=1.0/uResolution;
+  float radiusPx=rad*max(uResolution.x,uResolution.y);
   vec3 sum=vec3(0.0); float wsum=0.0;
-  for(int i=-3;i<=3;i++){
-    for(int j=-3;j<=3;j++){
-      vec2 o=vec2(float(i),float(j))/3.0*rad; float w=exp(-(float(i*i+j*j))*0.35);
-      sum+=texture(uBg,coverUv(uv+o)).rgb*w; wsum+=w;
-    }
+  const float goldenAngle=2.39996;
+  for(int i=0;i<24;i++){
+    float fi=float(i);
+    float r=sqrt(fi+0.5)/sqrt(24.0);
+    float theta=fi*goldenAngle;
+    vec2 offset=vec2(cos(theta),sin(theta))*r*radiusPx*texel;
+    float w=exp(-2.0*r*r);
+    sum+=texture(uBg,coverUv(uv+offset)).rgb*w; wsum+=w;
   }
-  return sum/wsum;
+  return wsum>0.0 ? sum/wsum : texture(uBg,coverUv(uv)).rgb;
 }
 void main(){
   vec2 uv=vUv; vec2 p=uv*2.0-1.0; p.x*=uResolution.x/uResolution.y; float t=uTime*uSpeed*0.2;
@@ -235,12 +244,11 @@ void main(){
   float mask=texture(uMask,uv).r; mfac*=(1.0-mask); mfac=clamp(mfac,0.0,1.0);
   pc*=mfac; float fa=clamp(a*mfac,0.0,1.0);
 
-  if(uHasBg>0.5){
-    vec3 sharpBg=texture(uBg,coverUv(uv)).rgb; vec3 softBg=blurBg(uv,uBlur*fa);
-    vec3 bg=mix(sharpBg,softBg,fa); vec3 outRgb=pc+bg*(1.0-fa); fragColor=vec4(outRgb,1.0);
-  } else {
-    fragColor=vec4(pc,fa);
-  }
+  // 💡 캔버스는 페인트 색상만 반투명하게(alpha=fa) 그립니다. 사진은 이 캔버스가 자체적으로
+  // 그리지 않고, 그 아래 깔린 CSS 레이어(원본 사진 + 블러 처리된 사진)에 전적으로 맡깁니다.
+  // 예전에는 uHasBg일 때 캔버스가 항상 alpha=1.0(완전 불투명)으로 사진까지 같이 그려서,
+  // 그 아래 CSS로 아무리 블러를 걸어도 캔버스에 완전히 가려져 전혀 보이지 않았습니다.
+  fragColor=vec4(pc,fa);
 }`;
 
 function compile(type, src) {
@@ -290,12 +298,16 @@ let bgTex = makeTex(2, 2); let bgLoaded = false; let bgAspect = 1.0; let current
 
 function loadBgImage(src) {
   if (!src || src === currentBgSrc) return; currentBgSrc = src;
-  const img = new Image(); if (!/^data:/i.test(src)) img.crossOrigin = 'anonymous';
+  // 💡 같은 출처(우리 서버) 이미지라 crossOrigin이 필요 없는데, 이게 걸려있으면
+  // devtunnels 같은 프록시가 CORS 헤더를 안 내려줄 때 이미지 로드가 조용히 실패해서
+  // uHasBg가 영영 0으로 남아 배경 합성/블러 코드 전체가 실행되지 않는 문제가 있었습니다.
+  const img = new Image();
   img.onload = () => {
     gl.bindTexture(gl.TEXTURE_2D, bgTex); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
     bgAspect = img.width / img.height; bgLoaded = true;
   };
+  img.onerror = () => { console.error('[brik.js] 배경 이미지 로드 실패:', src); };
   img.src = src;
 }
 loadBgImage(ctrl('sourceImage', ''));

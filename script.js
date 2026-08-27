@@ -13,6 +13,11 @@
   const $ = (sel, ctx = document) => ctx.querySelector(sel);
   const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
 
+  // 💡 상단 네비게이션의 사운드 버튼과 탑비디오 파티클 캔버스 클릭이 같은 재생 상태를 공유하기 위한 훅
+  // (initParticles가 실제 토글 로직을, initTopNav가 아이콘 갱신 로직을 채워 넣습니다)
+  let mediaToggleHandler = null;
+  let notifySoundState = null;
+
   function formatDate(dateStr, timeStr) {
     const d = new Date(`${dateStr}T${timeStr}:00`);
     const days = ['일', '월', '화', '수', '목', '금', '토'];
@@ -156,16 +161,104 @@ envelopeOpening.addEventListener('click', () => {
         // 클로즈업 애니메이션(0.8초) + 멈춰있는 시간(1초) = 총 1.8초 대기 후 전환
         setTimeout(() => {
           envelopeOpening.style.opacity = '0';
+
+          // 💡 봉투가 잠겨있는 동안(overflow: hidden) 갤러리/스토리 이미지가 비동기로
+          // 로드되며 레이아웃이 바뀌어도 항상 탑 비디오 섹션(맨 위)에서 시작하도록 고정
+          window.scrollTo(0, 0);
           document.body.classList.remove('no-scroll');
 
           setTimeout(() => {
             envelopeOpening.style.display = 'none';
           }, 800);
 
-        }, 1800); 
+        }, 1800);
 
       }, 800);
     });
+  }
+
+  /* ═══════════════════════════════════════════
+     Top Nav (상단 고정 메뉴 바)
+     ═══════════════════════════════════════════ */
+  function initTopNav() {
+    const topNav = $('#topNav');
+    const menuBtns = $$('.top-nav__menu-btn');
+    const soundBtns = $$('.top-nav__sound-btn');
+    const sideMenu = $('#sideMenu');
+    const overlay = $('#sideMenuOverlay');
+    const closeBtn = $('#sideMenuClose');
+    if (menuBtns.length === 0 || !sideMenu || !overlay) return;
+
+    // 💡 탑비디오 섹션이 화면에 보이는 동안은 메뉴 바를 숨기고, 히어로 섹션부터는
+    // 스크롤과 무관하게 화면 상단에 계속 고정되어 나타남
+    const topVideoSection = $('.top-video-section');
+    if (topNav && topVideoSection) {
+      const visibilityObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          topNav.classList.toggle('top-nav--hidden', entry.isIntersecting);
+        });
+      }, { threshold: 0 });
+      visibilityObserver.observe(topVideoSection);
+    }
+
+    function openMenu() {
+      sideMenu.classList.add('is-open');
+      overlay.classList.add('is-open');
+      menuBtns.forEach((btn) => btn.setAttribute('aria-expanded', 'true'));
+      sideMenu.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('no-scroll');
+    }
+
+    function closeMenu() {
+      sideMenu.classList.remove('is-open');
+      overlay.classList.remove('is-open');
+      menuBtns.forEach((btn) => btn.setAttribute('aria-expanded', 'false'));
+      sideMenu.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('no-scroll');
+    }
+
+    menuBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        if (sideMenu.classList.contains('is-open')) closeMenu();
+        else openMenu();
+      });
+    });
+
+    overlay.addEventListener('click', closeMenu);
+    if (closeBtn) closeBtn.addEventListener('click', closeMenu);
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && sideMenu.classList.contains('is-open')) closeMenu();
+    });
+
+    $$('.side-menu__link', sideMenu).forEach((link) => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const href = link.getAttribute('href');
+        // 💡 아직 만들어지지 않은 메뉴(참석 의사 전달/방명록 등)는 href="#"만 있으므로 이동 없이 메뉴만 닫음
+        const targetEl = href && href.length > 1 ? $(href) : null;
+        closeMenu();
+        // 💡 슬라이드 아웃 애니메이션(0.45s)이 끝난 뒤 스크롤 이동
+        if (targetEl) {
+          setTimeout(() => targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
+        }
+      });
+    });
+
+    if (soundBtns.length > 0) {
+      soundBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          if (mediaToggleHandler) mediaToggleHandler();
+        });
+      });
+      // 💡 캔버스 클릭 등 다른 경로로 재생 상태가 바뀌어도 모든 섹션의 아이콘이 함께 갱신되도록 등록
+      notifySoundState = (isPlaying) => {
+        soundBtns.forEach((btn) => {
+          btn.classList.toggle('is-playing', isPlaying);
+          btn.setAttribute('aria-label', isPlaying ? '배경음악 끄기' : '배경음악 재생');
+        });
+      };
+    }
   }
 
   /* ═══════════════════════════════════════════
@@ -239,6 +332,24 @@ function initHero() {
     const parentsEl = $('#greetingParents');
     if (parentsEl) parentsEl.innerHTML = parentsHTML;
 
+    // 💡 배경 텍스트(intro) → 본문(content) 순서로 등장시키는 노출 감지
+    const greetingSection = $('#greeting');
+    if (greetingSection) {
+      const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            greetingSection.classList.add('is-intro-visible');
+            setTimeout(() => {
+              greetingSection.classList.add('is-content-visible');
+            }, 500);
+            revealObserver.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+      revealObserver.observe(greetingSection);
+    }
+
     // 💡 스크롤 진입 감지 (위/아래 스크롤 시 반복 실행)
     const target = $('#greetingContent');
     if (!target) return;
@@ -287,13 +398,19 @@ function initGallery(galleryImages) {
     return;
   }
 
-  // 🛠️ 갤러리 크기 및 간격 설정 (여기서 모든 레이아웃을 조절합니다!) 🛠️
+  // 갤러리의 시각 기준 폭을 일반 모바일 폭으로 제한합니다.
+  // PC가 넓어져도 사진 자체는 모바일과 같은 크기로 유지됩니다.
   const GALLERY_CONFIG = {
-    spacingVW: 20,       // 1. 이미지 간의 가로 간격 (사진이 서로 겹치면 이 숫자를 45, 50으로 늘리세요)
-    minWidthVW: 10,      // 2. 가장 작은 이미지의 가로 크기 (화면 너비의 %)
-    maxWidthVW: 45,      // 3. 가장 큰 이미지의 가로 크기 (화면 너비의 %)
-    scatterY_VH: 50      // 4. 위아래로 흩어지는 범위 (화면 높이의 %)
+    mobileReferenceWidth: 360,
+    spacingPercent: 40,
+    minWidthPercent: 20,
+    maxWidthPercent: 65,
+    scatterY_VH: 0
   };
+
+  function getGalleryLayoutWidth() {
+    return Math.min(window.innerWidth, GALLERY_CONFIG.mobileReferenceWidth);
+  }
 
   const sticky = document.createElement('div');
   sticky.className = 'alet-gallery__sticky';
@@ -308,11 +425,15 @@ function initGallery(galleryImages) {
 
   galleryImages.forEach((src, i) => {
     const wrap = document.createElement('div');
-    wrap.className = 'alet-image-wrap'; 
+    wrap.className = 'alet-image-wrap';
+    wrap.setAttribute('role', 'button');
+    wrap.tabIndex = 0;
+    wrap.setAttribute('aria-label', `갤러리 사진 ${i + 1} 크게 보기`);
 
-    // 💡 직관적인 사이즈 조절: 최소 크기 ~ 최대 크기 사이에서 랜덤으로 결정됨
-    const widthVW = GALLERY_CONFIG.minWidthVW + Math.random() * (GALLERY_CONFIG.maxWidthVW - GALLERY_CONFIG.minWidthVW);
-    wrap.style.width = `${widthVW}vw`;
+    // 모바일 기준 폭에 대한 비율을 저장해 PC에서도 같은 크기로 렌더링합니다.
+    const widthPercent = GALLERY_CONFIG.minWidthPercent + Math.random() * (GALLERY_CONFIG.maxWidthPercent - GALLERY_CONFIG.minWidthPercent);
+    wrap.dataset.widthPercent = widthPercent;
+    wrap.style.width = `${(getGalleryLayoutWidth() * widthPercent) / 100}px`;
 
     // 💡 겹침(중복) 완벽 방지: 좌우(X축) 랜덤 흔들림은 삭제하고, 상하(Y축) 지그재그 배치 적용
     const direction = i % 2 === 0 ? -1 : 1; // 짝수 번째는 위로, 홀수 번째는 아래로
@@ -324,23 +445,37 @@ function initGallery(galleryImages) {
 
     wrap.innerHTML = `<img src="${src}" class="alet-image" alt="갤러리 사진 ${i + 1}" loading="lazy">`;
 
+    const openGalleryPhoto = () => openPhotoModal(galleryImages, i);
     wrap.addEventListener('click', (e) => {
       if (grid.classList.contains('is-dragging')) {
         e.preventDefault(); return;
       }
-      openPhotoModal(galleryImages, i);
+      openGalleryPhoto();
+    });
+    wrap.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openGalleryPhoto();
+      }
     });
 
     sticky.appendChild(wrap);
     wrapElements.push(wrap);
   });
 
-  // 💡 X축 평면 무한 루프 렌더링 엔진
+  function syncImageWidths() {
+    const layoutWidth = getGalleryLayoutWidth();
+    wrapElements.forEach((wrap) => {
+      wrap.style.width = `${(layoutWidth * parseFloat(wrap.dataset.widthPercent)) / 100}px`;
+    });
+  }
+
+  // X축 평면 무한 루프 렌더링 엔진
   function updateCarousel() {
-    const vW = window.innerWidth;
+    const layoutWidth = getGalleryLayoutWidth();
     const vH = window.innerHeight;
     
-    const spacing = (vW * GALLERY_CONFIG.spacingVW) / 100;
+    const spacing = (layoutWidth * GALLERY_CONFIG.spacingPercent) / 100;
     const currentLoopWidth = galleryImages.length * spacing;
     const scrollX = grid.scrollLeft;
 
@@ -360,13 +495,45 @@ function initGallery(galleryImages) {
   }
 
   grid.addEventListener('scroll', updateCarousel);
-  window.addEventListener('resize', updateCarousel);
+  window.addEventListener('resize', () => {
+    syncImageWidths();
+    updateCarousel();
+  });
+
+  // 기본 상태에서는 사진이 오른쪽에서 왼쪽으로 천천히 흐릅니다.
+  const AUTO_SCROLL_SPEED = 28; // 초당 px
+  let autoScrollEnabled = true;
+  let autoScrollFrame = null;
+  let lastAutoScrollTime = null;
+
+  function stopAutoScroll() {
+    if (!autoScrollEnabled) return;
+    autoScrollEnabled = false;
+    if (autoScrollFrame) cancelAnimationFrame(autoScrollFrame);
+    autoScrollFrame = null;
+  }
+
+  function runAutoScroll(timestamp) {
+    if (!autoScrollEnabled) return;
+    if (lastAutoScrollTime !== null) {
+      const elapsedSeconds = Math.min((timestamp - lastAutoScrollTime) / 1000, 0.1);
+      grid.scrollLeft += AUTO_SCROLL_SPEED * elapsedSeconds;
+    }
+    lastAutoScrollTime = timestamp;
+    autoScrollFrame = requestAnimationFrame(runAutoScroll);
+  }
+
+  function startAutoScroll() {
+    if (!autoScrollEnabled || autoScrollFrame) return;
+    autoScrollFrame = requestAnimationFrame(runAutoScroll);
+  }
 
   setTimeout(() => {
-    const loopWidth = galleryImages.length * ((window.innerWidth * GALLERY_CONFIG.spacingVW) / 100);
+    const loopWidth = galleryImages.length * ((getGalleryLayoutWidth() * GALLERY_CONFIG.spacingPercent) / 100);
     const centerStart = Math.floor(250000 / loopWidth) * loopWidth;
     grid.scrollLeft = centerStart;
     updateCarousel();
+    startAutoScroll();
   }, 50);
 
   // PC 마우스 드래그 스크롤 기능
@@ -382,8 +549,30 @@ function initGallery(galleryImages) {
     if (!isDown) return;
     e.preventDefault();
     const walk = (e.pageX - grid.offsetLeft - startX) * 1.5;
-    if (Math.abs(walk) > 5) grid.classList.add('is-dragging');
+    if (Math.abs(walk) > 5) {
+      grid.classList.add('is-dragging');
+      stopAutoScroll();
+    }
     grid.scrollLeft = scrollLeft - walk;
+  });
+
+  // 모바일 터치, 마우스 휠, 키보드·스크롤바 조작도 자동 이동을 해제합니다.
+  let touchStartX = null;
+  grid.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0]?.clientX ?? null;
+  }, { passive: true });
+  grid.addEventListener('touchmove', (e) => {
+    const currentX = e.touches[0]?.clientX;
+    if (touchStartX !== null && currentX !== undefined && Math.abs(currentX - touchStartX) > 5) stopAutoScroll();
+  }, { passive: true });
+  grid.addEventListener('wheel', (e) => {
+    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) stopAutoScroll();
+  }, { passive: true });
+  grid.addEventListener('pointerdown', (e) => {
+    if (e.target === grid) stopAutoScroll();
+  });
+  grid.addEventListener('keydown', (e) => {
+    if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) stopAutoScroll();
   });
 // --- 💡 [추가] 갤러리 섹션 진입 시 ALET 애니메이션 실행 옵저버 ---
   const gallerySection = $('#gallery');
@@ -410,7 +599,7 @@ function initGallery(galleryImages) {
           observer.unobserve(entry.target);
         }
       });
-    }, { threshold: 0.3 }); 
+    }, { threshold: 0.75 }); 
     
     observer.observe(gallerySection);
   }
@@ -520,8 +709,18 @@ function initGallery(galleryImages) {
       const div = document.createElement('div');
       div.className = 'story__photo-item animate-item';
       div.setAttribute('data-animate', 'fade-up');
+      div.setAttribute('role', 'button');
+      div.tabIndex = 0;
+      div.setAttribute('aria-label', `스토리 사진 ${i + 1} 크게 보기`);
       div.innerHTML = `<img src="${src}" alt="스토리 사진 ${i + 1}" loading="lazy">`;
-      div.addEventListener('click', () => openPhotoModal(storyImages, i));
+      const openStoryPhoto = () => openPhotoModal(storyImages, i);
+      div.addEventListener('click', openStoryPhoto);
+      div.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openStoryPhoto();
+        }
+      });
       container.appendChild(div);
     });
   }
@@ -536,19 +735,36 @@ let touchStartX = 0;
 let touchEndX = 0;
 let touchStartY = 0;
 let touchEndY = 0;
+let lastFocusedElement = null;
 
 /* 💡 화면 튕김 및 잔상을 유발하던 스크롤 강제 조작 로직 완전히 삭제 */
 function openPhotoModal(images, index) {
+  if (!images.length) return;
+
+  // 닫은 뒤 사용자가 열었던 사진으로 키보드 포커스를 되돌립니다.
+  lastFocusedElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   document.body.classList.add('no-scroll');
   modalImages = images;
   modalIndex = index;
   showModalImage();
   $('#photoModal').classList.add('is-open');
+
+  // 모달이 열린 뒤 가장 먼저 닫기 버튼에 포커스를 둡니다.
+  requestAnimationFrame(() => $('#modalClose').focus());
 }
 
 function closePhotoModal() {
-  $('#photoModal').classList.remove('is-open');
+  const modal = $('#photoModal');
+  if (!modal.classList.contains('is-open')) return;
+
+  modal.classList.remove('is-open');
   document.body.classList.remove('no-scroll');
+
+  const returnFocusTarget = lastFocusedElement;
+  lastFocusedElement = null;
+  requestAnimationFrame(() => {
+    if (returnFocusTarget?.isConnected) returnFocusTarget.focus();
+  });
 }
 
 function showModalImage() {
@@ -574,6 +790,24 @@ function initPhotoModal() {
   $('#modalNext').addEventListener('click', () => modalNavigate(1));
 
   const modal = $('#photoModal');
+
+  function keepFocusInModal(event) {
+    if (event.key !== 'Tab') return;
+
+    const focusable = $$('button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])', modal)
+      .filter((el) => el.offsetParent !== null);
+    if (!focusable.length) return;
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
   modal.addEventListener('click', (e) => {
     if (e.target === modal || e.target.id === 'modalContainer') {
       closePhotoModal();
@@ -588,6 +822,10 @@ function initPhotoModal() {
   // Keyboard navigation
   document.addEventListener('keydown', (e) => {
     if (!modal.classList.contains('is-open')) return;
+    if (e.key === 'Tab') {
+      keepFocusInModal(e);
+      return;
+    }
     if (e.key === 'Escape') closePhotoModal();
     if (e.key === 'ArrowLeft') modalNavigate(-1);
     if (e.key === 'ArrowRight') modalNavigate(1);
@@ -768,8 +1006,9 @@ function handleSwipe() {
 function initParticles() {
     const canvas = $('#particleCanvas');
     const video = $('#topVideo');
-    const textImg = $('#videoGuideText'); 
-    if (!canvas || !video) return;
+    const textImg = $('#videoGuideText');
+    const stage = $('.top-video-section');
+    if (!canvas || !video || !stage) return;
 
     const ctx = canvas.getContext('2d');
     const sCanvas = document.createElement('canvas');
@@ -779,20 +1018,23 @@ function initParticles() {
     const tCtx = tCanvas.getContext('2d', { willReadFrequently: true });
 
     let width, height;
-    const dpr = window.devicePixelRatio || 1;
+    // 고밀도 화면에서 불필요하게 과도한 캔버스 해상도가 생성되지 않도록 상한을 둡니다.
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
     // 🛠️ 파티클 커스텀 설정
     const numPlayParticles = 400;     
     const scatterAmount = 2.5;    
     const jitter = 2.2;           
-    const particleSize = 0.9;     
+    const particleSize = 0.9;
     const explosionPower = 37;    
     const opacitySpeed = 0.08;    
     const moveSpeed = 0.04;       
     const friction = 0.82;        
 
-    const vCols = 150; 
-    const vRows = 150; 
+    // 💡 원본 영상(main.mp4) 실제 해상도가 1080x750 (정사각형이 아님)이므로,
+    // 샘플링 그리드도 같은 비율로 맞춰서 카세트테이프 형상이 눌리거나 늘어나지 않도록 합니다.
+    const vCols = 150;
+    const vRows = Math.round(vCols * 750 / 1080); // 104
     sCanvas.width = vCols;
     sCanvas.height = vRows;
 
@@ -800,9 +1042,6 @@ function initParticles() {
     let videoParticles = [];
     let textParticles = []; 
     let currentPlayTarget = [];
-    
-    let textExploded = false; 
-    let textTimer = 0;        
 
     function initTextParticles() {
         if (!textImg || !textImg.complete || textImg.naturalWidth === 0) {
@@ -810,7 +1049,7 @@ function initParticles() {
             return;
         }
         
-        const tCols = 200; // 💡 1. 파티클 개수(밀도) 조절: 숫자를 키울수록 글자가 촘촘해집니다. (150 -> 300)
+        const tCols = 250; // 💡 1. 파티클 개수(밀도) 조절: 숫자를 키울수록 글자가 촘촘해집니다. (150 -> 300)
         const tRows = Math.floor(tCols * (textImg.naturalHeight / textImg.naturalWidth));
         tCanvas.width = tCols;
         tCanvas.height = tRows;
@@ -841,11 +1080,13 @@ function initParticles() {
     if (textImg) initTextParticles();
 
     function resize() {
-      width = window.innerWidth;
-      height = window.innerHeight;
-      canvas.width = width * dpr;
-      canvas.height = height * dpr;
-      ctx.scale(dpr, dpr);
+      // 전체 브라우저가 아니라 청첩장 본문 안의 영상 영역을 기준으로 파티클을 그립니다.
+      const rect = stage.getBoundingClientRect();
+      width = Math.max(1, Math.round(rect.width));
+      height = Math.max(1, Math.round(rect.height));
+      canvas.width = Math.round(width * dpr);
+      canvas.height = Math.round(height * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
       currentPlayTarget = video.paused ? getPlayShape() : getPauseShape();
       playParticles.forEach((p, i) => {
@@ -853,12 +1094,17 @@ function initParticles() {
           p.ty = currentPlayTarget[i].y;
       });
 
-      const scale = Math.min(width, height) / vCols * 0.9;
-      const maxW = Math.min(750, width); 
-      let finalScale = Math.min(scale, maxW / vCols) * 1.2;
+      // 💡 vCols x vRows 그리드(원본 영상 비율)를 컨테이너 안에 여백을 두고 비율 그대로 맞춰 넣습니다.
+      const maxW = Math.min(750, width);
+      const scaleByWidth = maxW / vCols;
+      const scaleByHeight = (height * 0.9) / vRows;
+      // 💡 카세트테이프 형상 전체 크기 배율 (기존 1.2 → 1.5로 확대)
+      let finalScale = Math.min(scaleByWidth, scaleByHeight) * 1.7;
       
       const offsetX = (width - vCols * finalScale) / 2;
-      const offsetY = (height - vRows * finalScale) / 2 - (height * 0.01); 
+      // 💡 그리드 박스 자체는 정중앙이 맞지만, 원본 영상 프레임 안에서 카세트 그림이
+      // 위쪽에 치우쳐 있어 보여서(밝은 픽셀=보이는 점들이 위쪽에 몰림) 박스를 살짝 아래로 내립니다.
+      const offsetY = (height - vRows * finalScale) / 2 + (height * 0.08);
 
       videoParticles.forEach(p => {
          p.tx = offsetX + p.gridX * finalScale + p.scatterX;
@@ -882,12 +1128,15 @@ function initParticles() {
           });
       }
     }
-    window.addEventListener('resize', resize);
+    window.addEventListener('resize', resize, { passive: true });
+    if ('ResizeObserver' in window) {
+      new ResizeObserver(resize).observe(stage);
+    }
 
     function getPlayShape() {
       const pts = [];
       const offsetX = width / 2 - 50;
-      const offsetY = height * 0.76 - 50; 
+      const offsetY = height * 0.86 - 50;
       for(let i=0; i<numPlayParticles; i++) {
         let r1 = Math.random(); let r2 = Math.random();
         if(r1 + r2 > 1) { r1 = 1 - r1; r2 = 1 - r2; }
@@ -902,7 +1151,7 @@ function initParticles() {
     function getPauseShape() {
       const pts = [];
       const offsetX = width / 2 - 50;
-      const offsetY = height * 0.76 - 50; 
+      const offsetY = height * 0.86 - 50;
       for(let i=0; i<numPlayParticles; i++) {
         const isLeft = Math.random() < 0.5;
         pts.push({
@@ -932,7 +1181,7 @@ function initParticles() {
     }
     
     resize(); 
-    playParticles.forEach(p => { p.x = width / 2; p.y = height * 0.82; });
+    playParticles.forEach(p => { p.x = width / 2; p.y = height * 0.86; });
 
     function explodeAllParticles() {
       playParticles.forEach(p => {
@@ -947,16 +1196,13 @@ function initParticles() {
         }
       });
 
-      if (!textExploded) {
-          textExploded = true;
-          textParticles.forEach(p => {
-              const angle = Math.random() * Math.PI * 2; 
-              // 💡 텍스트가 화면 밖으로 확실히 날아가도록 힘 조정
-              const power = 10 + Math.random() * 15; 
-              p.vx = Math.cos(angle) * power; 
-              p.vy = Math.sin(angle) * power;
-          });
-      }
+      // 💡 버튼 파티클과 동일하게, 터치 시 팍 튀었다가 (스프링 복원력으로) 제자리로 돌아옴
+      textParticles.forEach(p => {
+        if (p.targetAlpha > 0.05) {
+          const angle = Math.random() * Math.PI * 2; const power = 5 + Math.random() * explosionPower;
+          p.vx = Math.cos(angle) * power; p.vy = Math.sin(angle) * power;
+        }
+      });
     }
 
     function updateVideoTargets() {
@@ -976,10 +1222,10 @@ function initParticles() {
         });
     }
 
-    canvas.addEventListener('click', () => {
-      explodeAllParticles();
+    // 💡 상단 네비게이션의 사운드 버튼에서도 동일하게 호출할 수 있도록 함수로 분리
+    function toggleMedia() {
       const bgm = document.getElementById('bgm');
-      
+
       if (video.paused) {
         video.muted = false; video.play();
         if (bgm) bgm.play().catch(e => console.log(e));
@@ -990,6 +1236,14 @@ function initParticles() {
         currentPlayTarget = getPlayShape();
       }
       playParticles.forEach((p, i) => { p.tx = currentPlayTarget[i].x; p.ty = currentPlayTarget[i].y; });
+
+      if (notifySoundState) notifySoundState(!video.paused);
+    }
+    mediaToggleHandler = toggleMedia;
+
+    canvas.addEventListener('click', () => {
+      explodeAllParticles();
+      toggleMedia();
     });
 
     // 💡 isExploded 파라미터로 마찰력 및 복원력 차단
@@ -1008,15 +1262,13 @@ function initParticles() {
         const drawX = p.x + (Math.random() - 0.5) * jitter;
         const drawY = p.y + (Math.random() - 0.5) * jitter;
 
-        ctx.fillStyle = `rgba(144, 178, 221, ${p.alpha})`;
+        ctx.fillStyle = `rgba(39, 42, 41, ${p.alpha})`;
         ctx.beginPath();
         ctx.arc(drawX, drawY, particleSize, 0, Math.PI * 2);
         ctx.fill();
     }
 
-    let lastTime = performance.now();
-    function animate(now) {
-      const dt = now - lastTime; lastTime = now;
+    function animate() {
       ctx.clearRect(0, 0, width, height);
 
       playParticles.forEach(p => {
@@ -1037,37 +1289,17 @@ function initParticles() {
           }
       });
 
-      if (!textExploded && textParticles.length > 0) {
-          textTimer += (dt / 1000); 
-          if (textTimer >= 6.0) {  // 💡 텍스트가 멈춰있는 시간 4.0이면 4초
-              textExploded = true;
-              textParticles.forEach(p => {
-                  const angle = Math.random() * Math.PI * 2;
-                  // 💡 화면 밖으로 시원하게 날아가도록 폭발력 부여
-                  const power = 10 + Math.random() * 15; 
-                  p.vx = Math.cos(angle) * power;
-                  p.vy = Math.sin(angle) * power;
-              });
-          }
-      }
-
       textParticles.forEach(p => {
-          // 💡 투명해지는(alpha 감소) 애니메이션 코드를 완전히 삭제하여 선명도 유지
-          if (!textExploded) {
-              p.alpha += (p.targetAlpha - p.alpha) * 0.15;
-          }
+          // 💡 폭발/소멸 없이 항상 제자리에서 은은하게 반짝이며 화면에 남아있음
+          p.alpha += (p.targetAlpha - p.alpha) * 0.15;
 
           if (p.alpha > 0.05) {
-              let displayAlpha = p.alpha;
-              if (!textExploded) {
-                  displayAlpha += (Math.random() - 0.5) * opacitySpeed; 
-                  if(displayAlpha > 1) displayAlpha = 1;
-                  if(displayAlpha < 0.2 && p.targetAlpha > 0) displayAlpha = 0.2;
-              }
+              let displayAlpha = p.alpha + (Math.random() - 0.5) * opacitySpeed;
+              if (displayAlpha > 1) displayAlpha = 1;
+              if (displayAlpha < 0.2 && p.targetAlpha > 0) displayAlpha = 0.2;
               const temp = p.alpha;
               p.alpha = displayAlpha;
-              // 💡 텍스트가 터졌을 때(textExploded), 마찰력 차단 여부를 함께 전달
-              drawParticle(p, textExploded); 
+              drawParticle(p);
               p.alpha = temp;
           }
       });
@@ -1082,8 +1314,14 @@ function initParticles() {
      ═══════════════════════════════════════════ */
 
  async function init() {
+    // 💡 새로고침/뒤로가기 시 브라우저가 이전 스크롤 위치를 임의로 복원하는 것을 막고,
+    // 항상 최상단(탑 비디오 섹션)에서 시작하도록 고정
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    window.scrollTo(0, 0);
+
     setMetaTags();
     initEnvelopeOpening();
+    initTopNav();
     initTopVideo(); 
     initParticles();
     initHero();
