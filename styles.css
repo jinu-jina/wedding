@@ -523,10 +523,11 @@ a {
   font-weight: 700;
   line-height: 1.15;
   letter-spacing: 0.01em;
-  /* 💡 레퍼런스(Staggered Menu)와 동일하게 yPercent:140 rotate:10 상태에서 시작,
-     item 자체는 overflow:hidden인 .side-menu__item에 가려져 있다가 위로 올라오며 등장 */
+  /* 💡 레퍼런스(Staggered Menu)와 동일하게 아래쪽에 살짝 기울어진 채로 숨어 있다가
+     item 자체는 overflow:hidden인 .side-menu__item에 가려져 있다가 위로 올라오며 등장.
+     실제 transform/transition은 script.js가 항목마다 순서대로 인라인으로 걸어줍니다
+     (CSS만으로는 다수 항목이 동시에 트랜지션될 때 일부가 누락되는 경우가 있어 JS로 제어). */
   transform: translateY(140%) rotate(10deg);
-  transition: transform 1s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .side-menu__index {
@@ -542,39 +543,7 @@ a {
   /* 💡 숫자 색상은 여기서 지정합니다 */
   color: rgba(255, 255, 255, 0.55);
   opacity: 0;
-  transition: opacity 0.6s cubic-bezier(0.33, 1, 0.68, 1);
 }
-
-/* 💡 메뉴가 열릴 때 항목이 순서대로(staggered) 떠오르며 나타나도록 각 항목마다 transition-delay를 다르게 부여 */
-.side-menu.is-open .side-menu__label {
-  transform: translateY(0) rotate(0deg);
-}
-
-.side-menu.is-open .side-menu__index {
-  opacity: 1;
-}
-
-.side-menu__item:nth-child(1) .side-menu__label { transition-delay: 0s; }
-.side-menu__item:nth-child(2) .side-menu__label { transition-delay: 0.1s; }
-.side-menu__item:nth-child(3) .side-menu__label { transition-delay: 0.2s; }
-.side-menu__item:nth-child(4) .side-menu__label { transition-delay: 0.3s; }
-.side-menu__item:nth-child(5) .side-menu__label { transition-delay: 0.4s; }
-.side-menu__item:nth-child(6) .side-menu__label { transition-delay: 0.5s; }
-.side-menu__item:nth-child(7) .side-menu__label { transition-delay: 0.6s; }
-.side-menu__item:nth-child(8) .side-menu__label { transition-delay: 0.7s; }
-.side-menu__item:nth-child(9) .side-menu__label { transition-delay: 0.8s; }
-.side-menu__item:nth-child(10) .side-menu__label { transition-delay: 0.9s; }
-
-.side-menu__item:nth-child(1) .side-menu__index { transition-delay: 0.10s; }
-.side-menu__item:nth-child(2) .side-menu__index { transition-delay: 0.18s; }
-.side-menu__item:nth-child(3) .side-menu__index { transition-delay: 0.26s; }
-.side-menu__item:nth-child(4) .side-menu__index { transition-delay: 0.34s; }
-.side-menu__item:nth-child(5) .side-menu__index { transition-delay: 0.42s; }
-.side-menu__item:nth-child(6) .side-menu__index { transition-delay: 0.50s; }
-.side-menu__item:nth-child(7) .side-menu__index { transition-delay: 0.58s; }
-.side-menu__item:nth-child(8) .side-menu__index { transition-delay: 0.66s; }
-.side-menu__item:nth-child(9) .side-menu__index { transition-delay: 0.74s; }
-.side-menu__item:nth-child(10) .side-menu__index { transition-delay: 0.82s; }
 
 /* ═══════════════════════════════════════════
    Main Content

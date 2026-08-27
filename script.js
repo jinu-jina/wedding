@@ -201,13 +201,39 @@ envelopeOpening.addEventListener('click', () => {
       visibilityObserver.observe(topVideoSection);
     }
 
-    // 💡 CSS 클래스 선택자(.is-open)에 의존하지 않고 아이콘/텍스트에 직접 인라인 transform을
-    // 걸어서, 캐시나 특이도 문제로 클래스 기반 애니메이션이 씹히는 경우를 원천 차단합니다.
+    // 💡 CSS 클래스 선택자(.is-open)나 transition-delay에 의존하지 않고 요소마다
+    // 인라인 style.transition/transform을 직접 걸어서, 다수 요소가 동시에 트랜지션될 때
+    // 일부가 누락되거나 특이도 문제로 애니메이션이 씹히는 경우를 원천 차단합니다.
     function setToggleVisual(btn, open) {
       const icon = btn.querySelector('.top-nav__menu-icon');
       const textInner = btn.querySelector('.top-nav__menu-text-inner');
-      if (icon) icon.style.transform = open ? 'rotate(225deg)' : 'rotate(0deg)';
-      if (textInner) textInner.style.transform = open ? 'translateY(-1.4em)' : 'translateY(0)';
+      if (icon) {
+        icon.style.transition = 'transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)';
+        icon.style.transform = open ? 'rotate(225deg)' : 'rotate(0deg)';
+      }
+      if (textInner) {
+        textInner.style.transition = 'transform 0.5s cubic-bezier(0.22, 1, 0.36, 1)';
+        textInner.style.transform = open ? 'translateY(-1.4em)' : 'translateY(0)';
+      }
+    }
+
+    const sideMenuItems = $$('.side-menu__item', sideMenu);
+
+    function animateSideMenuItems(open) {
+      sideMenuItems.forEach((item, i) => {
+        const label = $('.side-menu__label', item);
+        const index = $('.side-menu__index', item);
+        const labelDelay = open ? i * 0.05 : 0;
+        const indexDelay = open ? labelDelay + 0.08 : 0;
+        if (label) {
+          label.style.transition = `transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${labelDelay}s`;
+          label.style.transform = open ? 'translateY(0) rotate(0deg)' : 'translateY(140%) rotate(10deg)';
+        }
+        if (index) {
+          index.style.transition = `opacity 0.4s ease ${indexDelay}s`;
+          index.style.opacity = open ? '1' : '0';
+        }
+      });
     }
 
     function openMenu() {
@@ -219,6 +245,7 @@ envelopeOpening.addEventListener('click', () => {
         btn.setAttribute('aria-label', '메뉴 닫기');
         setToggleVisual(btn, true);
       });
+      animateSideMenuItems(true);
       sideMenu.setAttribute('aria-hidden', 'false');
       document.body.classList.add('no-scroll');
     }
@@ -232,6 +259,7 @@ envelopeOpening.addEventListener('click', () => {
         btn.setAttribute('aria-label', '메뉴 열기');
         setToggleVisual(btn, false);
       });
+      animateSideMenuItems(false);
       sideMenu.setAttribute('aria-hidden', 'true');
       document.body.classList.remove('no-scroll');
     }
