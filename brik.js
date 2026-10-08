@@ -385,8 +385,12 @@ function syncBlurMask(now) {
 }
 
 let time = 0; let last = performance.now();
+// 💡 화면 밖에서는 그리기를 멈춤 (top video 섹션과 같은 방식) — 다시 들어오면 이어서 그림
+let __heroVisible = true;
+let __heroRunning = false;
 function render(now) {
-  const dt = now - last; last = now;
+  if (!__heroVisible) { __heroRunning = false; return; }
+  const dt = Math.max(0, now - last); last = now;
   if (canvas.width !== lastW || canvas.height !== lastH) { setupMask(canvas.width, canvas.height); lastW = canvas.width; lastH = canvas.height; }
   let playing = true; try { playing = controls.get('playing'); } catch (e) {}
   if (playing) time += dt * 0.001;
@@ -427,5 +431,17 @@ function render(now) {
 
   requestAnimationFrame(render);
 }
-requestAnimationFrame(render);
+function startHeroLoop() {
+  if (__heroRunning) return;
+  __heroRunning = true;
+  last = performance.now();          // 멈춰 있던 시간만큼 한 번에 건너뛰지 않게
+  requestAnimationFrame(render);
+}
+if ('IntersectionObserver' in window) {
+  new IntersectionObserver((entries) => {
+    __heroVisible = entries[0].isIntersecting;
+    if (__heroVisible) startHeroLoop();
+  }, { rootMargin: '100px 0px' }).observe(canvas);
+}
+startHeroLoop();
 }

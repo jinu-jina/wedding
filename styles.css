@@ -12,15 +12,83 @@
 }
 
 @font-face {
+     font-family: 'S-CoreDream-2ExtraLight';
+     src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/S-CoreDream-2ExtraLight.woff') format('woff');
+     font-weight: 200;
+     font-style: normal;
+     font-display: swap;
+}
+
+@font-face {
      font-family: 'S-CoreDream-1Thin';
      src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/S-CoreDream-1Thin.woff') format('woff');
      font-weight: 100;
      font-style: normal;
 }
 
+@font-face {
+     font-family: 'DungGeunMo';
+     src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/DungGeunMo.woff') format('woff');
+     font-weight: normal;
+     font-style: normal;
+     font-display: swap;
+}
+
+/* 참석 의사(RSVP) 팝업: 에스코어 드림 4Regular(선택 안 된 버튼·라벨) / 6Bold(선택된 버튼) */
+@font-face {
+     font-family: 'S-CoreDream-4Regular';
+     src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/S-CoreDream-4Regular.woff') format('woff');
+     font-weight: 400;
+     font-style: normal;
+     font-display: swap;
+}
+
+@font-face {
+     font-family: 'S-CoreDream-6Bold';
+     src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/S-CoreDream-6Bold.woff') format('woff');
+     font-weight: 700;
+     font-style: normal;
+     font-display: swap;
+}
+
+/* 오시는 길·계좌번호 섹션 제목: 에스코어 드림 5 Medium */
+@font-face {
+     font-family: 'S-CoreDream-5Medium';
+     src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/S-CoreDream-5Medium.woff') format('woff');
+     font-weight: 500;
+     font-style: normal;
+     font-display: swap;
+}
+
+/* 오시는 길 섹션: 배달의민족 한나는 열한살(제목) / 한나체 Pro(본문·버튼·아코디언 제목) / Monoplex KR Regular(아코디언 내용) */
+@font-face {
+     font-family: 'BMHANNA11yrs';
+     src: url('https://cdn.jsdelivr.net/npm/@kfonts/bm-hanna-11yrs@0.2.1/BMHANNA_11yrs_ttf.woff2') format('woff2'),
+          url('https://cdn.jsdelivr.net/npm/@kfonts/bm-hanna-11yrs@0.2.1/BMHANNA_11yrs_ttf.woff') format('woff');
+     font-weight: normal;
+     font-style: normal;
+     font-display: swap;
+}
+
+@font-face {
+     font-family: 'HannaPro';
+     src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_seven@1.0/BMHANNAPro.woff') format('woff');
+     font-weight: normal;
+     font-style: normal;
+     font-display: swap;
+}
+
+@font-face {
+     font-family: 'Monoplex KR';
+     src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_Monoplex-kr@1.0/MonoplexKR-Regular.woff2') format('woff2');
+     font-weight: 400;
+     font-style: normal;
+     font-display: swap;
+}
+
 /* ─── CSS Variables ─── */
 :root {
-  --color-bg: #111216;
+  --color-bg: #c3cbd1;
   --color-bg-warm: #F5EFE0;
   --color-bg-card: #FFFCF5;
   --color-text: #2C2420;
@@ -61,6 +129,10 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
+
+  /* 💡 PC·모바일 어떤 환경에서도 항상 같은 490px 프레임 폭을 씁니다.
+     (이전에는 모바일 500px / PC 390px로 환경마다 달랐지만, 이제 하나의 값으로 통일) */
+  --app-max-width: 490px;
 }
 
 /* ─── Reset & Base ─── */
@@ -83,8 +155,33 @@ img, .hero {
   -webkit-user-drag: none !important;
 }
 
+/* 👇 갤러리 섹션부터 끝(푸터)까지 + 그 팝업들: 글자 드래그(선택)·꾹 눌러 뜨는 메뉴 방지 */
+.alet-gallery, .photo-modal,
+.fairy-zone,
+.rsvp, .rsvp-modal,
+.guestbook,
+.dday,
+.footer {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+/* 단, 글자를 입력하는 칸(RSVP 성함, 방명록 글쓰기 등)은 입력·선택이 되도록 예외 */
+:is(.alet-gallery, .photo-modal, .fairy-zone, .rsvp, .rsvp-modal, .guestbook, .dday, .footer)
+  :is(input, textarea, [contenteditable="true"]) {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
+
 html {
-  overflow-x: hidden !important;
+  /* 💡 overflow-x:hidden이면 overflow-y가 명시돼 있지 않아도 브라우저가 자동으로
+     overflow-y:auto로 계산해서(computed "hidden auto") html/body 자체가 별도의
+     스크롤 컨테이너가 되어버립니다 — 그 안의 position:sticky가 진짜 뷰포트 스크롤이
+     아니라 이 스크롤 컨테이너를 기준으로 계산되어 sticky가 동작하지 않았습니다.
+     clip은 hidden과 똑같이 옆으로 삐져나온 부분을 잘라내지만 스크롤 컨테이너를
+     만들지 않아서 이 문제가 생기지 않습니다. */
+  overflow-x: clip !important;
   width: 100%;
   margin: 0;
   padding: 0;
@@ -98,7 +195,7 @@ body {
   line-height: 1.8;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
+  overflow-x: clip;                    /* html과 동일한 이유로 hidden 대신 clip 사용 */
   width: 100%;
   margin: 0;
   /* 💡 모바일 기기의 상단 여백을 없애서 스크롤 시 검은 줄이 남는 현상 완벽 제거 */
@@ -152,7 +249,14 @@ a {
    ═══════════════════════════════════════════ */
 .envelope-opening {
   position: fixed;
-  inset: 0;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100%;
+  /* 💡 정확히 450px로 맞추면 브라우저마다 미세한 오차로 옆 틈(뒤 배경이 비침)이
+     생겨서, 여유분(양옆 20px씩)을 더해 확실히 프레임 전체를 덮도록 함 */
+  max-width: calc(var(--app-max-width) + 40px);
+  transform: translateX(-50%);
   z-index: 9999;
   background-color: #fff;
   display: flex;
@@ -308,25 +412,38 @@ a {
 .top-nav {
   position: fixed;
   top: 0;
-  left: 0;
-  right: 0;
+  /* 💡 PC 등 넓은 화면에서 모니터 전체 폭이 아닌 .main-content와 같은
+     모바일 프레임 폭 기준으로 좌우에 배치되도록 함 */
+  left: 50%;
+  width: 100%;
+  max-width: var(--app-max-width);
+  transform: translateX(-50%);
   z-index: 500;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: calc(0.9rem + var(--safe-top)) 1.1rem 0.9rem;
 
-  /* 💡 색상은 일단 흰색 고정. 추후 섹션별로 바뀔 수 있도록 변수로 관리 */
+  /* 💡 기본 색상 흰색. 섹션별 색은 아래 .top-nav[data-section="…"] 에서 바꿈 */
   --nav-color: #fff;
   color: var(--nav-color);
   filter: drop-shadow(0 1px 5px rgba(0, 0, 0, 0.35));
 
-  font-family: 'S-CoreDream-1Thin', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  font-family: 'S-CoreDream-3Light', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;   /* 💡 1Thin → 2ExtraLight → 3Light (한 단계씩 굵게) */
   -webkit-tap-highlight-color: transparent;
 
   opacity: 1;
-  transition: opacity 0.35s ease;
+  transition: opacity 0.35s ease, color 0.35s ease, filter 0.35s ease;
 }
+
+/* 💡 섹션별 상단 바 색 (script.js가 현재 섹션 번호를 data-section에 넣어 줌)
+      [00] 홈 · [01] 모시는 글 = 위의 기본 흰색 그대로
+      글자가 어두운 섹션은 흰 글자용 검은 그림자를 빼서 글자가 탁해 보이지 않게 함 */
+.top-nav[data-section="02"] { --nav-color: #494141; filter: none; }   /* [02] 웨딩 갤러리 — "웨딩 갤러리" 제목과 같은 색 */
+.top-nav[data-section="03"] { --nav-color: #2d2e2b; filter: none; }   /* [03] 오시는 길 안내 */
+.top-nav[data-section="04"] { --nav-color: #2d2e2b; filter: none; }   /* [04] 축의금 전하실 곳 */
+.top-nav[data-section="05"] { --nav-color: #4e434c; filter: none; }   /* [05] 참석 의사 전달 */
+.top-nav[data-section="06"] { --nav-color: #454648; filter: none; }   /* [06] 방명록 (아래 D-day·푸터도 [06]으로 표시되어 같은 색) */
 
 .top-nav.top-nav--hidden {
   opacity: 0;
@@ -439,7 +556,13 @@ a {
 /* ─── 사이드 메뉴 (우에서 좌로 슬라이드, Staggered Menu 스타일) ─── */
 .side-menu__overlay {
   position: fixed;
-  inset: 0;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100%;
+  /* 💡 여유분을 더해 확실히 프레임 전체를 덮도록 함(envelope-opening과 동일한 이유) */
+  max-width: calc(var(--app-max-width) + 40px);
+  transform: translateX(-50%);
   z-index: 650;
   background: rgba(0, 0, 0, 0.45);
   opacity: 0;
@@ -455,6 +578,9 @@ a {
 .side-menu {
   position: fixed;
   top: 0;
+  /* 💡 열고 닫는 슬라이드 애니메이션이 이미 transform(translateX)을 쓰고 있어서
+     여기서는 centering에 transform을 못 쓰고, 넓은 화면에서만 아래 media query로
+     .main-content 프레임의 우측 끝에 맞춰 밀어줍니다 (모바일 폭에서는 right:0 유지). */
   right: 0;
   z-index: 700;
   width: min(78%, 320px);
@@ -464,9 +590,14 @@ a {
   height: 100vh;
   height: 100dvh;
   background: rgba(24, 20, 18, 0.95);
-  padding: calc(4.5rem + var(--safe-top)) 0 calc(2rem + var(--safe-bottom));
+  /* 💡 아래 여백 6rem = 하단 공유 버튼 자리 (화면이 짧아도 메뉴 목록과 겹치지 않게) */
+  padding: calc(4.5rem + var(--safe-top)) 0 calc(6rem + var(--safe-bottom));
   transform: translateX(100%);
-  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  /* 💡 PC에서는 패널이 프레임 우측 끝(모니터 진짜 끝이 아님)에 도킹되므로 translateX(100%)만으로는
+     검은 여백 안에 살짝 걸쳐 보일 수 있어서, 슬라이드 애니메이션(0.45s)이 끝난 뒤에만
+     visibility를 hidden으로 바꿔 완전히 안 보이게 함 (열 때는 지연 없이 바로 보이게) */
+  visibility: hidden;
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), visibility 0s linear 0.45s;
   overflow-x: hidden;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
@@ -477,6 +608,17 @@ a {
 
 .side-menu.is-open {
   transform: translateX(0);
+  visibility: visible;
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), visibility 0s linear 0s;
+}
+
+/* 💡 PC 등 넓은 화면(--app-max-width보다 넓을 때)에서는 모니터 우측 끝이 아니라
+   .main-content 프레임의 우측 끝에 패널이 붙도록 오프셋을 줌. 정확히 프레임 끝에
+   맞추면 미세한 오차로 옆에 틈이 생겨서, 여유분(20px)만큼 더 밀어 확실히 덮음 */
+@media (min-width: 480px) {
+  .side-menu {
+    right: calc(50% - (var(--app-max-width) / 2) - 20px);
+  }
 }
 
 .side-menu__close {
@@ -497,8 +639,47 @@ a {
   cursor: pointer;
 }
 
+/* 💡 top-nav의 '+' 아이콘과 완전히 동일한 방식(16px 폭, 1.1px 두께 막대)으로 만들어
+   두 아이콘의 크기·굵기가 항상 정확히 일치하도록 함 (SVG의 대각선 X는 +보다
+   선 길이가 길어져 커 보이는 문제가 있었음). 45deg/-45deg로 고정해 X 모양을 만듭니다. */
 .side-menu__close-icon {
+  position: relative;
+  width: 16px;
+  height: 16px;
   flex-shrink: 0;
+  /* 💡 패널이 열릴 때 아래에서 살짝 떠오르며 회전과 함께 나타나는 시작 상태
+     (막대 자체가 아니라 아이콘 전체를 작은 각도로 돌려서 버벅임 없이 회전감만 살림).
+     실제 전환은 script.js가 항목 애니메이션과 함께 인라인으로 걸어줍니다. */
+  transform: translateY(6px) rotate(-35deg);
+  opacity: 0;
+}
+
+.side-menu__close-icon-line {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100%;
+  height: 1.1px;
+  background: currentColor;
+  border-radius: 2px;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.side-menu__close-icon-line--b {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.side-menu__close-text-wrap {
+  display: inline-block;
+  height: 1.3em;
+  overflow: hidden;
+  line-height: 1.3em;
+}
+
+.side-menu__close-text {
+  display: inline-block;
+  /* 💡 메뉴 항목 텍스트(.side-menu__label)와 동일한 방식으로 아래에서 떠오르며 등장 */
+  transform: translateY(140%) rotate(10deg);
 }
 
 .side-menu__list {
@@ -519,10 +700,13 @@ a {
 
 .side-menu__label {
   display: inline-block;
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 700;
   line-height: 1.15;
   letter-spacing: 0.01em;
+  /* 💡 터치/클릭 중일 때 [00] 인덱스 텍스트와 같은 색으로 변경 */
+  color: #fff;
+  transition: color 0.2s ease;
   /* 💡 레퍼런스(Staggered Menu)와 동일하게 아래쪽에 살짝 기울어진 채로 숨어 있다가
      item 자체는 overflow:hidden인 .side-menu__item에 가려져 있다가 위로 올라오며 등장.
      실제 transform/transition은 script.js가 항목마다 순서대로 인라인으로 걸어줍니다
@@ -545,23 +729,76 @@ a {
   opacity: 0;
 }
 
+/* 💡 항목을 터치/클릭(누르는 중)하거나 마우스를 올리면 라벨이 [00] 인덱스와 같은 색으로 */
+.side-menu__link:hover .side-menu__label,
+.side-menu__link:active .side-menu__label {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* 💡 메뉴 하단 공유 버튼 2개 (카카오톡 공유하기 / 사이트 링크 복사) — 패널 맨 아래에 가로로 나란히.
+      메뉴가 열리면 항목들이 다 올라온 뒤 서서히 나타남 */
+.side-menu__share {
+  position: absolute;
+  left: 2rem;
+  right: 2rem;
+  bottom: calc(2rem + var(--safe-bottom));
+  display: flex;
+  gap: 0.6rem;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.side-menu.is-open .side-menu__share {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.5s ease 0.4s, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.4s;
+}
+.side-menu__share-btn {
+  flex: 1;
+  padding: 0.7rem 0.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.35);   /* 💡 버튼 테두리 */
+  border-radius: 999px;
+  background: none;
+  color: #fff;
+  font-family: 'S-CoreDream-3Light', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  font-size: 0.8rem;                              /* 💡 버튼 글자 크기 */
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+.side-menu__share-btn:hover,
+.side-menu__share-btn:active {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
 /* ═══════════════════════════════════════════
    Main Content
    ═══════════════════════════════════════════ */
 .main-content {
-  /* 💡 3. 표준 모바일 화면비 적용 (가로 너비 고정) */
+  /* 💡 PC·모바일 관계없이 항상 max-width: 490px(--app-max-width)로 고정합니다.
+     실제 기기 폭이 490px보다 좁은 일반적인 모바일(예: 360~430px)에서는 100%가
+     490px보다 작으므로 자연스럽게 기기 폭 그대로 채워지고, 490px보다 넓은
+     화면(PC, 큰 태블릿)에서는 490px로 정확히 고정됩니다. */
   width: 100%;
-  max-width: 450px; /* 스마트폰 너비와 유사한 규격 */
-  margin: 0 auto; /* PC 화면에서 정중앙 배치 */
+  max-width: var(--app-max-width);
+  margin: 0 auto; /* 490px보다 넓은 화면에서 정중앙 배치 */
   min-height: 100vh; /* 세로로 화면을 꽉 채우도록 보장 */
   
   /* 💡 4. 가져오신 코드 적용: 실제 청첩장 본문 영역의 배경색 */
   background-color: #ffffff; 
   
   /* PC 화면에서 돋보이도록 은은한 그림자 추가 (선택 사항) */
-  box-shadow: 0 0 40px rgba(0, 0, 0, 0.5); 
-  
-  overflow: hidden;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+
+  /* 💡 overflow:hidden 대신 overflow:clip — 화면에 잘려 보이는 건 동일하지만, hidden과
+     달리 clip은 "스크롤 컨테이너"로 취급되지 않아서 자손의 position:sticky가 이 요소를
+     기준으로 잘못 갇히지 않습니다(인사말 섹션의 스크롤 커튼 효과에 쓰는 sticky가
+     이것 때문에 안 먹혔음). */
+  overflow: clip;
   position: relative;
 }
 
@@ -590,27 +827,108 @@ a {
    Top Video Section
    ═══════════════════════════════════════════ */
 .top-video-section {
-  /* 본문(.main-content) 폭을 기준으로 렌더링하여 PC와 모바일에서 같은 디자인 비율을 유지합니다. */
+  /* 💡 다른 섹션(.hero 등)과 동일하게 별도의 max-width를 두지 않고 .main-content
+     폭을 그대로 채웁니다(width:100%). 세로 길이는 더 이상 폭에 비례하는
+     aspect-ratio가 아니라 고정 px 값이라서, 기기 폭이 달라도(모바일 375px~
+     430px대, PC 390px 등) 항상 동일한 세로 길이로 보입니다. */
   position: relative;
   isolation: isolate;
   width: 100%;
-  height: 100vh; /* 구형 브라우저용 대체값 */
-  /* 💡 100dvh는 모바일에서 스크롤 중 주소창이 접혔다 펼쳐지며 실시간으로 높이가 바뀌어
-     스크롤이 걸리는 느낌을 주므로, 스크롤 중에는 값이 변하지 않는 100svh(안정적인 최소 높이)를 사용합니다.
-     PC/태블릿처럼 세로가 훨씬 긴 화면에서 카드 폭(최대 450px)에 안 맞게 한없이 길어지는 것도 함께 제한합니다. */
-  height: min(100svh, 500px);
-  background-color: #7B93AC;
+  height: 860px;
+  margin: 0 auto;
+  background-color: #638CC0;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
   -webkit-tap-highlight-color: transparent;
   -webkit-user-select: none;
   user-select: none;
+  /* 💡 타이핑 중에도 세로 길이가 처음부터 끝까지 고정되도록
+     (아래 __greeting의 min-height:0 과 함께 타이핑에 따라 섹션이 늘어나는 것을 막음) */
+  overflow: hidden;
+}
+
+/* 💡 재생/정지 버튼 파티클 전용 최상위 레이어. 스테이지(.top-video-section__stage)의
+   overflow:hidden 경계에 잘리지 않도록, 섹션(.top-video-section) 전체를 덮는 별도
+   캔버스에 그립니다. 클릭 처리는 기존 스테이지/안내 캔버스가 그대로 담당하므로
+   pointer-events는 꺼서 다른 영역의 터치를 가로채지 않게 합니다. */
+#buttonParticleCanvas {
+  position: absolute;
+  z-index: 40;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* 💡 크로마키 제거된 고양이 영상. 스크롤 안내 근처 우측 하단에 배치합니다. */
+.top-video-section__cat {
+  position: absolute;
+  right: 1.5%;
+  bottom: 0;
+  width: 30%;
+  z-index: 45;
+  /* 💡 이 영역을 터치했을 때 배경 음악 재생/정지(파티클 튕김 포함) 토글이 되지
+     않도록, 클릭을 여기서 막아야 하므로 pointer-events를 켭니다
+     (script.js에서 click 이벤트를 stopPropagation 처리합니다). */
+  pointer-events: auto;
+  transform: translateY(15%);
+}
+
+#catVideo {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+#catCanvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* 💡 고양이 터치 시 위에 잠깐 나타나는 말풍선(meow.png). 평소엔 숨겨져 있다가
+   .is-visible이 붙으면 살짝 위로 뜨면서 나타납니다. */
+.top-video-section__meow {
+  position: absolute;
+  left: 50%;
+  bottom: 70%;
+  width: 75%;
+  transform: translate(-50%, 6px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 50;
+}
+
+.top-video-section__meow.is-visible {
+  opacity: 1;
+  transform: translate(-50%, -6px);
+}
+
+/* 💡 영상/캔버스/파티클(카세트테이프, 재생버튼)이 그려지는 영역.
+   기존 top-video-section의 비율(1080:750, main.mp4 원본)과 크기 로직을 그대로 유지합니다. */
+.top-video-section__stage {
+  position: relative;
+  flex: 0 0 auto;
+  width: 100%;
+  /* 💡 세로 길이가 기기 폭에 따라 달라지지 않도록 aspect-ratio(폭에 비례) 대신
+     고정 px(기준 폭 390px에서 1080:750 비율로 계산한 값)를 사용합니다. */
+  height: 271px;
+  /* 💡 카세트/버튼 파티클(버튼은 stageTopInSection 기준으로 위치가 계산됨)을
+     함께 아래로 내려서 상단 여백을 확보합니다. (고정 px, 기준 폭 390px * 17%) */
+  margin-top: 66px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   overflow: hidden;
 }
 
 #topVideo {
-  opacity: 0; 
+  opacity: 0;
   position: absolute;
   width: 1px;
   height: 1px;
@@ -633,16 +951,109 @@ a {
   pointer-events: auto;
 }
 
-.video-guide-text {
-  position: absolute;
-  z-index: 20;
-  top: 4%; 
-  left: 50%;
-  transform: translateX(-50%);
-  width: 85%; 
-  max-width: 320px;
-  pointer-events: none; 
-  opacity: 0; /* 💡 실제 이미지는 숨기고, JS에서 픽셀 데이터만 빼옵니다 */
+/* 💡 스테이지(파티클 영역) 아래에 나오는 영역. "♪ 화면 터치 시..." 안내문(정적 텍스트),
+   타이핑 효과 인사말, 맨 아래 스크롤 안내까지 세로로 쌓습니다.
+   - min-height: 0 → 내용이 늘어나도 flex 아이템이 부모(.top-video-section)를 밀어
+     늘리지 않도록 하여, 섹션 전체 세로 길이가 항상 고정됩니다. */
+.top-video-section__greeting {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  overflow: hidden;
+  /* 💡 padding-top이 커 보이지만, 재생/정지 버튼 파티클이 스테이지 경계를 넘어
+     이 영역 위쪽까지 그려지기 때문에(별도 최상위 캔버스, #buttonParticleCanvas)
+     그 자리를 비워 두기 위한 여백입니다. 74px 밑으로 너무 줄이면 버튼이
+     "♪ 화면 터치 시..." 안내문과 겹칠 수 있습니다.
+     💡 세로 여백(위/아래)은 기기 폭에 따라 달라지지 않도록 고정 px(기준 폭 390px
+     기준 19%/8%로 계산한 값)를 쓰고, 좌우 여백만 폭에 비례하는 %로 둡니다. */
+  padding: 74px 9% 31px;
+  box-sizing: border-box;
+}
+
+/* 💡 "♪ 화면 터치 시 음악 on/off" 안내문. 파티클이 아니라 일반 텍스트이며,
+   밑줄(border-bottom)로 구분선을 그립니다. */
+.top-video-section__heading {
+  flex: 0 0 auto;
+  /* 💡 align-self:flex-start를 없애고 부모(__greeting)의 stretch를 그대로 받아서,
+     밑줄(border-bottom)이 텍스트 폭이 아니라 좌우 padding 안쪽 전체 폭(본문 텍스트와
+     같은 폭)으로 그어지도록 합니다 - 왼쪽 여백만큼 오른쪽도 같은 여백이 남습니다. */
+  width: 100%;
+  font-family: 'DungGeunMo', 'Noto Sans KR', sans-serif;
+  font-size: 16pt;
+  color: #FFFFFF;
+  margin-top: 0.3em;
+  border-bottom: 2px solid #FFFFFF;
+  padding-bottom: 0.05em;
+  margin-bottom: 1.4em;
+  white-space: nowrap;
+}
+
+/* 💡 Text Type 타이핑 효과 텍스트 (일반 흰색 텍스트, 배경 박스 없음) */
+.text-type {
+  flex: 0 0 auto;
+  width: 100%;
+  font-family: 'DungGeunMo', 'Noto Sans KR', sans-serif;
+  /* 💡 "(물론 이곳이 아니여도 다음 섹션부터는" 줄이 줄바꿈되지 않도록 살짝 축소 */
+  font-size: 12pt;
+  line-height: 1.5;
+  color: #FFFFFF;
+  white-space: pre-line;
+  word-break: keep-all;
+  text-align: left;
+}
+
+.text-type__content {
+  color: #FFFFFF;
+}
+
+.text-type__cursor {
+  display: inline-block;
+  margin-left: 2px;
+  color: #FFFFFF;
+  vertical-align: middle;
+  transform: translateY(-1px) scaleY(1.4);
+  transform-origin: center;
+  animation: topGreetingCursorBlink 1s step-end infinite;
+}
+
+.text-type__cursor--hidden {
+  opacity: 0;
+  animation: none;
+}
+
+@keyframes topGreetingCursorBlink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+/* 💡 맨 아래 "⌄ 스크롤 내리기" 안내. margin-top:auto로 __greeting 안의 남는 공간을
+   모두 차지해서, 인사말 텍스트가 짧든 길든 항상 박스 맨 아래에 붙습니다. */
+.top-video-section__scroll-cue {
+  flex: 0 0 auto;
+  margin-top: auto;
+  margin-bottom: 3em;
+  padding-top: 2em;
+  text-align: center;
+  color: #FFFFFF;
+  font-family: 'DungGeunMo', 'Noto Sans KR', sans-serif;
+  font-size: 11pt;
+  letter-spacing: 0.05em;
+}
+
+.top-video-section__scroll-arrow {
+  display: block;
+  font-size: 1.6em;
+  line-height: 1;
+  margin-bottom: 0.2em;
+  animation: topVideoScrollCueBounce 1.6s ease-in-out infinite;
+}
+
+@keyframes topVideoScrollCueBounce {
+  0%, 100% { transform: translateY(0); opacity: 0.6; }
+  50% { transform: translateY(6px); opacity: 1; }
 }
 
 /* ═══════════════════════════════════════════
@@ -654,62 +1065,55 @@ a {
 .hero {
   position: relative;
   width: 100%;
-  height: 100vh; /* 구형 브라우저용 대체값 */
-  /* 💡 100lvh(Large Viewport Height)는 "주소창이 접힌, 가장 큰 상태"를 기준으로
-     페이지 로드 시 한 번만 계산되고 스크롤 중에는 값이 변하지 않습니다.
-     처음부터 큰 값으로 잡아두기 때문에 나중에 주소창이 실제로 접혀도 섹션이
-     갑자기 커지며 튀는 일이 없고, 인사말 섹션이 빼꼼 보이는 틈도 생기지 않습니다.
-     대신 주소창이 아직 펼쳐진 초기 상태에서는 사진이 화면 아래로 살짝 더 내려가 있을
-     수 있는데, object-fit: cover가 여백 없이 그대로 확대/크롭해서 채웁니다. */
-  height: min(100lvh, 1000px);
+  /* 💡 임의로 뷰포트 높이에 맞춰 강제로 자르지 않고, 아래 .layer-1-bg 원본 이미지의
+     실제 가로세로 비율에 맞춰 높이가 자연스럽게 정해지도록 함 (크롭 없음) */
+  height: auto;
   /* 양옆 남는 빈 공간의 배경색 (필요시 수정) */
   background-color: #ececde;
   overflow: hidden;
 }
 
 .hero__frame {
-  /* 💡 히어로 전체를 채우고, 가로 중앙 정렬은 margin:auto로 처리 */
-  position: absolute;
-  inset: 0;
+  /* 💡 가로 폭만 채우고(100%, 최대 500px), 높이는 안의 사진 묶음들(.hero__layer)을 따라감 */
+  position: relative;
   width: 100%;
-  height: 100%;
   max-width: 500px;
   margin: 0 auto;
   overflow: hidden;
+  /* 💡 1번째 사진 묶음과 2번째 사진 묶음의 경계가 사라져 보이게 하는 정도. 아래 .hero__layer--1/--2가
+     같이 참조하므로 여기서 한 번만 바꾸면 됩니다 (키우면 경계가 더 넓게, 부드럽게 사라짐) */
+  --hero-seam-fade: 20px;
 }
 
-/* ─── 위/아래 섹션과의 경계를 부드럽게 잇는 그라데이션 오버레이 ───
-   히어로 사진을 직접 지우는 대신, 이웃 섹션의 실제 색으로 시작해서 투명하게
-   사라지는 레이어를 사진 위에 얹어 "잘린 선"이 아니라 색이 스며들며 이어지게 함.
-   스크롤 위치와 무관하게 항상 적용됩니다. */
-.hero__edge-fade {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 6rem;
-  z-index: 20;
-  pointer-events: none;
+/* 💡 사진 묶음(바닥 사진 + 그 위에 꼭 맞게 덮이는 이미지) 하나. 각 묶음은 자기 바닥 사진 높이만큼만
+   차지하고, 위 이미지(absolute inset:0)는 이 묶음 기준으로 덮여서 다른 묶음까지 늘어나지 않습니다.
+   묶음을 세로로 쌓으면(1번 아래에 2번) 그대로 다음 사진이 이어져 나옵니다. */
+.hero__layer {
+  position: relative;
+  width: 100%;
 }
 
-.hero__edge-fade--top {
-  top: 0;
-  /* 탑비디오 섹션 배경색(#7B93AC) */
-  background: linear-gradient(to bottom, #7B93AC 0%, rgba(123, 147, 172, 0) 100%);
+/* 💡 1번째 묶음(1.jpg+1_top.png)과 2번째 묶음(2_bg.jpg+2_tex.png)의 경계가 사라져 보이도록,
+   그리팅 섹션의 원 박스 전환(circle-intro-pin--cover, 위 2270번째 줄 부근)과 같은 방식을 씁니다:
+   · 위 묶음(1번, z-index 높음)의 맨 아래 가장자리를 그라디언트 마스크로 투명하게 만들고,
+   · 아래 묶음(2번)을 그 투명해지는 높이(--hero-seam-fade)만큼 위로 겹쳐 올려서,
+   그 투명해진 부분 사이로 2번 묶음(2_bg.jpg)이 비쳐 보여 두 사진이 부드럽게 이어집니다. */
+.hero__layer--1 {
+  z-index: 2;               /* 2번 묶음보다 위에서 그려져야 아래가 비쳐 보임 */
+  -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - var(--hero-seam-fade)), transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - var(--hero-seam-fade)), transparent 100%);
 }
-
-.hero__edge-fade--bottom {
-  bottom: 0;
-  /* 인사말 섹션 상단 이미지(bg_01.jpg)의 평균색(#62717B) */
-  background: linear-gradient(to top, #62717B 0%, rgba(98, 113, 123, 0) 100%);
+.hero__layer--2 {
+  z-index: 1;
+  margin-top: calc(var(--hero-seam-fade) * -1);   /* 1번 묶음 투명 구간만큼 위로 겹침 */
 }
 
 /* [Layer 1] 바닥 1.jpg */
 .layer-1-bg {
+  /* 💡 이 레이어가 실제 이미지 비율 그대로 렌더링되면서 .hero__frame의 높이를 정합니다 */
   display: block;
   width: 100%;
-  height: 100%;
-  /* 💡 프레임 높이가 화면 높이에 맞춰 고정되므로, 사진은 비율 유지한 채 채우고 남는 부분은 크롭됩니다 */
-  object-fit: cover;
+  height: auto;
   z-index: 1;
 }
 
@@ -761,6 +1165,24 @@ a {
   pointer-events: none;
 }
 
+/* 💡 2번째 사진 묶음: 1.jpg 바로 아래에 이어지는 2_bg.jpg + 그 위에 꼭 맞게 덮이는 2_tex.png.
+   1_top.png가 1.jpg 위에 덮이는 것과 같은 방식입니다. */
+.layer-2-bg {
+  display: block;
+  width: 100%;
+  height: auto;
+  z-index: 1;
+}
+.layer-2-tex {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 2;
+  pointer-events: none;
+}
+
 /* ═══════════════════════════════════════════
    Greeting Section 
    ═══════════════════════════════════════════ */
@@ -771,23 +1193,21 @@ a {
   flex-direction: column;
 }
 
-/* ─── 1. bg_01 영역 (배경 잘림 해결 & 텍스트 정렬) ─── */
+/* ─── 1. 배경 영상 영역 (bg_01.jpg → bg_dissolve.mp4로 대체, 배경 잘림 해결 & 텍스트 정렬) ─── */
 .greeting__part1 {
   position: relative;
   overflow: hidden;
   container-type: inline-size;
   width: 100%;
-  background-image: url('images/greeting/bg_01.jpg');
-  
-  /* 💡 100% 100%를 지우고 가로만 100%로 꽉 채우도록 변경 */
-  background-size: 100% auto; 
-  background-position: center top;
-  background-repeat: no-repeat;
-  
+  /* 💡 영상이 로딩되기 전에도 뒤의 원 박스가 비치지 않도록 하는 불투명 바탕색(기존 bg_01 색감) */
+  background-color: #66798a;
+
   /* 💡 (핵심) 원본 이미지의 실제 픽셀 크기를 입력해 주세요! 
      예시: 이미지가 가로 800px, 세로 1200px이라면 아래처럼 작성합니다. */
-  aspect-ratio: 1080 / 1920; 
-  
+  /* 💡 원본 영상은 1080×1920이지만 아래쪽 꽃 줄기 부분이 불필요하게 길어서 1613까지만 보이게 자름
+     (영상은 object-position: center top이라 아래쪽부터 잘림). 다시 늘리려면 1920으로 */
+  aspect-ratio: 1080 / 1613;
+
   display: flex;
   justify-content: center;
   align-items: center;
@@ -797,31 +1217,24 @@ a {
 
 
   /* 💡 위(소중한 분들을) 텍스트와 본문 사이의 간격 */
-  padding-top: 58%; /* 수치를 키우면 본문이 아래로 내려갑니다 */
+  padding-top: 7%; /* 수치를 키우면 본문이 아래로 내려갑니다 */
   /* 💡 본문과 아래(초대합니다) 텍스트 사이의 간격 */
-  padding-bottom: 30%; /* 수치를 키우면 본문이 위로 올라갑니다 */
+  padding-bottom: 56.6%; /* 수치를 키우면 본문이 위로 올라갑니다 (높이를 줄인 만큼 85% → 56.6%로 줄여 본문 위치 유지) */
   
-  padding-left: 15%;
-  padding-right: 15%;
+  padding-left: 10%;
+  padding-right: 10%;
 }
 
-/* bg_01 배경과 동일한 크기로 겹치며, 본문보다 먼저 등장합니다. */
-.greeting__intro-image {
+/* 배경 영상 — 영역 전체(기존 bg_01.jpg와 같은 크기)를 채우고 본문 텍스트 뒤에 깔립니다. */
+.greeting__bg-video {
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  opacity: 0;
-  transform: translateY(18px) scale(0.985);
-  transition: opacity 0.9s ease, transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  object-fit: cover;
+  object-position: center top;
   pointer-events: none;
-}
-
-.greeting.is-intro-visible .greeting__intro-image {
-  opacity: 1;
-  transform: translateY(0) scale(1);
 }
 
 .greeting__text {
@@ -835,15 +1248,15 @@ a {
   font-family: 'S-CoreDream-3Light', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
   font-weight: 300;
   /* 본문 영역 폭의 6.34%: 252px에서는 약 16px, 315px에서는 약 20px입니다. */
-  font-size: 6.34cqw;
+  font-size: 5.55cqw;
   line-height: 1.4;
   color: #26140a;
   white-space: pre-line;
   margin: 0;
   width: 100%;
   
-  /* 양쪽 정렬(Justify) 및 마지막 줄 왼쪽 정렬 */
-  text-align: justify;
+  /* 좌측 정렬 (아래 "소개글 텍스트" 규칙에서도 동일하게 지정) */
+  text-align: left;
   text-align-last: left;
   word-break: keep-all; /* 단어 단위로 끊어지게 하여 가독성 확보 */
 }
@@ -854,61 +1267,9 @@ a {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .greeting__intro-image,
   .greeting__text {
     transition-duration: 0.01ms;
   }
-}
-
-/* ─── 2. bg_02 영역 (배경 & 레이스 완벽 겹치기) ─── */
-.greeting__part2 {
-  position: relative;
-  width: 100%;
-  
-  /* 배경 이미지 깔기 (내부 이미지 크기에 맞춰 100% 꽉 차게) */
-  background-image: url('images/greeting/bg_02.jpg');
-  background-size: 100% 100%; 
-  background-position: top center;
-  background-repeat: no-repeat;
-  
-  /* 쓸데없는 여백 전부 제거 */
-  padding: 0; 
-}
-
-.greeting__lace-wrapper {
-  position: relative;
-  width: 100%;
-  display: block; /* 굳이 flex를 써서 가운데 정렬할 필요 없음 */
-}
-
-/* 💡 기준이 되는 뼈대 이미지 (이 이미지의 높이가 전체 영역의 높이를 결정함) */
-.greeting__lace-base {
-  width: 100%;
-  display: block;
-}
-
-/* 💡 글씨 애니메이션 텍스트 (기준 이미지 위에 똑같은 크기로 정확히 겹침) */
-.greeting__lace-tex {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  
-  /* 애니메이션 설정 유지 */
-  clip-path: inset(0 100% 0 0); 
-  transition: clip-path 2.5s cubic-bezier(0.25, 1, 0.5, 1);
-  z-index: 2;
-}
-
-.greeting__lace-wrapper.is-visible .greeting__lace-tex {
-  clip-path: inset(0 0 0 0);
-}
-
-/* ─── 💡 문제 4 해결: HTML 텍스트 숨김 ─── */
-/* bg_02.jpg 위에 뜨던 글씨는 lace_tex.png로 대체되므로 강제로 완전 숨김 처리 */
-.greeting__parents {
-  display: none !important;
 }
 
 /* ═══════════════════════════════════════════
@@ -917,33 +1278,24 @@ a {
 .greeting__text {
   -webkit-user-select: none;
   user-select: none;
-  color: #3F6780;
+  color: #fdfdfd;
   white-space: pre-line;
   margin: 0;
   width: 100%;
-  text-align: justify;
+  text-align: left;       /* 좌측 정렬 */
   text-align-last: left;
   word-break: keep-all;
 
-  /* 💡 추가: 내부 요소들이 겹쳐서 만든 '단일 알파 마스크(한 덩어리)' 외곽을 따라 
-      점점 투명해지는 그라디언트 스트로크 효과 생성 */
-  filter: drop-shadow(0 0 2px rgba(222, 224, 214, 0.3))
-          drop-shadow(0 0 5px rgba(222, 224, 214, 0.6))
-          drop-shadow(0 0 8px rgba(222, 224, 214, 0.1));
+  /* 💡 글자 외곽을 따라 #97aabe(rgb 151,170,190)가 글자 가까이는 진하고 바깥으로 갈수록
+      투명해지는 그라디언트 스트로크. 안쪽(작은 반경·진함) → 바깥쪽(큰 반경·옅음) 순서로 겹칩니다.
+      필터는 앞 단계 결과 위에 다시 적용되므로 값을 키우면 번짐이 빠르게 강해집니다. */
+  filter: drop-shadow(0 0 1px rgba(151, 170, 190, 0.9))
+          drop-shadow(0 0 3px rgba(151, 170, 190, 0.6))
+          drop-shadow(0 0 7px rgba(151, 170, 190, 0.35));
 }
 
+/* 💡 텍스트를 감싸던 둥근 박스(배경/패딩/border-radius)는 제거했습니다. */
 .greeting__text-line {
-  /* 💡 수정: 기존 밑줄(box-shadow)을 배경색(background-color)으로 변경하여 덩어리로 묶음 */
-  background-color: rgba(222, 224, 214, 1.0);
-  
-  /* 💡 추가: 패딩을 넉넉히 주어 줄간격 사이의 빈 여백을 덮고, 좌우로도 여유 공간 확보 */
-  padding: 6px 8px;
-  
-  /* 💡 추가: 모서리 둥글게 처리 */
-  border-radius: 14px;
-
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
   display: inline;
 }
 
@@ -951,21 +1303,28 @@ a {
 .hl {
   display: inline-block;
   position: relative;
+  isolation: isolate;      /* ::before(z-index:-1)가 이 글자 안에서만 글자 뒤로 깔리도록 */
   transition: transform 2.0s ease;
 }
 
-/* 💡 마스킹 대신 색상을 덮어씌울 '가상 배경' 세팅 */
+/* 💡 글자가 올라올 때 뒤에 깔리는 둥근 초록 그라디언트: 가운데는 불투명, 가장자리로 갈수록 투명 */
 .hl::before {
   content: "";
   position: absolute;
-  top: -12px;
-  bottom: -0.5px;
-  left: -6px;
-  right: -6px;
-  background-color: transparent; /* 평소에는 투명해서 기존 밑줄색이 보임 */
-  border-radius: 12px;
-  z-index: -1; /* 텍스트보다는 뒤에, 전체 밑줄보다는 앞에 위치 */
-  transition: transform 2.0s ease, background-color 2.0s ease;
+  top: -14px;
+  bottom: -4px;
+  left: -10px;
+  right: -10px;
+  /* 색은 그대로(가운데 190,200,163 → 가장자리 159,169,95), 불투명 구간을 0~40%로 넓혀서 더 진하게 보이게 함.
+     더 진하게: 40%를 키우기(예: 55%) · 덜 진하게: 줄이기(예: 20%) */
+  background: radial-gradient(closest-side,
+    rgba(190, 200, 163, 1) 0%,
+    rgba(190, 200, 163, 1) 40%,
+    rgba(159, 169, 95, 0) 100%);
+  border-radius: 50%;
+  opacity: 0;              /* 평소에는 안 보임 */
+  z-index: -1;
+  transition: transform 2.0s ease, opacity 2.0s ease;
   pointer-events: none;
 }
 
@@ -974,245 +1333,240 @@ a {
   transform: translateY(-8px);
 }
 
-/* 💡 글씨가 위로 뜰 때 가상 배경의 위치를 고정하고 색상 변경! */
+/* 💡 글씨가 위로 뜰 때 가상 배경의 위치는 고정하고 서서히 나타남 */
 .hl.is-bounce::before {
-  /* 글씨가 올라간 만큼 반대로 내려서 원래 밑줄 위치에 정확히 고정 */
+  /* 글씨가 올라간 만큼 반대로 내려서 원래 위치에 정확히 고정 */
   transform: translateY(8px);
-  /* 에러를 유발하던 투명 마스킹 대신 요청하신 색상으로 부드럽게 덮어씌움 */
-  background-color: #9FA95F; 
+  opacity: 1;
 }
 
 /* ═══════════════════════════════════════════
-   ALET Gallery & 진입 애니메이션 (최종 통합본)
+   Gallery Section
    ═══════════════════════════════════════════ */
 .alet-gallery {
-  position: relative;
-  --color-taupe-paper: #DFDBC8;
-  --color-ink-black: #3F3A32;
-  --color-charcoal: #261A0C;
-/* 👇 진입 애니메이션 때 보여질 배경색 */
-  --bg-color-intro: #d6dfc8;
-
-  /* 💡 갤러리 영역의 기준 세로 길이: 화면(뷰포트) 세로 길이에 비례하되,
-     PC 등 세로가 매우 긴 화면에서 카드 폭에 안 맞게 한없이 길어지지 않도록 상한을 둡니다. */
-  --gallery-vh: min(75vh, 620px);
-
-  /* 초기 배경색을 진입용으로 설정 */
-  background-color: var(--bg-color-intro); 
-  color: var(--color-ink-black);
-  padding: 40px 0 40px 0; 
-  overflow: hidden; 
-  
-  /* 배경색이 자연스럽게 바뀌도록 트랜지션 추가 */
-  transition: background-color 2.5s ease; 
+  position: relative;     /* 앨범 영상 캔버스를 이 안에서 정중앙에 배치하기 위함 */
+  background-color: #C9C9C9;
+  /* 💡 그레인: 256×256 작은 타일(images/texture/grain.png)을 배경색 위에 반복 — 실시간 필터 없이 가벼움.
+     진하게/연하게는 grain.png의 투명도를 바꾸거나, 타일 크기(background-size)로 알갱이 굵기를 조절 */
+  background-image: url('images/texture/grain.png');
+  background-repeat: repeat;
+  background-size: 256px 256px;
+  /* 💡 기종이 달라도 위·아래 여백 비율이 똑같도록, 이 섹션의 세로 수치(높이·위치·글자·사진 크기)는 전부
+     "앨범 폭(--gw)"에 비례하게 잡았습니다. 앨범 폭 = 화면 폭(최대 441px). 아래 숫자는 폭 441px 기준 px 값 ÷ 441 입니다.
+     (예: 폭 441px에서 870px = 1.973, 100px = 0.2268) → 숫자를 키우면 그만큼 커지고, 화면이 좁으면 자동으로 함께 줄어듭니다. */
+  --gw: min(100vw, 441px);
+  min-height: calc(var(--gw) * 1.973);      /* 섹션 높이 (폭 441px일 때 870px) */
+  /* 💡 내용 전체 아래로 내리기: 카메라·제목·안내 문구·앨범·사진 띠가 모두 이 값만큼 내려갑니다 (키우면 더 아래) */
+  --gallery-shift: calc(var(--gw) * 0.21);        /* 441px일 때 100px */
+  /* 💡 "웨딩 갤러리"와 안내 문구 사이 추가 간격: 안내 문구·앨범·사진 띠만 이만큼 더 내려감 (키우면 간격이 더 넓어짐) */
+  --gallery-title-gap: calc(var(--gw) * 0.068);     /* 441px일 때 30px */
 }
 
-/* 갤러리 등장 완료 시 기존 타우페 배경색으로 복구 */
-.alet-gallery.is-loaded {
-  background-color: var(--color-taupe-paper);
-}
-
-/* ─── 텍스트 스타일 및 진입 애니메이션 ─── */
-.gallery-header-new {
-  position: relative;
-  z-index: 10;
-  padding: 0 20px;
-  margin-bottom: 0; /* 갤러리 진입 전 여백 삭제 */
-  
-  /* 👇 진입 시 공간을 아예 없애서 배경 세로 길이를 축소시킵니다 */
-  max-height: 0;
-  overflow: hidden;
-  
-  text-align: left;
-  opacity: 0;
-  transform: translateY(15px);
-  
-  /* 갤러리가 나타날 때 부드럽게 공간이 열리도록 트랜지션 추가 */
-  transition: max-height 1.5s ease, margin-bottom 1.5s ease, opacity 1.5s ease, transform 1.5s ease;
-}
-
-/* 갤러리 등장 시 상단 텍스트가 제 공간을 차지하며 밀려 내려옴 */
-.alet-gallery.is-loaded .gallery-header-new {
-  max-height: 150px; /* 텍스트가 표시될 충분한 높이로 늘어남 */
-  margin-bottom: 30px;
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.gallery-header-new__title {
-  font-family: 'Noto Sans KR', sans-serif; /* 폰트 종류 */
-  font-weight: 500; /* 폰트 굵기 (300: 얇게, 400: 보통, 700: 두껍게) */
-  font-size: 40px;  /* 💡 글자 크기 */
-  color: var(--color-ink-black); /* 글자 색상 */
-  line-height: 1.35; /* 줄 간격 */
-  margin-bottom: 14px; /* 아래쪽 텍스트와의 간격 */
-  letter-spacing: -0.5px; /* 자간(글자 사이 간격) */
-}
-
-/* 🤍 하트 아이콘 전용 설정 */
-.gallery-header-new__title .heart {
-  font-size: 16px; /* 하트 크기만 따로 조절 */
-  vertical-align: middle;
-  margin: 0 2px;
-}
-
-.gallery-header-new__subtitle {
-  font-family: 'Noto Sans KR', sans-serif;
-  font-weight: 400; 
-  font-size: 16px; /* 💡 글자 크기 (너무 작으면 12px~13px로 키워보세요) */
-  color: var(--color-ink-black);
-  line-height: 1.6; /* 줄 간격 */
-  opacity: 0.95; /* 투명도 (1.0이면 완전 진하게, 0.5면 반투명하게) */
-}
-
-/* ─── 중앙 애니메이션 안내 문구 ─── */
-.gallery-intro {
+/* 💡 갤러리 제목 "웨딩 갤러리": 한 줄, 섹션 가로 중앙, 중앙 정렬 (Noto Serif KR Light, #494141) */
+.gallery-title {
   position: absolute;
-  /* 💡 top:50%이 빠져있으면 흐름상 위치(static position) 기준으로 계산되어 정중앙이 아니게 되므로 명시합니다. */
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) scale(0.8);
-  width: 90%;
+  top: calc(var(--gw) * 0.18 + var(--gallery-shift));   /* 위치: 위쪽 여백 (441px일 때 60px + 전체 내림값) */
+  left: 0;                 /* left·right 0 + 아래 text-align: center → 가로 중앙 */
+  right: 0;
+  white-space: nowrap;     /* 한 줄 유지 */
+  z-index: 3;
+  margin: 0;
+  font-family: 'Noto Serif KR', serif;
+  font-weight: 300;        /* Light */
+  font-size: calc(var(--gw) * 0.10);   /* 441px일 때 약 46px */
+  line-height: 1.3;
+  letter-spacing: 2;
   text-align: center;
-  z-index: 20;
-  opacity: 0;
+  color: #494141;
   pointer-events: none;
 }
 
-.gallery-intro p {
-  font-family: 'Noto Sans KR', sans-serif;
-  font-weight: 500; 
-  font-size: 16px; /* 💡 애니메이션 글자 크기 */
-  color: var(--color-ink-black);
-  line-height: 1.6; /* 줄 간격 */
+/* 💡 안내 문구: 앨범 아래 우측, 우측 정렬 (Monoplex KR ExtraLight Italic, 검정) */
+@font-face {
+  font-family: 'Monoplex KR';
+  font-weight: 200;        /* ExtraLight */
+  font-style: italic;
+  font-display: swap;
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_Monoplex-kr@1.0/MonoplexKR-ExtraLightItalic.woff2') format('woff2');
 }
-
-/* 💡 중앙 텍스트 애니메이션 실행 (총 3초로 연장) */
-.gallery-intro.play-anim {
-  animation: introZoomFade 5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-}
-
-/* 💡 새로운 애니메이션 시퀀스 적용 */
-@keyframes introZoomFade {
-  /* 1단계: 없는 상태에서 커지면서 나타남 (0% ~ 20%) */
-  0% { opacity: 0; transform: translate(-50%, 50%) scale(0.8); }
-  20% { opacity: 1; transform: translate(-50%, 50%) scale(1.0); }
-  
-  /* 2단계: 잠깐 멈추고 텍스트를 읽을 시간 부여 (20% ~ 75%) */
-  75% { opacity: 1; transform: translate(-50%, 50%) scale(1.0); }
-  
-  /* 3단계: 작아지면서 서서히 사라짐 (75% ~ 100%) */
-  100% { opacity: 0; transform: translate(-50%, 50%) scale(0.8); }
-}
-
-/* ─── 갤러리 라인 및 이미지 그리드 설정 ─── */
-.alet-lines {
+.gallery-hint {
   position: absolute;
-  bottom: calc(40px + var(--gallery-vh) * 0.5);
-  left: 0;
-  width: 100%;
-  /* 💡 공간 확장: 기존 65vh를 85vh~95vh 정도로 키워 선이 뻗어나갈 공간을 열어줍니다. */
-  height: calc(var(--gallery-vh) * 0.9333);
-  transform: translateY(50%);
-  pointer-events: none; 
-  z-index: 1; 
-  /* overflow: hidden; 라인을 잘라냈던 컨테이너*/
-  /* 💡 기존 2.5s를 텍스트와 똑같이 3s로 변경해 줍니다! (gallery-intro.play-anim 설정 값과 같게) */
-  transition: transform 5s cubic-bezier(0.25, 1, 0.5, 1);
-}
-
-.alet-lines.play-anim {
-  transform: translateY(50%) rotate(90deg); 
-}
-
-/* 💡 4. 라인 색상 독립 제어 */
-.alet-line {
-  position: absolute; 
-  top: 50%; 
-  left: 50%;
-  
-  /* 👇 진입 애니메이션 때의 라인 색상 (현재 살짝 투명한 베이지/브라운 느낌입니다) */
-  background-color: rgba(163, 180, 140, 0.4); 
-  
-  /* 색상도 부드럽게 전환되도록 트랜지션 추가 */
-  transition: background-color 2.5s ease; 
-}
-
-/* 갤러리 로딩 완료 시 원래 지정했던 라인 색상으로 복구 */
-.alet-gallery.is-loaded .alet-line {
-  background-color: rgba(0, 0, 0, 0.12);
-}
-
-.alet-line-h { width: 150vw; height: 1px; transform: translate(-50%, -50%); }
-.alet-line-v { width: 1px; height: calc(var(--gallery-vh) * 0.9333); transform: translate(-50%, -50%); }
-.alet-line-d1 { width: 150vw; height: 1px; transform: translate(-50%, -50%) rotate(55deg); }
-.alet-line-d2 { width: 150vw; height: 1px; transform: translate(-50%, -50%) rotate(-65deg); }
-
-.alet-gallery__field {
-  position: relative;
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  width: 100vw;
-  height: var(--gallery-vh);
-  margin-left: calc(-50vw + 50%);
-  box-sizing: border-box;
-  overflow-x: auto;
-  overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  cursor: grab;
-  z-index: 5; 
-}
-
-.alet-gallery__field::-webkit-scrollbar { display: none; }
-.alet-gallery__field:active { cursor: grabbing; }
-
-.alet-gallery__sticky { 
-  position: sticky; 
-  left: 0; 
-  top: 0; 
-  width: 100vw; 
-  height: 100%; 
-  pointer-events: none; 
-  isolation: isolate; 
-}
-
-.alet-gallery__spacer { height: 1px; flex-shrink: 0; }
-
-.alet-image-wrap {
-  position: absolute; 
-  left: 50%; top: 50%; 
-  transform-origin: center center;
-  pointer-events: auto; 
-  will-change: transform, z-index;
-  background-color: transparent; 
-  mix-blend-mode: overlay; /* (또는 multiply) */
-}
-
-.alet-image-wrap:focus-visible {
-  outline: 3px solid #EFD8D5;
-  outline-offset: 4px;
-}
-
-.alet-image {
-  display: block; 
-  width: 100%; 
-  height: auto; 
-  max-width: 80vw;
-  object-fit: contain;
-  border-radius: 0px !important; 
-  box-shadow: none !important; 
-  border: none !important;
+  top: calc(var(--gw) * 0.432 + var(--gallery-shift) + var(--gallery-title-gap));   /* 위치: 위쪽 여백 (441px일 때 194px + 전체 내림값 + 제목과의 추가 간격) */
+  right: 6%;              /* 위치: 오른쪽 여백 */
+  z-index: 3;
+  margin: 0;
+  font-family: 'Monoplex KR', 'Noto Sans KR', monospace;
+  font-weight: 200;        /* ExtraLight */
+  font-style: italic;
+  font-size: calc(var(--gw) * 0.035);   /* 441px일 때 약 12.5px (이전 11px) */
+  line-height: 1.6;        /* 행간: 글자 크기의 배수 (작을수록 두 줄이 가까워짐, 이전 1.9) */
+  letter-spacing: -0.073em;  /* 자간: 0보다 작을수록 글자가 더 붙음 (글자 크기에 비례, 441px에서 약 -0.8px) */
+  text-align: right;
+  color: #000;
   pointer-events: none;
-  transform: scale(1.2); 
-  opacity: 0;
-  transition: transform 2s cubic-bezier(0.25, 1, 0.5, 1), opacity 1.5s ease;
 }
 
-.alet-gallery.is-loaded .alet-image {
-  transform: scale(1);
+/* 💡 앨범 영상(초록 배경 제거본): 갤러리 배경 바로 위, 가로세로 정중앙에 배치 */
+.gallery-book__video {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;   /* 화면에는 안 보이지만 프레임은 계속 디코딩됨 */
+}
+/* 💡 앨범 위를 좌 → 우로 흐르는 사진 띠 (가운데 세로 정렬, 프레임 양옆 끝까지) */
+.gallery-strip {
+  --gallery-strip-h: calc(var(--gw) * 0.42);        /* 사진 높이 (441px일 때 약 185px) */
+  --gallery-strip-num-h: calc(var(--gw) * 0.0408);  /* 사진 위 번호가 차지하는 높이 (441px일 때 18px) */
+  position: absolute;
+  left: 0;
+  right: 0;
+  /* 사진마다 크기가 랜덤(--s 배율)이라, 가장 큰 사진(--gallery-strip-smax) + 위쪽 번호 여유만큼의 높이를
+     정중앙 기준으로 확보. 사진들은 이 중앙선에 세로 가운데 정렬됩니다. */
+  --gallery-strip-smax: 1.1;             /* script.js가 STRIP_SCALE_MAX 값으로 덮어씀 */
+  top: calc(50% + var(--gallery-shift) + var(--gallery-title-gap));
+  transform: translateY(-50%);
+  height: calc(var(--gallery-strip-h) * var(--gallery-strip-smax) + var(--gallery-strip-num-h) * 2);
+  overflow: clip;
+  z-index: 2;
+  opacity: 0;
+  pointer-events: none;
+  touch-action: pan-y;          /* 세로 스크롤은 그대로, 터치는 클릭으로 인식 */
+  transition: opacity 0.8s ease;
+}
+.gallery-strip.is-visible {
   opacity: 1;
+  pointer-events: auto;
+}
+.gallery-strip__track {
+  display: flex;
+  align-items: center;          /* 크기가 다른 사진들을 세로 가운데 정렬 */
+  width: max-content;
+  height: 100%;
+  will-change: transform;
+}
+/* 사진 한 장. --s = 그 사진의 랜덤 크기 배율(script.js가 넣음). 사진 사이 간격은 여기서 줍니다. */
+.gallery-strip__item {
+  --s: 1;
+  position: relative;
+  flex: none;
+  margin-right: calc(var(--gw) * 0.0272);   /* 사진 사이 간격 (441px일 때 12px) */
+}
+/* 💡 사진 번호 [01] — 사진 상단 왼쪽(사진 바로 위), 좌측 정렬 (에스코어 드림 2 ExtraLight, 블랙)
+   글자 크기와 사진과의 간격이 모두 --s에 비례해서, 사진이 커지면 번호도 같은 비율로 커집니다. */
+.gallery-strip__num {
+  position: absolute;
+  left: 0;
+  bottom: 100%;
+  margin-bottom: calc(var(--gw) * 0.0113 * var(--s));   /* 441px일 때 5px × 배율 */
+  font-family: 'S-CoreDream-2ExtraLight', 'Noto Sans KR', sans-serif;
+  font-weight: 200;
+  font-size: calc(var(--gw) * 0.0204 * var(--s));   /* 번호 기본 크기(배율 1일 때, 441px에서 9px) */
+  line-height: 1;
+  letter-spacing: calc(var(--gw) * 0.0011 * var(--s));
+  text-align: left;
+  white-space: nowrap;
+  color: #000;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.gallery-strip__img {
+  display: block;
+  height: calc(var(--gallery-strip-h) * var(--s));   /* 사진 기본 높이 × 랜덤 배율 */
+  width: auto;
+  max-width: none;              /* 전역 img { max-width: 100% } 무효화 */
+  cursor: pointer;
+  -webkit-user-drag: none;
+}
+
+/* 💡 앨범 묶음(.gallery-book): 이전에 캔버스가 하던 배치(가운데, 폭 100%/최대 441px)를 그대로 넘겨받았고,
+   안에 캔버스 + 페이지 위 글자를 담습니다. container-type으로 글자 크기·위치를 앨범 폭(cqw) 기준으로 잡습니다. */
+.gallery-book {
+  position: absolute;
+  z-index: 1;             /* 사진 띠(z 2)보다 아래 */
+  top: calc(50% + var(--gallery-shift) + var(--gallery-title-gap));
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  max-width: 441px;
+  container-type: inline-size;
+  pointer-events: none;
+}
+
+/* 💡 펼쳐진 페이지 위 글자 (책이 펼쳐진 뒤 사진 띠와 함께 나타남 — script.js가 .is-visible 토글)
+   위치: 앨범 정중앙에서 (가로 dx, 세로 dy) 만큼 떨어진 지점이 글자의 "중앙". 값의 단위 cqw = 앨범 폭의 1%.
+   글자 색 검정, 중앙 정렬. */
+.gallery-book__labels {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+.gallery-book__labels.is-visible {
+  opacity: 1;
+}
+.gallery-book__label {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-family: 'Courier New', Courier, monospace;
+  line-height: 1;
+  white-space: nowrap;
+  text-align: center;
+  color: #000000af;
+}
+/* 왼쪽 페이지 상단 중앙 — Courier New Regular */
+.gallery-book__label--title {
+  left: calc(50% - 21.3cqw);   /* dx: 가운데에서 왼쪽으로 (수치를 키우면 더 왼쪽) */
+  top: calc(50% - 36.6cqw);    /* dy: 가운데에서 위로 (수치를 키우면 더 위) */
+  font-size: 2.8cqw;             /* 글자 크기 (앨범 폭 441px일 때 약 13px) */
+  font-weight: 400;
+  font-style: normal;
+}
+/* 오른쪽 페이지 하단 오른쪽 — Courier New Italic */
+.gallery-book__label--preview {
+  left: calc(53% + 32.2cqw);   /* dx: 가운데에서 오른쪽으로 */
+  top: calc(50% + 37.8cqw);    /* dy: 가운데에서 아래로 */
+  font-size: 1.6cqw;           /* 글자 크기 (약 9px) */
+  font-weight: 400;
+  font-style: italic;
+}
+
+/* 💡 상단 중앙 카메라 일러스트 — 그림 주변에 투명 여백이 있어서(가로 약 80%가 그림), 보이는 카메라 폭은 약 57px */
+.gallery-camera {
+  position: absolute;
+  top: calc(var(--gw) * -0.02 + var(--gallery-shift));   /* 위치: 위쪽 (441px일 때 -4px - 40px + 전체 내림값). 음수를 키우면(-0.11 등) 더 위로 */
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(var(--gw) * 0.145);   /* 크기 (441px일 때 70px) */
+  height: auto;
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* 💡 카메라 일러스트 · "웨딩 갤러리" 제목 · 안내 문구: 처음엔 숨겨 두었다가
+      책(영상)이 펼쳐지면(script.js가 #gallery에 .is-book-open 추가) 위에서부터 차례로 나타남.
+      섹션을 벗어나면 다시 숨겨져서, 다시 들어올 때 또 책이 펼쳐진 뒤 나타남.
+      나타나는 속도: 0.8s / 순서 간격: transition-delay */
+.gallery-camera,
+.gallery-title,
+.gallery-hint {
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+.alet-gallery.is-book-open .gallery-camera { opacity: 1; transition-delay: 0s; }
+.alet-gallery.is-book-open .gallery-title  { opacity: 1; transition-delay: 0.15s; }
+.alet-gallery.is-book-open .gallery-hint   { opacity: 1; transition-delay: 0.3s; }
+
+.gallery-book__canvas {
+  display: block;
+  width: 100%;            /* 묶음(.gallery-book) 폭을 그대로 따름 */
+  height: auto;           /* 세로 길이는 script.js의 BOOK_STRETCH가 aspect-ratio로 지정 */
+  pointer-events: none;
+  /* 💡 책 그림자: 초록 배경을 지운 뒤의 투명도(책 모양)를 따라 그려짐. 가까운 진한 그림자 + 넓고 옅은 그림자.
+     세기: 뒤의 rgba 마지막 숫자 · 퍼짐: 두 번째/세 번째 px 값 · 방향: 첫 번째 px는 세로 위치 */
+  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.28))
+          drop-shadow(0 18px 24px rgba(0, 0, 0, 0.1));
 }
 
 /* ═══════════════════════════════════════════
@@ -1220,23 +1574,29 @@ a {
    ═══════════════════════════════════════════ */
 .photo-modal {
   position: fixed;
-  inset: 0;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100%;
+  /* 💡 내부의 닫기/이전/다음 버튼이 좌우 끝(left:0/right:0)에 딱 붙는 기준이라
+     여유분을 더하면 버튼 위치가 밀려서, 폭은 정확히 프레임 폭으로 유지 */
+  max-width: var(--app-max-width);
   z-index: 9000;
-  
-  /* 💡 잔상 방지 2: 반투명(rgba) 배경을 완전히 불투명한 타우페 배경(#ada59b)으로 변경 
+
+  /* 💡 잔상 방지 2: 반투명(rgba) 배경을 완전히 불투명한 타우페 배경(#ada59b)으로 변경
       -> 뒤에 있는 갤러리 렌더링을 완전히 가려버려서 GPU 과부하(잔상)를 차단합니다. */
-  background: #533934; 
-  
+  background: #ffffff;   /* 레퍼런스와 같은 흰색 배경 */
+
   display: flex;
   align-items: center;
   justify-content: center;
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.3s ease, visibility 0.3s ease;
-  
-  /* 💡 잔상 방지 3: 모바일 브라우저 하드웨어(GPU) 가속 강제 활성화 */
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
+
+  /* 💡 잔상 방지 3: 모바일 브라우저 하드웨어(GPU) 가속 강제 활성화 (translateX로 프레임 중앙 정렬도 함께 처리) */
+  -webkit-transform: translateX(-50%) translateZ(0);
+  transform: translateX(-50%) translateZ(0);
   will-change: opacity, visibility;
 }
 
@@ -1245,61 +1605,57 @@ a {
   visibility: visible;
 }
 
+/* 💡 버튼/숫자 색상 (레퍼런스에서 추출): X·화살표 #999999, 숫자 #747474 */
 .photo-modal__close,
-.photo-modal__nav,
+.photo-modal__nav {
+  color: #999999 !important;
+}
 .photo-modal__counter {
-  color: #EFD8D5 !important;
+  color: #747474 !important;
 }
 
 .photo-modal__close {
   position: absolute;
-  top: calc(1rem + var(--safe-top));
-  right: calc(1rem + var(--safe-right));
-  font-size: 2rem;
+  top: calc(8px + var(--safe-top));
+  right: calc(9px + var(--safe-right));
   width: 44px;
   height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2;
-  opacity: 0.8;
   transition: opacity var(--transition);
 }
 
-.photo-modal__close:hover { opacity: 1; }
+.photo-modal__close:hover,
+.photo-modal__nav:hover { opacity: 0.6; }
 
 /* 마우스가 아닌 키보드로 조작할 때도 현재 위치를 명확히 표시합니다. */
 .photo-modal__close:focus-visible,
 .photo-modal__nav:focus-visible {
-  opacity: 1;
-  outline: 2px solid #EFD8D5;
+  outline: 2px solid #999999;
   outline-offset: 3px;
 }
 
+/* 💡 이전/다음 버튼: 하단 숫자(n / 전체)와 같은 선상(같은 bottom, 같은 높이 44px)에 배치 */
 .photo-modal__nav {
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 2.5rem;
-  width: 48px;
-  height: 48px;
+  bottom: calc(15px + var(--safe-bottom));
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2;
-  opacity: 0.7;
   transition: opacity var(--transition);
 }
 
-.photo-modal__nav:hover { opacity: 1; }
 .photo-modal__nav--prev {
-  /* 💡 화면 왼쪽 끝에 완전히 딱 붙도록 0으로 설정 */
-  left: 0; 
+  left: calc(8px + var(--safe-left, 0px));
 }
 
 .photo-modal__nav--next {
-  /* 💡 화면 오른쪽 끝에 완전히 딱 붙도록 0으로 설정 */
-  right: 0;
+  right: calc(8px + var(--safe-right));
 }
 
 .photo-modal__container {
@@ -1319,11 +1675,13 @@ a {
 
 /* 💡 사진 크기 및 원본 비율 100% 유지 설정 */
 .photo-modal__img {
-  width: 100%;  
-  height: 100%; 
-  
-  /* 👇 핵심: 사진이 잘리거나 확대되지 않고 원본 비율 그대로 화면에 딱 맞게 들어갑니다 */
-  object-fit: contain; 
+  /* 💡 가로 100%로 화면에 꽉 차게, 세로는 원본 비율대로(화면보다 길면 화면 높이에 맞춤) */
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+
+  /* 👇 사진이 잘리거나 왜곡되지 않고 원본 비율 그대로 들어갑니다 */
+  object-fit: contain;
   
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
@@ -1331,328 +1689,852 @@ a {
   transform: translateZ(0);
 }
 
-/* 💡 1. 하단 숫자(카운터) 위치 올리기 */
+/* 💡 하단 숫자(카운터): 이전/다음 버튼과 같은 bottom·같은 높이(44px)라 세로 중심이 정확히 같은 선상 */
 .photo-modal__counter {
   position: absolute;
-  /* 👇 기존 1.5rem에서 3.5rem으로 변경했습니다. 이 숫자를 더 키우면 위로 올라갑니다. */
-  bottom: calc(2.0rem + var(--safe-bottom)); 
+  bottom: calc(15px + var(--safe-bottom));
   left: 50%;
   transform: translateX(-50%);
-  font-family: var(--font-serif);
-  font-size: 0.875rem;
-  letter-spacing: 2px;
-  color: #EFD8D5 !important;
-}
-
-/* 💡 수정된 안내 문구 스타일: 사진 뒤로 숨지 않도록 z-index 추가 및 위치 상향 */
-.photo-modal__guide {
-  position: absolute;
-  /* X 버튼과 비슷한 높이에 오도록 top 수치 조절 */
-  top: calc(1.4rem + var(--safe-top)); 
-  left: 50%;
-  transform: translateX(-50%);
-  width: 85%;
-  text-align: left;
-  
-  font-family: var(--font-serif);
-  font-size: 16px;
-  color: rgba(211, 185, 180, 1.0);
-  line-height: 1.2; /* 줄 간격 */
-  letter-spacing: -0.5px;
-  pointer-events: none;
-  
-  /* 👇 핵심: 텍스트가 사진에 가려지지 않고 무조건 맨 위에 뜨도록 강제 */
-  z-index: 10; 
-}
-
-/* ═══════════════════════════════════════════
-   Calendar Section
-   ═══════════════════════════════════════════ */
-.calendar-section {
-  background-color: var(--color-bg-warm);
-  background-image:
-    radial-gradient(ellipse at 50% 0%, rgba(201, 169, 110, 0.06) 0%, transparent 60%);
-}
-
-.calendar {
-  max-width: 360px;
-  margin: 0 auto var(--spacing-lg);
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  padding: var(--spacing-md);
-  position: relative;
-}
-
-/* Corner accents for calendar */
-.calendar::before,
-.calendar::after {
-  content: '';
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  border-color: var(--color-gold);
-  border-style: solid;
-  opacity: 0.4;
-}
-
-.calendar::before {
-  top: 4px;
-  left: 4px;
-  border-width: 1px 0 0 1px;
-}
-
-.calendar::after {
-  bottom: 4px;
-  right: 4px;
-  border-width: 0 1px 1px 0;
-}
-
-.calendar__header {
-  font-family: var(--font-serif);
-  font-size: 1.0625rem;
-  font-weight: 700;
-  letter-spacing: 2px;
-  margin-bottom: var(--spacing-sm);
-  color: var(--color-text);
-}
-
-.calendar__weekdays {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 0;
-  margin-bottom: 0.25rem;
-}
-
-.calendar__weekday {
-  font-size: 0.6875rem;
-  font-weight: 400;
-  color: var(--color-text-muted);
-  text-align: center;
-  padding: 0.5rem 0;
-}
-
-.calendar__weekday:first-child {
-  color: var(--color-crimson);
-}
-
-.calendar__weekday:last-child {
-  color: var(--color-navy);
-}
-
-.calendar__days {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 0;
-}
-
-.calendar__day {
-  text-align: center;
-  padding: 0.5rem 0;
-  font-size: 0.8125rem;
-  font-weight: 400;
-  color: var(--color-text-light);
-  position: relative;
-}
-
-.calendar__day:nth-child(7n+1) {
-  color: var(--color-crimson);
-}
-
-.calendar__day:nth-child(7n) {
-  color: var(--color-navy);
-}
-
-.calendar__day.is-empty {
-  visibility: hidden;
-}
-
-.calendar__day.is-today {
-  font-weight: 700;
-  color: #fff;
-  background: var(--color-crimson);
-  border-radius: 50%;
-}
-
-.calendar-actions {
-  display: flex;
-  gap: var(--spacing-sm);
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-/* ═══════════════════════════════════════════
-   Story Section
-   ═══════════════════════════════════════════ */
-.story {
-  background-color: var(--color-bg);
-  background-image:
-    radial-gradient(ellipse at 80% 80%, rgba(27, 58, 92, 0.03) 0%, transparent 70%);
-}
-
-.story__text {
-  font-size: 0.9375rem;
-  font-weight: 400;
-  line-height: 2;
-  color: var(--color-text-light);
-  white-space: pre-line;
-  margin-bottom: var(--spacing-xl);
-}
-
-.story__photos {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-}
-
-.story__photo-item {
-  overflow: hidden;
-  cursor: pointer;
-  border: 1px solid var(--color-border);
-  padding: 6px;
-  background: var(--color-bg-card);
-}
-
-.story__photo-item img {
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  object-fit: cover;
-  transition: transform var(--transition-slow);
-}
-
-.story__photo-item:hover img {
-  transform: scale(1.03);
-}
-
-.story__photo-item:focus-visible {
-  outline: 3px solid var(--color-gold-dark);
-  outline-offset: 4px;
-}
-
-/* ═══════════════════════════════════════════
-   Location Section
-   ═══════════════════════════════════════════ */
-.location {
-  background-color: var(--color-bg);
-  background-image:
-    radial-gradient(ellipse at 20% 80%, rgba(201, 169, 110, 0.04) 0%, transparent 60%);
-}
-
-.location__info {
-  margin-bottom: var(--spacing-md);
-}
-
-.location__venue {
-  font-size: 1.0625rem;
-  font-weight: 700;
-  margin-bottom: 0.25rem;
-  letter-spacing: 1px;
-}
-
-.location__hall {
-  font-size: 0.875rem;
-  font-weight: 400;
-  color: var(--color-text-light);
-  margin-bottom: var(--spacing-xs);
-}
-
-.location__address {
-  font-size: 0.8125rem;
-  font-weight: 400;
-  color: var(--color-text-muted);
-  line-height: 1.6;
-}
-
-.location__tel {
-  font-size: 0.8125rem;
-  font-weight: 400;
-  color: var(--color-text-muted);
-  margin-top: 0.25rem;
-}
-
-.location__copy {
-  margin-bottom: var(--spacing-lg);
-}
-
-.location__map {
-  margin-bottom: var(--spacing-lg);
-  overflow: hidden;
-  border: 1px solid var(--color-border);
-  padding: 4px;
-  background: var(--color-bg-card);
-}
-
-.location__map-img {
-  width: 100%;
-  aspect-ratio: 16 / 10;
-  object-fit: cover;
-}
-
-.location__links {
-  display: flex;
-  gap: var(--spacing-sm);
-  justify-content: center;
-}
-
-/* ═══════════════════════════════════════════
-   Account Section (축의금)
-   ═══════════════════════════════════════════ */
-.account {
-  background-color: var(--color-bg-warm);
-  background-image:
-    radial-gradient(ellipse at 50% 100%, rgba(139, 46, 59, 0.03) 0%, transparent 60%);
-}
-
-.account__desc {
-  font-size: 0.875rem;
-  font-weight: 400;
-  color: var(--color-text-light);
-  margin-bottom: var(--spacing-lg);
-}
-
-/* ─── Accordion ─── */
-.accordion {
-  max-width: 400px;
-  margin: 0 auto var(--spacing-sm);
-  border: 1px solid var(--color-border);
-  overflow: hidden;
-  background: var(--color-bg-card);
-}
-
-.accordion__trigger {
+  height: 44px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: 1rem 1.25rem;
+  font-family: var(--font-serif);
   font-size: 0.875rem;
-  font-weight: 400;
+  line-height: 1;
   letter-spacing: 1px;
-  transition: background var(--transition);
+  color: #747474 !important;
 }
 
-.accordion__trigger:hover {
-  background: var(--color-bg);
+/* ═══════════════════════════════════════════
+   Cat Dance Modal (고양이 터치 시 뜨는 레트로 창 스타일 팝업)
+   ═══════════════════════════════════════════ */
+.cat-dance-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6% 6%;
+  box-sizing: border-box;
+  background: rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
 }
 
-.accordion__trigger span:nth-child(2) {
-  flex: 1;
+.cat-dance-modal.is-open {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* 💡 영상(3cat_dance.mp4) 자체에 이미 창/타이틀바가 그려져 있어서, 여기서는
+   별도 틀 없이 영상 하나만 폭 100%로 보여줍니다. */
+.cat-dance-modal__body {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  line-height: 0;
+}
+
+.cat-dance-modal__body video {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* 💡 영상 속에 이미 그려져 있는 우측 상단 빈 박스 3개 위치에 맞춰, 배경/테두리 없는
+   투명한 아이콘만 겹쳐 올립니다(영상 속 박스 테두리가 그대로 보이도록). %값은 항상
+   영상 자체의 가로/세로 비율 기준이라 기기 화면 크기와 무관하게 항상 같은 위치에
+   맞습니다. 위치가 실제 영상과 안 맞으면 이 %값들만 조정하면 됩니다.
+   💡 이전에는 left(94%) + width(7%)가 101%가 되어 세 번째(닫기) 아이콘이 영상
+   오른쪽 바깥으로 밀려나 있었습니다 - width를 줄이고 안쪽으로 당겨서 고쳤습니다. */
+.cat-dance-modal__icon {
+  position: absolute;
+  top: 1.5%;
+  width: 5.5%;
+  aspect-ratio: 1 / 1;
+  border: none;
+  background: transparent;
+  color: #14212b;
+  font-size: 0.85rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.cat-dance-modal__icon--1 { left: 76%; }
+.cat-dance-modal__icon--2 { left: 84%; }
+.cat-dance-modal__icon--3 { left: 92%; }
+
+/* ═══════════════════════════════════════════
+   Guestbook Section (방명록 [06]) — 스타일은 guestbook.css 에 따로 있음
+   ═══════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════
+   RSVP Section (참석 의사 전달 [05]) — rsvp_section.svg 기준
+   ═══════════════════════════════════════════ */
+/* SVG 폭 516을 섹션 폭에 맞추고, 1단위 = --u 로 그대로 환산 (위치·크기·글자 모두 비율 유지) */
+.rsvp {
+  container-type: inline-size;
+  --rsvp-cream: #f7f0e8;
+  --rsvp-gray: #c7cdd2;
+  --rsvp-ink: #4e434c;
+  --rsvp-century: 'Century', 'Century Schoolbook', 'C059', Georgia, serif;
+}
+.rsvp__card {
+  --u: calc(100cqw / 516);
+  border: calc(14 * var(--u)) solid var(--rsvp-gray);    /* 바깥 회색 테두리 */
+  background: var(--rsvp-cream);
+  padding: calc(77 * var(--u)) 0 calc(61 * var(--u));
+  text-align: center;
+}
+.rsvp__eyebrow {
+  font-family: var(--rsvp-century);
+  font-size: calc(27 * var(--u));
+  line-height: 1;
+  color: var(--rsvp-ink);
+}
+.rsvp__title {
+  margin-top: calc(21 * var(--u));
+  font-family: 'Diphylleia', var(--font-serif);
+  font-size: calc(46 * var(--u));
+  font-weight: 400;
+  line-height: 1;
+  color: var(--rsvp-ink);
+}
+/* 문단도 가운데, 글줄도 가운데 정렬 */
+.rsvp__desc {
+  display: inline-block;
+  margin-top: calc(41 * var(--u));
+  font-family: 'S-CoreDream-2ExtraLight', var(--font-serif);
+  font-weight: 200;
+  font-size: max(12px, calc(17 * var(--u)));
+  line-height: calc(30 / 17);
+  color: #000;
+  text-align: center;
+}
+/* 회색 둥근 상자 + 크림색 알약 버튼 2개 (SVG 원본보다 약 80% 크기로 줄임) */
+.rsvp__actions {
+  display: flex;
+  flex-direction: column;
+  gap: calc(14 * var(--u));
+  width: calc(256 * var(--u));
+  margin: calc(56 * var(--u)) auto 0;
+  padding: calc(14 * var(--u)) calc(19 * var(--u));
+  border-radius: calc(18 * var(--u));
+  background: var(--rsvp-gray);
+}
+.rsvp__btn {
+  height: calc(51 * var(--u));
+  border-radius: 999px;
+  background: var(--rsvp-cream);
+  font-family: 'Diphylleia', var(--font-serif);
+  font-size: calc(22 * var(--u));
+  line-height: 1;
+  color: var(--rsvp-ink);
+  transition: filter 0.2s ease;
+}
+.rsvp__btn:hover { filter: brightness(0.97); }
+/* 누른 버튼: 크림색 → #dfdedd (크림색과 회색 #c7cdd2의 중간색) */
+.rsvp__btn:active,
+.rsvp__btn.is-pressed {
+  background: #dfdedd;
+  filter: none;
+}
+.rsvp__btn:focus-visible { outline: 2px solid var(--rsvp-ink); outline-offset: 3px; }
+
+/* ─── 응답 완료 애니메이션 (script.js의 playRsvpThanks가 클래스를 순서대로 붙임) ───
+   1) .is-closing : 내용 위치 고정(가운데 기준) + 넘치는 부분 숨김
+   2) .is-shut    : 위아래 회색 판이 한 번에 스르륵 닫히고, 섹션은 감사 문구 높이 + 위아래 5px까지 줄어듦
+   3) .is-thanked : "응답해 주셔서 감사합니다!" 가 튀어나옴 */
+.rsvp__card {
+  position: relative;
+  --rsvp-ease: cubic-bezier(0.65, 0, 0.35, 1);
+  --rsvp-close: 1.1s;
+  --rsvp-thanks-size: calc(24 * var(--u));
+  transition: height var(--rsvp-close) var(--rsvp-ease),
+              padding var(--rsvp-close) var(--rsvp-ease),
+              border-width var(--rsvp-close) var(--rsvp-ease);
+}
+.rsvp__card.is-closing { overflow: hidden; }
+/* 위아래 여백·테두리도 0으로 → 최종 높이를 문구 + 5px까지 낮출 수 있게 (좌우 테두리는 유지) */
+.rsvp__card.is-shut {
+  padding-top: 0;
+  padding-bottom: 0;
+  border-top-width: 0;
+  border-bottom-width: 0;
+}
+/* 닫히는 동안 내용은 가운데를 기준으로 고정 → 위(제목)·아래(두 번째 버튼)부터 가려짐
+   (+8u: 위 여백 77 / 아래 여백 61 차이의 절반 → 위치가 튀지 않게) */
+.rsvp__card.is-closing .rsvp__content {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(calc(-50% + 8 * var(--u)));
+  transition: opacity 0.4s ease 0.5s;     /* 판이 거의 닫혀 갈 때 내용이 사라짐 */
+}
+.rsvp__shutter {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  height: 0;
+  background: var(--rsvp-gray);
+  transition: height var(--rsvp-close) var(--rsvp-ease);
+}
+.rsvp__shutter--top { top: 0; }
+.rsvp__shutter--bottom { bottom: 0; }
+.rsvp__card.is-shut .rsvp__shutter { height: calc(50% + 1px); }
+.rsvp__card.is-shut .rsvp__content { opacity: 0; }
+.rsvp__card.is-thanked .rsvp__content { visibility: hidden; }
+
+.rsvp__thanks {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Diphylleia', var(--font-serif);
+  font-size: var(--rsvp-thanks-size);
+  line-height: 1;
+  color: var(--rsvp-ink);
+  visibility: hidden;
+  opacity: 0;
+  transform: scale(0.4);
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), visibility 0s 0.6s;
+}
+.rsvp__card.is-thanked .rsvp__thanks {
+  visibility: visible;
+  opacity: 1;
+  transform: none;
+  transition-delay: 0s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .rsvp__card,
+  .rsvp__shutter,
+  .rsvp__thanks { transition: none !important; }
+}
+
+/* ─── 참석 의사 체크 팝업 — rsvp_section_popup.svg 기준 (폭 555 = --p 555단위) ─── */
+.rsvp-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9600;                       /* 사진 팝업(9500) 위, 알림(10000) 아래 */
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 24px 16px calc(24px + var(--safe-bottom));
+  background: rgba(0, 0, 0, 0.45);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;                 /* body.no-scroll(touch-action:none)이 걸려도 팝업 안은 스크롤 */
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.rsvp-modal[hidden] { display: none; }
+.rsvp-modal.is-open { opacity: 1; }
+
+.rsvp-pop {
+  --p: calc(100cqw / 555);
+  --pop-cream: #f7f0e8;
+  --pop-btn: #b0b9bf;
+  --pop-text: #545454;
+  --pop-ink: #4e434c;
+  position: relative;
+  container-type: inline-size;
+  width: min(100%, 460px);
+  margin: auto 0;                      /* 화면보다 짧으면 세로 가운데, 길면 위부터 스크롤 */
+  border-radius: 14.5px;
+  background: var(--pop-cream);
+  outline: none;
+  transform: translateY(12px);
+  transition: transform 0.25s ease;
+}
+.rsvp-modal.is-open .rsvp-pop { transform: none; }
+/* --p(cqw)는 안쪽 요소에서 쓰일 때 .rsvp-pop 폭 기준으로 계산됨 */
+.rsvp-pop__eyebrow,
+.rsvp-pop__title,
+.rsvp-form { padding-inline: calc(64.5 * var(--p)) calc(65.5 * var(--p)); }
+
+.rsvp-pop__close {
+  position: absolute;
+  top: calc(12 * var(--p));
+  right: calc(12 * var(--p));
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  color: var(--pop-ink);
+}
+.rsvp-pop__close svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+.rsvp-pop__eyebrow {
+  padding-top: calc(54 * var(--p));
+  font-family: 'Century', 'Century Schoolbook', 'C059', Georgia, serif;
+  font-size: calc(20.92 * var(--p));
+  line-height: 1;
+  color: var(--pop-ink);
+  text-align: center;
+}
+.rsvp-pop__title {
+  margin-top: calc(16 * var(--p));
+  font-family: 'Diphylleia', var(--font-serif);
+  font-size: calc(35.64 * var(--p));
+  font-weight: 400;
+  line-height: 1;
+  color: var(--pop-ink);
+  text-align: center;
+}
+
+.rsvp-form {
+  padding-top: calc(48 * var(--p));
+  padding-bottom: calc(52 * var(--p));
+}
+.rsvp-form__hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+
+.rsvp-field + .rsvp-field { margin-top: calc(46 * var(--p)); }
+.rsvp-field { transition: opacity 0.25s ease; }
+/* 미참석 선택 시 참석 인원·식사 여부 비활성 */
+.rsvp-form.is-absent .rsvp-field--attend-only { opacity: 0.35; pointer-events: none; }
+
+/* 항목 이름: • 구분 */
+.rsvp-field__label {
+  display: flex;
+  align-items: center;
+  gap: calc(9.6 * var(--p));
+  padding-left: calc(6 * var(--p));
+  font-family: 'S-CoreDream-4Regular', var(--font-serif);
+  font-size: max(12px, calc(17 * var(--p)));
+  line-height: 1;
+  color: var(--pop-text);
+}
+.rsvp-field__label::before {
+  content: "";
+  width: calc(4 * var(--p));
+  height: calc(4 * var(--p));
+  min-width: 3px;
+  min-height: 3px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* 밑줄 입력칸 (성함 / 구분 직접입력) */
+.rsvp-input {
+  display: block;
+  width: calc(229 * var(--p));
+  min-width: 150px;
+  margin: calc(24 * var(--p)) 0 0 calc(6 * var(--p));
+  padding: 0 calc(3 * var(--p)) calc(6 * var(--p));
+  border: 0;
+  border-bottom: 2px solid var(--pop-btn);
+  border-radius: 0;
+  background: transparent;
+  font-family: 'S-CoreDream-2ExtraLight', var(--font-serif);
+  font-weight: 200;
+  font-size: 16px;                     /* 16px 미만이면 아이폰이 입력 시 화면을 확대함 */
+  line-height: 1.4;
+  color: var(--pop-text);
+}
+.rsvp-input::placeholder { color: #c9c9c9; opacity: 1; }
+.rsvp-input:focus { outline: none; border-bottom-color: var(--pop-text); }
+.rsvp-input--group { margin-top: calc(31 * var(--p)); }
+
+/* 선택 버튼: 기본 = 테두리만, 선택(aria-pressed=true) = 회색 채움 + 크림색 굵은 글자 */
+.rsvp-choices {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: calc(15 * var(--p));
+  margin-top: calc(20 * var(--p));
+}
+.rsvp-choices--4 {
+  grid-template-columns: repeat(4, 1fr);
+  gap: calc(6.1 * var(--p));
+  margin-top: calc(18 * var(--p));
+}
+.rsvp-choice {
+  height: calc(53 * var(--p));
+  min-height: 38px;
+  border: 2px solid var(--pop-btn);
+  border-radius: calc(10 * var(--p));
+  background: transparent;
+  font-family: 'S-CoreDream-4Regular', var(--font-serif);
+  font-size: max(13px, calc(22 * var(--p)));
+  line-height: 1;
+  color: var(--pop-text);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.rsvp-choices--4 .rsvp-choice { font-size: max(13px, calc(21 * var(--p))); }
+.rsvp-choice[aria-pressed="true"] {
+  background: var(--pop-btn);
+  font-family: 'S-CoreDream-6Bold', var(--font-serif);
+  font-weight: 700;
+  color: var(--pop-cream);
+}
+.rsvp-choice:focus-visible,
+.rsvp-submit:focus-visible,
+.rsvp-pop__close:focus-visible,
+.rsvp-count__step:focus-visible { outline: 2px solid var(--pop-ink); outline-offset: 2px; }
+
+/* 참석 인원: [1      명   ▲▼] + 밑줄 */
+.rsvp-count {
+  display: flex;
+  align-items: center;
+  width: calc(229 * var(--p));
+  min-width: 150px;
+  margin: calc(24 * var(--p)) 0 0 calc(6 * var(--p));
+  padding-bottom: calc(4 * var(--p));
+  border-bottom: 2px solid var(--pop-btn);
+  font-family: 'S-CoreDream-2ExtraLight', var(--font-serif);
+  font-weight: 200;
+  color: var(--pop-text);
+}
+.rsvp-count__input {
+  width: calc(128 * var(--p));
+  min-width: 70px;
+  padding: 0 0 0 calc(14 * var(--p));
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.4;
+  color: inherit;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.rsvp-count__input::-webkit-outer-spin-button,
+.rsvp-count__input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.rsvp-count__input:focus { outline: none; }
+.rsvp-count__unit { font-size: max(13px, calc(17 * var(--p))); }
+.rsvp-count__steps {
+  display: flex;
+  flex-direction: column;
+  margin-left: auto;
+}
+.rsvp-count__step {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 18px;
+  color: #8f989e;
+}
+.rsvp-count__step svg { width: 10px; height: 7px; fill: currentColor; }
+
+.rsvp-submit {
+  display: block;
+  width: 100%;
+  height: calc(53 * var(--p));
+  min-height: 42px;
+  margin-top: calc(68 * var(--p));
+  border-radius: calc(10 * var(--p));
+  background: var(--pop-btn);
+  font-family: 'S-CoreDream-6Bold', var(--font-serif);
+  font-weight: 700;
+  font-size: max(14px, calc(22 * var(--p)));
+  color: var(--pop-cream);
+  transition: filter 0.2s ease;
+}
+.rsvp-submit:hover { filter: brightness(0.95); }
+.rsvp-submit:disabled { cursor: wait; filter: none; opacity: 0.7; }
+
+/* ═══════════════════════════════════════════
+   D-day Section (카운트다운 시계 iframe — 방명록 바로 아래)
+   ═══════════════════════════════════════════ */
+/* 💡 섹션 크기 = 시계 크기 = 490 × 600 (폭이 좁으면 같은 비율로 줄어듦), 위아래 여백 없음 */
+.dday {
+  padding: 0;
+  background-color: var(--color-bg);
+}
+.dday__frame {
+  display: block;
+  width: 100%;
+  aspect-ratio: 490 / 600;
+  border: 0;
+  background: #e3d8c4 url("images/dday/bg.jpg") center / cover no-repeat;   /* 시계 배경 — iframe이 뜨기 전 빈칸 방지 (시계 안 배경과 같은 그림) */
+}
+
+/* ═══════════════════════════════════════════
+   오시는 길 안내 [03] + 축의금 전하실 곳 [04]
+   레이아웃 원본: 오시는길_계좌번호.svg (490 × 2000)
+   💡 모든 수치는 SVG 좌표(px) 그대로입니다. --u = SVG 1px 이 화면에서 차지하는 크기
+      (화면 폭 490px 이상이면 1px, 더 좁으면 비율대로 줄어듦) → calc(숫자 * var(--u))
+   💡 SVG y=0 = 포스터 무대(.fold-stage) 바로 아래. 두 섹션이 긴 배경(bg_long.jpg) 한 장을
+      이어서 씀. 배경 시작 위치(--loc-bg-top)는 script.js가 위쪽 벽 배경(bg_top.jpg)이 끝나는 곳
+      (포스터 높이의 --fold-bg-end 지점)에 맞춰 넣어줌 → 포스터 아래 여백까지 bg_long.jpg로 이어짐.
+   ═══════════════════════════════════════════ */
+.fairy-zone {
+  --u: min(1px, 100vw / 490);
+  --loc-text: #464744;
+  --loc-gray: #78777c;
+  --loc-card: linear-gradient(180deg, #d6d6d3 0%, #dddcd5 50%, #d8d7d1 72%, #cbcbc7 96%, #c9c9c6 100%);
+  /* 카드 그림자: 오른쪽 아래 어두운 그림자 + 왼쪽 위 밝은 빛 (SVG의 multiply / screen 그림자 레이어) */
+  --loc-card-shadow:
+    calc(5 * var(--u)) calc(6 * var(--u)) calc(10 * var(--u)) rgba(60, 68, 76, 0.38),
+    calc(-3 * var(--u)) calc(-3 * var(--u)) calc(8 * var(--u)) rgba(255, 255, 255, 0.45);
+  background:
+    url("images/location/bg_long.jpg") center var(--loc-bg-top, 0px) / 100% auto no-repeat,
+    linear-gradient(#aeb6bc, #aeb6bc) 0 0 / 100% var(--loc-bg-top, 0px) no-repeat,   /* 배경 위쪽 (포스터 뒤 벽 그림 아래 틈) = 배경 맨 위 색 */
+    #95a1aa;                                                                          /* 배경보다 내용이 길어지면 = 배경 맨 아래 색 */
+}
+
+/* 섹션 공통 여백(.section) 대신 SVG 좌표로 직접 배치 */
+.fairy-zone .location {
+  --loc-pad-top: 25px;                 /* 포스터 위 여백 (이 영역도 bg_top.jpg로 덮임) */
+  padding: var(--loc-pad-top) 0 0;
+  background: none;
+}
+.fairy-zone .account {
+  padding: 0;
+  background: none;
+}
+
+/* 💡 .location을 붙여 우선순위를 높임 — PC용 .section__inner 미디어쿼리(max-width·좌우 padding)에 덮이지 않도록 */
+.location .location__inner,
+.account .section__inner {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+.location .location__inner { padding: calc(90 * var(--u)) 0 calc(90 * var(--u)); }         /* 위 = 포스터 무대 아래 ~ 제목 (시안 223에서 133 줄임) / 아래 = 오시는 길 / 계좌번호 경계 (요정 착지 지점) */
+.account .section__inner { padding: calc(92 * var(--u)) 0 calc(98 * var(--u)); }
+
+/* 섹션 제목 "예식 장소 안내" / "계좌번호 안내" — 에스코어 드림 5 Medium 43px */
+.location__title,
+.account__title {
+  margin: 0;
+  font-family: 'S-CoreDream-5Medium', 'Noto Sans KR', sans-serif;
+  font-size: calc(43 * var(--u));
+  font-weight: 500;
+  line-height: calc(52 * var(--u));
+  letter-spacing: 0;
+  color: #2d2e2b;
+  text-align: center;
+}
+
+/* 예식장 이름 + 전화 아이콘 / 주소 + 복사 아이콘 — Noto Sans KR Light 19.52px */
+.location__info {
+  margin-top: calc(33.6 * var(--u));
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: calc(22 * var(--u));            /* 시안 19.52 → 22 (조금 키움) */
+  font-weight: 300;
+  line-height: calc(34 * var(--u));          /* 시안 30.15 → 34 (글자 키운 비율만큼) */
+  color: var(--loc-text);
+}
+.location__line {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(4 * var(--u));
+}
+.location__icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(4 * var(--u));
+  margin: calc(-4 * var(--u)) 0;       /* 누르는 영역만 넓히고 줄 간격은 그대로 */
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* SVG 아이콘: 모양을 마스크로 써서 글자색(currentColor)으로 칠함 */
+.loc-icon {
+  display: inline-block;
+  width: 1.15em;
+  height: 1.15em;
+  background-color: currentColor;
+  -webkit-mask: var(--icon) center / contain no-repeat;
+          mask: var(--icon) center / contain no-repeat;
+  flex: none;
+}
+.loc-icon--phone  { --icon: url("images/location/svg/phone-solid.svg"); }
+.loc-icon--copy   { --icon: url("images/location/svg/copy-solid.svg"); }
+.loc-icon--car    { --icon: url("images/location/svg/car-solid.svg"); }
+.loc-icon--bus    { --icon: url("images/location/svg/bus-solid.svg"); }
+.loc-icon--subway { --icon: url("images/location/svg/subway-solid.svg"); }
+.loc-icon--train  { --icon: url("images/location/svg/train-solid.svg"); }
+/* SVG 시안의 선 아이콘 (train은 시안에 없어 기존 파일 사용) */
+.location .loc-icon--copy { --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='339.47 347.7 17 16.99'%3E%3Cpath d='m339.48,347.7v14.16h4.95v-1.42h-3.54v-11.33h8.49v.71h1.42v-2.12h-11.33Zm5.66,2.83v14.16h11.33v-14.16h-11.33Zm1.42,1.42h8.49v11.33h-8.49v-11.33Z'/%3E%3C/svg%3E"); }
+.location .loc-icon--phone { --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='276.58 314.92 18.44 18.43'%3E%3Cpath d='m280.6,314.93c-.37,0-.74.13-1.04.38l-.04.02-.02.02-2.21,2.28.02.02c-.68.63-.89,1.57-.6,2.39,0,0,0,.02,0,.02.6,1.72,2.13,5.03,5.13,8.03s6.37,4.48,8.03,5.13h.02c.86.29,1.79.08,2.46-.49l2.23-2.23c.59-.59.59-1.6,0-2.19l-2.88-2.88-.02-.04c-.59-.59-1.63-.59-2.21,0l-1.42,1.42c-.51-.25-1.73-.88-2.9-1.99-1.16-1.11-1.75-2.38-1.97-2.88l1.42-1.42c.59-.59.61-1.58-.02-2.17l.02-.02-.07-.07-2.83-2.92-.02-.02-.04-.02c-.3-.24-.67-.38-1.04-.38Zm0,1.42c.05,0,.11.02.15.07l2.83,2.9.07.07s.04.07-.04.15l-1.77,1.77-.33.31.15.44s.81,2.18,2.52,3.8l.15.13c1.65,1.5,3.58,2.32,3.58,2.32l.44.2,2.1-2.1c.12-.12.1-.12.22,0l2.9,2.9c.12.12.12.08,0,.2l-2.17,2.17c-.33.28-.67.34-1.08.2-1.6-.63-4.72-2-7.5-4.78-2.8-2.8-4.26-5.98-4.8-7.52-.11-.29-.03-.71.22-.93l.04-.04,2.15-2.19s.1-.07.15-.07Z'/%3E%3C/svg%3E"); }
+.location .loc-icon--bus { --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='78.2 1015.94 31.93 29.47'%3E%3Cpath d='m85.57,1015.94c-2.7,0-4.91,2.21-4.91,4.91v6.14h-2.46v3.68h2.46v13.51c0,.68.55,1.23,1.23,1.23h3.68l.42-1.23h16.35l.42,1.23h3.68c.68,0,1.23-.55,1.23-1.23v-13.51h2.46v-3.68h-2.46v-6.14c0-2.7-2.21-4.91-4.91-4.91h-17.19Zm0,2.46h17.19c1.37,0,2.46,1.08,2.46,2.46h-22.11c0-1.37,1.08-2.46,2.46-2.46Zm-2.46,4.91h9.83v8.6h-9.83v-8.6Zm12.28,0h9.83v8.6h-9.83v-8.6Zm-12.28,11.05h22.11v7.37h-22.11v-7.37Zm1.23,2.46v2.46h4.91v-2.46h-4.91Zm14.74,0v2.46h4.91v-2.46h-4.91Z'/%3E%3C/svg%3E"); }
+.location .loc-icon--subway { --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='80.66 928.66 27.02 30.71'%3E%3Cpath d='m86.8,928.66c-3.38,0-6.14,2.76-6.14,6.14v14.74c0,2.98,1.78,5.56,4.34,6.72l-3.11,3.11h2.88l2.49-2.49c.24.02.51.04.77.04h12.28c.25,0,.52-.01.77-.04l2.49,2.49h2.88l-3.11-3.11c2.56-1.16,4.34-3.74,4.34-6.72v-14.74c0-3.38-2.76-6.14-6.14-6.14h-14.74Zm0,2.46h14.74c1.62,0,2.99,1.02,3.49,2.46h-21.72c.5-1.44,1.87-2.46,3.49-2.46Zm-3.68,4.91h9.83v7.37h-9.83v-7.37Zm12.28,0h9.83v7.37h-9.83v-7.37Zm-12.28,9.83h22.11v3.68c0,2.72-2.19,4.91-4.91,4.91h-12.28c-2.72,0-4.91-2.19-4.91-4.91v-3.68Zm4.3,2.46c-1.02,0-1.84.83-1.84,1.84s.83,1.84,1.84,1.84,1.84-.83,1.84-1.84-.83-1.84-1.84-1.84Zm13.51,0c-1.02,0-1.84.83-1.84,1.84s.83,1.84,1.84,1.84,1.84-.83,1.84-1.84-.83-1.84-1.84-1.84Z'/%3E%3C/svg%3E"); }
+.location .loc-icon--car { --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='77.81 691.8 32.69 24.57'%3E%3Cpath d='m86.18,691.8c-1.62,0-3.07,1.06-3.53,2.61l-1.69,5.64-2.38-.81-.77,2.3,2.42.81-.77,2.61c-.03.11-.04.23-.04.35v9.83c0,.68.55,1.23,1.23,1.23h3.68l.42-1.23h18.81l.42,1.23h3.68c.68,0,1.23-.55,1.23-1.23v-1.04c0-.06,0-.13,0-.19v-8.6c0-.12,0-.24-.04-.35l-.77-2.61,2.42-.81-.77-2.3-2.38.81-1.69-5.64c-.47-1.55-1.91-2.61-3.53-2.61h-15.97Zm0,2.46h15.97c.55,0,1.03.36,1.19.88l1.57,5.26h-21.49l1.57-5.26c.16-.53.64-.88,1.19-.88Zm-3.49,8.6h22.95l.81,2.69v7.14h-24.56v-7.14l.81-2.69Zm2.26,1.23c-1.02,0-1.84.83-1.84,1.84s.83,1.84,1.84,1.84,1.84-.83,1.84-1.84-.83-1.84-1.84-1.84Zm18.42,0c-1.02,0-1.84.83-1.84,1.84s.83,1.84,1.84,1.84,1.84-.83,1.84-1.84-.83-1.84-1.84-1.84Zm-14.12,3.68l-1.54,3.68h2.65l.54-1.23h6.52l.54,1.23h2.65l-1.54-3.68h-9.83Z'/%3E%3C/svg%3E"); }
+.location__icon-btn .loc-icon--phone { width: calc(20.8 * var(--u)); height: calc(20.8 * var(--u)); }   /* 시안 18.44 → 20.8 */
+.location__icon-btn .loc-icon--copy  { width: calc(19.2 * var(--u)); height: calc(19.2 * var(--u)); }   /* 시안 17 → 19.2 */
+
+/* 지도 버튼 — 알약 모양 145.24 × 41.97, 네이버 연두 / 카카오 연노랑 그라데이션 */
+.location__links {
+  display: flex;
+  justify-content: center;
+  gap: calc(18.79 * var(--u));
+  margin-top: calc(126.5 * var(--u));
+}
+.location__map-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(145.24 * var(--u));
+  height: calc(41.97 * var(--u));
+  border-radius: 999px;
+  box-shadow:
+    calc(4 * var(--u)) calc(5 * var(--u)) calc(8 * var(--u)) rgba(60, 68, 76, 0.35),
+    calc(-2 * var(--u)) calc(-2 * var(--u)) calc(6 * var(--u)) rgba(255, 255, 255, 0.4);
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: calc(17.28 * var(--u));
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: 0;
+  color: #2d2e2b;
+  text-decoration: none;
+  transition: filter 0.2s ease;
+}
+.location__map-btn:active { filter: brightness(0.95); }
+.location__map-btn--naver { background: linear-gradient(180deg, #c7d6bf 0%, #cedcc1 50%, #c9d7bd 72%, #bccbb3 96%, #bac9b2 100%); }
+.location__map-btn--kakao { background: linear-gradient(180deg, #e0e0c7 0%, #e7e6c9 50%, #e2e1c5 72%, #d5d5bb 96%, #d3d3ba 100%); }
+
+/* "교통 안내" 소제목 — 에스코어 드림 5 Medium 21px, 카드 왼쪽 끝에 맞춤 */
+.location__sub {
+  margin: calc(95.6 * var(--u)) 0 0 calc(45.62 * var(--u));
+  font-family: 'S-CoreDream-5Medium', 'Noto Sans KR', sans-serif;
+  font-size: calc(21 * var(--u));
+  font-weight: 500;
+  line-height: calc(26 * var(--u));
+  letter-spacing: 0;
+  color: var(--loc-text);
   text-align: left;
-  margin-left: 0.5rem;
 }
 
-.accordion__icon {
-  color: var(--color-crimson);
-  font-size: 0.625rem;
+/* ─── 아코디언 카드 공통 (교통편 / 계좌번호) — 398.76 × 62.31, 모서리 10 ─── */
+.loc-acc__item,
+.account .accordion {
+  width: calc(398.76 * var(--u));
+  margin: 0 0 calc(24.36 * var(--u)) calc(47.24 * var(--u));
+  border: 0;
+  border-radius: calc(10 * var(--u));
+  background: var(--loc-card);
+  box-shadow: var(--loc-card-shadow);
+  overflow: hidden;
+  text-align: left;
+}
+.loc-acc__item:last-child,
+.account .accordion:last-child { margin-bottom: 0; }
+
+.loc-acc__head,
+.account .accordion__trigger {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: calc(62.31 * var(--u));      /* 접힌 카드 높이 (펼치면 이 아래끝이 구분선) */
+  padding: 0 calc(23.9 * var(--u)) 0 0;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  background: none;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: calc(19 * var(--u));
+  font-weight: 350;
+  line-height: 1;
+  letter-spacing: 0;
+  color: var(--loc-text);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+/* 펼치면 제목 아래 구분선 + 아래로 떨어지는 옅은 그림자 */
+.loc-acc__head[aria-expanded="true"],
+.account .accordion__trigger[aria-expanded="true"] {
+  border-bottom-color: #d9d9d4;
+  box-shadow: 0 calc(3 * var(--u)) calc(4 * var(--u)) rgba(0, 0, 0, 0.12);
+}
+.account .accordion__trigger:hover { background: none; }
+
+/* 오른쪽 + 표시 (18.22px, 선 굵기 2.5px): 펼치면 45° 돌아 × 가 됨 */
+.loc-acc__mark,
+.account .accordion__mark {
+  position: relative;
+  width: calc(18.22 * var(--u));
+  height: calc(18.22 * var(--u));
+  margin-left: auto;
+  flex: none;
+  color: var(--loc-gray);
+  transition: transform 0.4s ease;
+}
+.loc-acc__mark::before, .loc-acc__mark::after,
+.account .accordion__mark::before, .account .accordion__mark::after {
+  content: "";
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 100%;
+  height: calc(2.5 * var(--u));
+  background: currentColor;
+  transform: translate(-50%, -50%);
+}
+.loc-acc__mark::after,
+.account .accordion__mark::after { transform: translate(-50%, -50%) rotate(90deg); }
+.loc-acc__head[aria-expanded="true"] .loc-acc__mark,
+.account .accordion__trigger[aria-expanded="true"] .accordion__mark { transform: rotate(45deg); }
+
+/* ─── 교통편 아코디언 (자차 / 버스 / 지하철) ─── */
+.loc-acc { margin-top: calc(12.7 * var(--u)); text-align: left; }
+.loc-acc__head .loc-icon {                /* 아이콘 칸 33 × 31, 가운데 = 카드 왼쪽에서 46.92 */
+  width: calc(33 * var(--u));
+  height: calc(31 * var(--u));
+  margin-left: calc(30.42 * var(--u));
+  color: var(--loc-gray);
+}
+.loc-acc__title { margin-left: calc(13.95 * var(--u)); }
+
+/* 내용: 높이 0 ↔ 내용 높이로 부드럽게 펼침 (grid 0fr → 1fr) */
+.loc-acc__body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.5s ease;
+}
+.loc-acc__item.is-open .loc-acc__body { grid-template-rows: 1fr; }
+.loc-acc__content {
+  min-height: 0;
+  overflow: hidden;
+  padding: 0 calc(29.6 * var(--u));
+  font-family: 'Noto Sans KR', sans-serif;
+  color: var(--loc-text);
+  word-break: keep-all;
+}
+.loc-acc__content > :first-child { margin-top: calc(17.8 * var(--u)); }
+.loc-acc__content > :last-child  { margin-bottom: calc(11.3 * var(--u)); }
+.loc-acc__block { margin: 0; }
+.loc-acc__block + .loc-acc__block { margin-top: calc(24.3 * var(--u)); }
+.loc-acc__label {                         /* 소제목 (네비게이션 / 주소 …) — 19px DemiLight, config의 \n 줄바꿈 그대로 */
+  display: block;
+  font-size: calc(19 * var(--u));
+  font-weight: 350;
+  line-height: calc(25 * var(--u));
+  white-space: pre-line;
+}
+.loc-acc__text {                          /* 내용 — 17px Light, config의 \n 줄바꿈 그대로 */
+  display: block;
+  font-size: calc(17 * var(--u));
+  font-weight: 300;
+  line-height: calc(25 * var(--u));
+  white-space: pre-line;
 }
 
-.accordion__arrow {
-  transition: transform var(--transition);
-  flex-shrink: 0;
-  color: var(--color-text-muted);
+/* ─── 오시는 길 포스터 병풍 펼침 (fold-test.html 이식) ─── */
+/* 상단 벽 배경: 섹션 맨 위(.location 위 여백 포함) ~ 포스터 높이의 --fold-bg-end 지점까지만
+   bg_top.jpg를 깔고(가로에 맞추고 남는 아래쪽은 잘림), 그 아래는 .location 배경색이 그대로 보임.
+   무대 높이 = 위 여백 + 포스터 + 아래 여백 이므로 포스터 높이 = 100% - 위 - 아래 */
+.fold-stage::before {
+  content: "";
+  position: absolute; left: 0; right: 0;
+  top: calc(-1 * var(--loc-pad-top, 0px));
+  height: calc(var(--loc-pad-top, 0px) + var(--fold-pad-top)
+             + (100% - var(--fold-pad-top) - var(--fold-pad-bottom)) * var(--fold-bg-end));
+  background: url("images/location/bg_top.jpg") center top / cover no-repeat;
+  pointer-events: none;
 }
+.fold-stage {
+  --fold-pad-top: 25px;              /* 포스터 위 여백 */
+  --fold-pad-bottom: 40px;           /* 포스터 아래 여백 */
+  --fold-bg-end: 0.87;               /* 배경 이미지가 끝나는 위치 (포스터 위=0, 아래=1) */
+  --paper-back: #e9e6df;
+  position: relative;
+  padding: var(--fold-pad-top) 0 var(--fold-pad-bottom);   /* 높이는 포스터에 맞춤 */
+  display: flex; align-items: center; justify-content: center;
+  perspective: 900px;
+  /* 카메라가 약간 위에서 내려다봄 — 원래 100vh 무대의 15% 지점(포스터 중심보다 35vh 위)과 같은 시점
+     (위아래 여백이 다르면 그 차이의 절반만큼 포스터 중심이 무대 중심에서 벗어나므로 보정) */
+  perspective-origin: 50% calc(50% + (var(--fold-pad-top) - var(--fold-pad-bottom)) / 2 - 35vh);
+  overflow-x: clip;                  /* 아래쪽 그림자는 잘리지 않도록 가로만 자름 */
+}
+/* 병풍 그림자: 띠마다 화면에 투영된 모양(다각형)을 JS가 매 프레임 그리고,
+   그 합친 모양 전체에 drop-shadow를 줌. 다각형 자체는 포스터에 가려져 안 보임 */
+.fold-shadow {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  overflow: visible;
+  fill: var(--paper-back);
+  filter: drop-shadow(5px 3px 2px rgba(0, 0, 0, 0.3));   /* 빛이 왼쪽 위 → 오른쪽 아래로 좁고 또렷한 그림자 */
+  pointer-events: none;
+}
+.fold-probe {
+  position: absolute; width: 0; height: 0;
+  pointer-events: none;
+}
+.fold-paper {
+  position: relative;
+  width: var(--w);
+  height: var(--h);
+  transform-style: preserve-3d;
+}
+.fold-strip {
+  position: absolute; left: 0; width: 100%;
+  height: var(--sh);                 /* 띠 1장 높이(px) */
+  transform-style: preserve-3d;
+  transform-origin: 50% 0;           /* 윗변이 접힘선 */
+}
+.fold-strip.is-first { top: 0; }
+.fold-strip:not(.is-first) { top: 100%; }
 
-.accordion__trigger[aria-expanded="true"] .accordion__arrow {
-  transform: rotate(180deg);
+.fold-face, .fold-back, .fold-shade {
+  position: absolute; inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.fold-face {
+  background-image: var(--img);
+  background-repeat: no-repeat;
+  background-size: 100% calc(var(--n) * 100%);
+}
+.fold-back { background: var(--paper-back); transform: rotateX(180deg); }
+.fold-shade { background: #000; opacity: 0; pointer-events: none; }
+
+/* ═══════════════════════════════════════════
+   Account Section (축의금) — 카드·+ 표시·그림자는 위 "아코디언 카드 공통"에서 함께 정의
+   ═══════════════════════════════════════════ */
+.account__desc {
+  margin: calc(38.1 * var(--u)) 0 0;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: calc(17 * var(--u));
+  font-weight: 300;
+  line-height: calc(29 * var(--u));
+  letter-spacing: 0;
+  color: var(--loc-text);
+  text-align: center;
+}
+.account__desc + .accordion { margin-top: calc(106.9 * var(--u)); }
+
+/* 제목 왼쪽 동그란 볼록 단추 (지름 21.66, 가운데 = 카드 왼쪽에서 27.59) */
+.account .accordion__icon {
+  width: calc(21.66 * var(--u));
+  height: calc(21.66 * var(--u));
+  margin-left: calc(16.76 * var(--u));
+  border-radius: 50%;
+  background: var(--loc-card);
+  box-shadow:
+    calc(2 * var(--u)) calc(2.5 * var(--u)) calc(3 * var(--u)) rgba(60, 68, 76, 0.4),
+    calc(-1 * var(--u)) calc(-1 * var(--u)) calc(2 * var(--u)) rgba(255, 255, 255, 0.7);
+  font-size: 0;                          /* 예전 ◆ 글자 자리 */
+  flex: none;
+}
+.account .accordion__trigger span:nth-child(2) {
+  flex: 1;
+  margin-left: calc(18.95 * var(--u));
+  text-align: left;
 }
 
 .accordion__panel {
@@ -1660,63 +2542,67 @@ a {
   overflow: hidden;
   transition: max-height 0.4s ease;
 }
+.accordion__panel-inner { padding: calc(15.5 * var(--u)) 0 calc(13.9 * var(--u)); }
 
-.accordion__panel-inner {
-  padding: 0 1.25rem 1rem;
-}
-
+/* 계좌 한 줄: 관계(14px) / 이름(18px Medium) + 은행·계좌(18px DemiLight) / 오른쪽 복사 버튼 */
 .account-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid var(--color-border);
+  gap: calc(8 * var(--u));
+  padding: calc(17.5 * var(--u)) calc(18 * var(--u)) calc(11.76 * var(--u)) calc(16.76 * var(--u));
+  border-bottom: 1px solid #b9b9ba;
 }
-
-.account-item:last-child {
-  border-bottom: none;
-}
-
-.account-item__info {
-  text-align: left;
-}
-
+.account-item:last-child { border-bottom: none; padding-bottom: 0; }
+.account-item__info { min-width: 0; text-align: left; }
 .account-item__role {
-  font-size: 0.6875rem;
-  font-weight: 400;
-  color: var(--color-text-muted);
-  letter-spacing: 1px;
+  font-size: calc(14 * var(--u));
+  font-weight: 350;
+  line-height: calc(20 * var(--u));
+  letter-spacing: 0;
+  color: var(--loc-gray);
 }
-
 .account-item__detail {
-  font-size: 0.8125rem;
-  font-weight: 400;
-  color: var(--color-text);
-  margin-top: 0.125rem;
-}
-
-.account-item__name {
-  font-weight: 700;
-}
-
-.account-item__copy {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.75rem;
-  font-weight: 400;
-  color: var(--color-crimson);
-  border: 1px solid var(--color-crimson);
-  opacity: 0.7;
-  transition: var(--transition);
+  margin-top: calc(3.8 * var(--u));
+  font-size: calc(18 * var(--u));
+  font-weight: 350;
+  line-height: calc(26 * var(--u));
+  color: var(--loc-text);
   white-space: nowrap;
 }
+.account-item__name { font-weight: 500; }
+.account-item__bank { margin: 0 calc(9 * var(--u)); }   /* 💡 이름 ↔ 은행 ↔ 계좌번호 사이 간격 (띄어쓰기 대신) */
 
-.account-item__copy:hover {
-  background: var(--color-crimson);
-  color: var(--color-white);
+/* 복사 버튼 — 볼록한 알약 47.3 × 23.7 */
+.account-item__copy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(47.3 * var(--u));
+  height: calc(23.7 * var(--u));
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #c9c9c6 0%, #d6d6d2 25%, #dddcd5 50%, #d8d7d2 80%, #d2d2ce 100%);
+  box-shadow:
+    calc(2 * var(--u)) calc(2 * var(--u)) calc(3 * var(--u)) rgba(60, 64, 60, 0.45),
+    calc(-1 * var(--u)) calc(-1 * var(--u)) calc(2 * var(--u)) rgba(255, 255, 255, 0.6);
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: calc(12 * var(--u));
+  font-weight: 350;
+  line-height: 1;
+  letter-spacing: 0.1em;
+  color: var(--loc-text);
   opacity: 1;
+  white-space: nowrap;
+  flex: none;
+  cursor: pointer;
+  transition: filter 0.2s ease, box-shadow 0.2s ease;
+}
+.account-item__copy:hover { background: linear-gradient(180deg, #c9c9c6 0%, #d6d6d2 25%, #dddcd5 50%, #d8d7d2 80%, #d2d2ce 100%); color: var(--loc-text); }
+.account-item__copy:active {
+  filter: brightness(0.96);
+  box-shadow: inset calc(1 * var(--u)) calc(1 * var(--u)) calc(2 * var(--u)) rgba(60, 64, 60, 0.35);
 }
 
 /* ═══════════════════════════════════════════
@@ -1788,19 +2674,17 @@ a {
 /* ═══════════════════════════════════════════
    Footer
    ═══════════════════════════════════════════ */
+/* 💡 푸터 = 490 × 100 고정 비율 (폭이 좁으면 같은 비율로 줄어듦) + 배경 이미지
+      배경 이미지: images/footer/footer_bg.jpg (490 × 100, 선명하게 하려면 980 × 200)
+      글자(이름·날짜)도 이 이미지 안에 포함. 이미지가 없으면 기존 배경색만 보임 */
 .footer {
-  padding: var(--spacing-lg) var(--spacing-md);
-  padding-bottom: calc(var(--spacing-lg) + var(--safe-bottom));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 490 / 100;
+  padding: 0 var(--spacing-md) var(--safe-bottom);
   text-align: center;
-  background: var(--color-bg);
-  border-top: 1px solid var(--color-border);
-}
-
-.footer__text {
-  font-size: 0.75rem;
-  font-weight: 400;
-  color: var(--color-text-muted);
-  letter-spacing: 2px;
+  background: var(--color-bg) url("images/footer/footer_bg.jpg") center / cover no-repeat;
 }
 
 /* ═══════════════════════════════════════════
@@ -1899,24 +2783,6 @@ a {
     min-width: 4.5rem;
   }
 
-  .gallery__grid {
-    gap: 6px;
-  }
-
-  .gallery__item {
-    padding: 4px;
-  }
-
-  .story__photos {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--spacing-md);
-  }
-
-  .story__photo-item img {
-    aspect-ratio: 3 / 2;
-  }
-
   .section__title {
     font-size: 1.375rem;
   }
@@ -1931,11 +2797,11 @@ a {
    Responsive - Desktop (1024px+)
    ═══════════════════════════════════════════ */
 @media (min-width: 1024px) {
+  /* 💡 --app-max-width/.main-content의 max-width는 490px로 이미 통일되어 있어
+     (:root, .main-content 기본 규칙) 여기서 따로 다시 좁히지 않습니다.
+     PC에서만 다르게 주고 싶은 장식(그림자)만 남겨둡니다. */
   .main-content {
-    max-width: 480px;
-    margin: 0 auto;
     box-shadow: 0 0 60px rgba(44, 36, 32, 0.1);
-    min-height: 100vh;
   }
 
   .section__inner {
@@ -1960,9 +2826,8 @@ a {
   .photo-modal,
   .toast,
   .countdown,
-  .calendar-actions,
   .location__links,
-  .location__copy,
+  .location__icon-btn,
   .account-item__copy {
     display: none !important;
   }
@@ -1970,5 +2835,179 @@ a {
   .animate-item {
     opacity: 1 !important;
     transform: none !important;
+  }
+}
+
+/* ═══════════════════════════════════════════
+   인트로 — 두 개의 그라데이션 원 (Greeting 섹션 맨 위)
+   · 모든 클래스가 .circle-intro 로 시작하므로 기존 스타일과 겹치지 않습니다
+   ═══════════════════════════════════════════ */
+
+/* ZEN SERIF Regular (원 안 문구) — 받으신 TTF 를 fonts 폴더에 ZenSerif-Regular.ttf 로 넣어주세요.
+   못 불러왔을 때는 아래 text.serifFont 스택의 다음 순서인 'Noto Serif KR'로 자동 대체됩니다
+   (상단 <link>에 이미 추가해 두었습니다). */
+@font-face {
+  font-family: 'ZenSerifKR';
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: local('ZEN SERIF'),
+       local('ZEN SERIF Regular'),
+       local('ZENSERIF'),
+       url('fonts/ZenSerif-Regular.ttf') format('truetype');
+}
+
+/* 💡 스크롤 커튼 효과의 stage. 안에 pin(원 박스) → C(bg_01) 순서로 들어 있습니다.
+   ⚠ 이 요소와 모든 조상에 overflow:hidden/auto/scroll이 있으면 sticky가 깨집니다
+   (html/body/.main-content는 overflow: clip 사용 중, 여기도 clip).
+   overflow:clip은 stage 밖으로 걸쳐 나간 원 박스(B)가 stage가 끝난 뒤 다음 섹션 위에
+   보이지 않게 잘라내는 역할입니다. z-index:60은 stage 전체의 쌓임 순서입니다
+   (top-nav 500/side-menu 700보다 아래). 내부 겹침은 C(2) > pin(1). */
+.circle-intro-track {
+  position: relative;
+  z-index: 60;
+  overflow: clip;
+  width: 100%;
+  max-width: var(--circle-intro-width, 490px);
+  margin: 0 auto;
+  /* JS(_layout)가 490×840 박스에서 제목 줄(A) 높이를 측정해 넣는 값 — JS 로딩 전 기본값 */
+  --circle-intro-a-height: 164px;
+}
+
+/* 💡 실제로 화면에 "고정"되는 요소 (position:sticky).
+   pin의 높이는 제목 줄(A)까지만이고, 안쪽 490×840 원 박스(.circle-intro)는 그 아래로
+   걸쳐서(overflow: visible) 그려집니다. 그래서 문서 흐름상 차지하는 높이는 A뿐이라
+   → C가 A 밑으로 완전히 지나갈 때까지 A가 화면 상단에 고정되고,
+   → 박스의 나머지(B)는 A와 함께 고정된 채 C에 덮입니다.
+   박스는 하나의 요소라 배경/캔버스/문구는 기존 그대로입니다. */
+.circle-intro-pin {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 1;
+  width: 100%;
+  height: var(--circle-intro-a-height);
+  /* 커버(복제본)가 같은 슬롯을 차지하므로 원본은 그만큼 위로 당겨 겹칩니다(net 0) */
+  margin-top: calc(var(--circle-intro-a-height) * -1);
+}
+
+/* 💡 커버(복제본) — script.js(_buildCover)가 원본 pin을 복제해 원본 바로 앞에 넣습니다.
+   레이어: 커버(3) > C(2) > 원본(1). 그래서 C가 올라오다 A 밑으로 들어가는 것처럼 보입니다.
+   · 원본과 sticky 슬롯 높이(A 높이)·top이 같아서 고정 해제 시점이 정확히 같습니다.
+   · 보이는 영역은 A 높이 + 경계 그라디언트 띠(--circle-intro-fade, 5px)까지. 띠는 sticky 슬롯(A 높이)
+     밖으로 걸쳐 있어서 슬롯 크기·고정 해제 시점은 원본과 그대로 같습니다. 클릭은 통과(pointer-events: none).
+   · 띠 부분은 정적인 linear-gradient 마스크라 아래로 갈수록 투명해져 A와 C가 부드럽게 이어집니다
+     (스크롤과 무관해 계산 비용 없음). 캔버스는 (A 높이 + 띠)만큼만 그립니다(원본의 윗부분을 매 프레임 복사). */
+.circle-intro-pin--cover {
+  z-index: 3;
+  margin-top: 0;
+  pointer-events: none;
+}
+.circle-intro-pin--cover .circle-intro {
+  height: calc(var(--circle-intro-a-height) + var(--circle-intro-fade, 5px));
+  -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 var(--circle-intro-a-height), transparent calc(var(--circle-intro-a-height) + var(--circle-intro-fade, 5px)));
+  mask-image: linear-gradient(to bottom, #000 0, #000 var(--circle-intro-a-height), transparent calc(var(--circle-intro-a-height) + var(--circle-intro-fade, 5px)));
+}
+.circle-intro-pin--cover .circle-intro__canvas {
+  height: calc(var(--circle-intro-a-height) + var(--circle-intro-fade, 5px));
+}
+
+/* C. bg_01 — 원 박스 바로 아래(문서 흐름상 위치는 기존과 동일: 박스 높이 840px 만큼 아래)에서
+   일반 스크롤로 올라와 박스를 덮습니다. 배경 이미지가 불투명해서 뒤가 비치지 않습니다.
+   커버(z 3)가 A 영역을 덮고 있어서 별도의 마스크는 필요 없습니다. */
+.circle-intro-track > .greeting__part1 {
+  z-index: 2;
+  margin-top: calc(var(--circle-intro-height, 840px) - var(--circle-intro-a-height));
+}
+
+.circle-intro {
+  /* 자주 바꾸는 값 — 실제 px 값은 config.js 의 CIRCLE_INTRO.layout 에서 지정하고,
+     script 가 init 시 한 번 아래 커스텀 프로퍼티로 덮어씁니다(여기 값은 JS 로딩 전 기본값). */
+  --circle-intro-width: 490px;                   /* 가로 길이(px, 고정) */
+  --circle-intro-height: 840px;                  /* 캔버스 자체의 실제(불변) 세로 길이(px) —
+                                                     원 그리기 좌표 계산 기준이라 절대 바뀌지 않음 */
+  --circle-intro-visible-height: 840px;          /* 바깥 박스에 "보이는" 세로 길이(px) — 고정값
+                                                     (병합 중에는 C가 올라와 아래를 덮습니다) */
+  --circle-intro-heading-color: #ffffff;         /* 상단 문구 색 — 가운데(합쳐진 뒤) 문구와 동일하게 흰색 */
+  /* 💡 프로젝트에 이미 S-CoreDream-3Light가 로드돼 있어(styles.css 상단 @font-face)
+     그대로 재사용합니다 (원본의 별도 SCDream3 @font-face는 생략). */
+  --circle-intro-heading-font: 'S-CoreDream-3Light', 'Noto Sans KR', sans-serif;
+
+  /* 💡 .circle-intro-pin 안 일반 흐름의 첫 번째 요소일 뿐 — 고정/이동은 .circle-intro-pin
+     쪽에서 처리하므로 여기서는 position을 건드리지 않습니다. */
+  position: relative;
+  width: 100%;
+  max-width: var(--circle-intro-width);
+  /* 💡 안쪽 캔버스는 항상 --circle-intro-height(불변)로 그려져서 원 위치 계산은
+     전혀 바뀌지 않습니다. */
+  height: var(--circle-intro-visible-height, var(--circle-intro-height));
+  margin: 0 auto;
+  overflow: hidden;
+  background: #b9ccde;
+  /* 💡 터치/클릭 인터랙션이 아니라 스크롤로만 동작하므로 cursor/touch-action을
+     따로 건드리지 않습니다 — 이 영역 위에서도 스크롤이 평소처럼 자연스럽게 됩니다. */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.circle-intro__canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  width: 100%;
+  /* 💡 항상 --circle-intro-height(불변, lay.height)로 고정 — 바깥 .circle-intro가
+     overflow:hidden으로 이 캔버스의 아래쪽을 잘라내는 방식이라, 원을 그리는 좌표
+     계산(script.js _drawIntro)은 하나도 건드리지 않고도 화면상 보이는 세로 길이만
+     줄어듭니다. */
+  height: var(--circle-intro-height);
+}
+
+/* 상단 문구 영역 (높이는 script 가 --circle-intro-top 으로 지정) */
+.circle-intro__heading {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 2;
+  height: var(--circle-intro-top, 0px);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--circle-intro-heading-padding-x, 40px);
+  pointer-events: none;
+  font-family: var(--circle-intro-heading-font);
+  font-weight: 300;
+  font-size: var(--circle-intro-heading-size, 20px);   /* config.js layout.headingFontSize (px 고정) */
+  line-height: 1.4;
+  letter-spacing: 1.5px;
+  color: var(--circle-intro-heading-color);
+  /* 💡 가운데(합쳐진 뒤) 문구의 그림자(shadowColor rgba(P.textRGB,.5), shadowBlur 8)와
+     동일한 값 — 흰 글씨가 밝은 배경 위에서도 잘 읽히도록 아주 약하게만 깔아줍니다. */
+  text-shadow: 0 0 4px rgba(78, 67, 76, 0.3);
+  text-align: left;
+}
+
+.circle-intro__heading p {
+  margin: 0;
+  /* 💡 부모(.circle-intro__heading)의 align-items:center를 이 요소만 빼서(flex-start)
+     top 기준으로 고정합니다. center를 그대로 두면 margin-top을 늘려도 flex가 다시
+     중앙 정렬을 시도해서 실제로는 절반만 내려가는 현상이 생깁니다. */
+  align-self: flex-start;
+  /* 💡 config.js layout.headingOffsetY 값. 원(circleRadius/top/bottom)에는 영향을
+     주지 않고 이 문구만 위아래로 옮길 수 있습니다. */
+  margin-top: var(--circle-intro-heading-offset-y, 0px);
+}
+
+/* 💡 모션 줄이기 설정: 고정 효과 해제, 그냥 일반 스크롤로 지나가도록 */
+@media (prefers-reduced-motion: reduce) {
+  .circle-intro-pin {
+    position: relative;
+    top: auto;
+    margin-top: 0;
+  }
+  .circle-intro-pin--cover {
+    display: none;
   }
 }

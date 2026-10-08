@@ -1,0 +1,2248 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>D-day Clock</title>
+  <!--
+    brik.space에서 만든 D-day 카운트다운 시계 (index.html의 D-day 섹션에서 iframe으로 불러옴)
+    원본 대비 수정 사항 (💡 표시):
+      - 추적 스크립트(frog.wix.com / posthog)와 brik 메타 태그 삭제
+      - 배경 = images/dday/bg.jpg, 프레임 = images/dday/timer_mask.png 형태(투명, 테두리 없음)
+        시계 중심·바늘 길이는 bg.jpg 초록 원에 맞춤 (스크립트의 MASK 참고)
+      - 원본 px 값(프레임 위치·바늘 두께 등)을 1080px 캔버스 기준 비율로 환산 (정사각형에서도 같은 모양)
+      - 캔버스를 화면 해상도에 맞춰 선명하게 그림
+      - 빈 곳 터치 시 글자 블록 초기화 기능 끔
+      - 글자 블록을 잡았을 때만 스크롤을 막고, 그 외엔 청첩장 페이지 스크롤이 그대로 됨
+  -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.20.0/matter.min.js"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@100;200;300;400;500;600;700;800;900&amp;display=swap">
+  <style>
+
+
+
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      overflow: hidden;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .tool-canvas-area {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    /* 💡 캔버스는 화면 해상도만큼 크게 그리고, 보이는 크기는 영역에 꽉 맞춤 */
+    canvas { display: block; background: transparent; width: 100%; height: 100%; }
+
+  </style>
+</head>
+<body>
+  <div class="tool-canvas-area">
+    <canvas id="canvas"></canvas>
+  </div>
+
+  <script>
+
+    // Mobile perf: cap devicePixelRatio so canvases allocate fewer pixels.
+    (function() {
+      var _isMobile = window.innerWidth <= 768;
+      if (_isMobile) {
+        var _nativeDPR = window.devicePixelRatio || 1;
+        var _cappedDPR = Math.min(1.5, _nativeDPR);
+        Object.defineProperty(window, 'devicePixelRatio', { get: function() { return _cappedDPR; } });
+      }
+    })();
+
+    window.CanvasRuntimeAPI = (function() {
+      var _exportMode = 'auto';
+      var _exportWidth = 0;
+      var _exportHeight = 0;
+      var _bgState = { mode: 'none', color: '#ffffff', imageEl: null, imageDataURL: null, fit: 'cover' };
+
+
+
+      var _canvas = document.getElementById('canvas');
+      var _area = _canvas ? _canvas.parentElement : document.querySelector('.tool-canvas-area');
+      var _resizeRAF = null;
+
+      function _detectCanvas() {
+        var r = window.renderer || window.threeRenderer;
+        if (r && r.domElement) {
+          _canvas = r.domElement;
+          _area = _canvas.parentElement;
+          return;
+        }
+        var area = document.querySelector('.tool-canvas-area');
+        if (area) {
+          var canvases = area.querySelectorAll('canvas');
+          var visible = [];
+          for (var j = 0; j < canvases.length; j++) {
+            if (canvases[j].style.display !== 'none') visible.push(canvases[j]);
+          }
+          if (visible.length >= 1) {
+            var largest = visible[0];
+            for (var i = 1; i < visible.length; i++) {
+              if (visible[i].width * visible[i].height > largest.width * largest.height) {
+                largest = visible[i];
+              }
+            }
+            _canvas = largest;
+            _area = _canvas.parentElement;
+          }
+        }
+      }
+
+
+
+
+      function _applyBgCSS() {
+        _detectCanvas();
+        if (!_canvas) return;
+        if (_bgState.mode === 'none') {
+          _canvas.style.background = '';
+        } else if (_bgState.mode === 'solid') {
+          _canvas.style.background = _bgState.color;
+        } else if (_bgState.mode === 'image') {
+          if (_bgState.imageDataURL) {
+            var fitCss = _bgState.fit === 'fill' ? '100% 100%' : _bgState.fit;
+            _canvas.style.backgroundColor = _bgState.color;
+            _canvas.style.backgroundImage = 'url("' + _bgState.imageDataURL + '")';
+            _canvas.style.backgroundSize = fitCss;
+            _canvas.style.backgroundPosition = 'center';
+            _canvas.style.backgroundRepeat = 'no-repeat';
+          } else {
+            _canvas.style.backgroundImage = '';
+            _canvas.style.backgroundColor = _bgState.color;
+          }
+        }
+      }
+
+      function setBackground(state) {
+        state = state || {};
+        _bgState.mode = state.mode || 'none';
+        _bgState.color = state.color || '#ffffff';
+        _bgState.fit = state.fit || 'cover';
+        if (state.image && state.image !== _bgState.imageDataURL) {
+          _bgState.imageDataURL = state.image;
+          _bgState.imageEl = null;
+          _applyBgCSS();
+          var img = new Image();
+          img.onload = function() {
+            if (_bgState.imageDataURL !== state.image) return;
+            _bgState.imageEl = img;
+          };
+          img.src = state.image;
+        } else if (!state.image) {
+          _bgState.imageEl = null;
+          _bgState.imageDataURL = null;
+        }
+        _applyBgCSS();
+      }
+
+      function getBackground() {
+        return { mode: _bgState.mode, color: _bgState.color, fit: _bgState.fit };
+      }
+
+      function setCanvas(el) {
+        _canvas = el;
+        _area = el ? el.parentElement : document.querySelector('.tool-canvas-area');
+        if (_bgState.mode !== 'none') _applyBgCSS();
+      }
+
+      function setExportDimensions(w, h) {
+        _detectCanvas();
+        _exportMode = 'fixed';
+        _exportWidth = Math.max(1, Math.round(w || 1));
+        _exportHeight = Math.max(1, Math.round(h || 1));
+        if (_canvas) {
+          _canvas.width = _exportWidth;
+          _canvas.height = _exportHeight;
+        }
+        if (window.p5 && typeof window.resizeCanvas === 'function') window.resizeCanvas(_exportWidth, _exportHeight);
+        if (window.renderer && window.renderer.setSize) window.renderer.setSize(_exportWidth, _exportHeight, false);
+        if (window.hydra && window.hydra.setResolution) window.hydra.setResolution(_exportWidth, _exportHeight);
+        window.dispatchEvent(new Event('resize'));
+      }
+
+      function fitToArea() {}
+
+      function getExportDimensions() {
+        if (_exportMode === 'fixed') return { width: _exportWidth, height: _exportHeight, mode: 'fixed' };
+        _detectCanvas();
+        var __cw = _canvas ? _canvas.width : 0;
+        var __ch = _canvas ? _canvas.height : 0;
+        if (__cw && __ch && !(__cw === 300 && __ch === 150)) {
+          return { width: __cw, height: __ch, mode: 'auto' };
+        }
+        var __area = _area || document.querySelector('.tool-canvas-area');
+        var __aw = __area ? __area.clientWidth : 0;
+        var __ah = __area ? __area.clientHeight : 0;
+        if (!__aw || !__ah) { __aw = window.innerWidth; __ah = window.innerHeight; }
+        return { width: __aw, height: __ah, mode: 'auto' };
+      }
+
+      function isFixedExportMode() { return _exportMode === 'fixed'; }
+
+      function _onAreaResize() {
+        var r = window.renderer || window.threeRenderer;
+        if (!r || !r.setSize) return;
+        if (_resizeRAF) cancelAnimationFrame(_resizeRAF);
+        _resizeRAF = requestAnimationFrame(function() {
+          _detectCanvas();
+          if (!_area) return;
+          var w = _area.clientWidth;
+          var h = _area.clientHeight;
+          if (w <= 0 || h <= 0) return;
+          r.setSize(w, h);
+          window.dispatchEvent(new Event('resize'));
+        });
+      }
+      if (typeof ResizeObserver !== 'undefined' && _area) {
+        new ResizeObserver(_onAreaResize).observe(_area);
+      }
+      window.addEventListener('resize', _onAreaResize);
+
+      setTimeout(function() {
+        _detectCanvas();
+        if (_bgState.mode !== 'none') _applyBgCSS();
+      }, 500);
+
+      function getMousePos(event) {
+        _detectCanvas();
+        if (!_canvas) return { x: 0, y: 0 };
+        var rect = _canvas.getBoundingClientRect();
+        var scaleX = _canvas.width / rect.width;
+        var scaleY = _canvas.height / rect.height;
+        var touch = event.touches && event.touches[0]
+          ? event.touches[0]
+          : event.changedTouches && event.changedTouches[0]
+          ? event.changedTouches[0]
+          : null;
+        var clientX = touch ? touch.clientX : event.clientX;
+        var clientY = touch ? touch.clientY : event.clientY;
+        return {
+          x: (clientX - rect.left) * scaleX,
+          y: (clientY - rect.top) * scaleY
+        };
+      }
+
+      function drawImage(ctx, img, x, y, w, h, fit) {
+        if (!img || !img.width || !img.height) return;
+        fit = fit || 'cover';
+        var ar = img.width / img.height;
+        var car = w / h;
+        var sx = 0, sy = 0, sw = img.width, sh = img.height;
+        var dx = x, dy = y, dw = w, dh = h;
+
+        if (fit === 'cover') {
+          if (ar > car) { sw = img.height * car; sx = (img.width - sw) / 2; }
+          else { sh = img.width / car; sy = (img.height - sh) / 2; }
+        } else if (fit === 'contain') {
+          if (ar > car) { dh = w / ar; dy = y + (h - dh) / 2; }
+          else { dw = h * ar; dx = x + (w - dw) / 2; }
+        }
+
+        ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
+      }
+
+      return {
+        setCanvas: setCanvas,
+        setBackground: setBackground,
+        getBackground: getBackground,
+        setExportDimensions: setExportDimensions,
+        fitToArea: fitToArea,
+        getExportDimensions: getExportDimensions,
+        isFixedExportMode: isFixedExportMode,
+
+
+        getMousePos: getMousePos,
+        drawImage: drawImage
+      };
+    })();
+
+    window.BrikCanvas = window.CanvasRuntimeAPI;
+    window.BrikControls = window.ControlsAPI;
+
+    (function() {
+      var srcDesc = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'src');
+      if (srcDesc && srcDesc.set) {
+        Object.defineProperty(HTMLImageElement.prototype, 'src', {
+          get: srcDesc.get,
+          set: function(val) {
+            if (val && typeof val === 'string' && !val.startsWith('data:') && !this.crossOrigin) {
+              this.crossOrigin = 'anonymous';
+            }
+            srcDesc.set.call(this, val);
+          },
+          configurable: true,
+          enumerable: true
+        });
+      }
+    })();
+
+    window.loadImage = function(src, callback) {
+      var img = new Image();
+      if (src && typeof src === 'string' && !src.startsWith('data:')) {
+        img.crossOrigin = 'anonymous';
+      }
+      img.onload = function() { if (callback) callback(img); };
+      img.onerror = function() { console.error('Failed to load image:', src); };
+      img.src = src;
+      return img;
+    };
+
+  </script>
+  <script>
+    var canvas = document.getElementById('canvas');
+    var ctx = canvas.getContext('2d');
+    var __ctArea = canvas.parentElement;
+    var __maxDim = (window.innerWidth <= 768) ? 960 : 4096;
+
+    // 💡 보이는 크기(CSS px) × 화면 배율만큼 캔버스를 크게 잡아 글자가 흐리지 않게 함
+    //    (모바일은 위에서 배율을 1.5로 제한해 둠)
+    function resizeCanvas() {
+      var cs = getComputedStyle(__ctArea);
+      var dpr = Math.min(2, window.devicePixelRatio || 1);
+      var cssW = __ctArea.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+      var cssH = __ctArea.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+      canvas.width = Math.min(__maxDim, Math.round(cssW * dpr));
+      canvas.height = Math.min(__maxDim, Math.round(cssH * dpr));
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    var controls = (function() {
+      // 💡 배경 = images/dday/bg.jpg (background_type "Image")
+      //    프레임 = timer_mask.png 형태(collider_shape "Mask", 아래 MASK 참고), 채우기 없음(frame_fill_type "None") + 테두리 없음(frame_stroke_width 0)
+      var _v = {"background_type":"Image","background_color":"#3F3F4B","background_image":"images/dday/bg.jpg","target_dday":"2026-12-05 11:00","days_label":"DAYS","hours_label":"HOURS","mins_label":"MINUTES","secs_label":"SECONDS","month_text":"2026","day_year_text":"12/05","additional_words":"💍\n🤵‍♂️💗👰‍♀️\n💌\n🤍\n🎂\n💐","font_family":{"family":"system-ui","style":"normal","weight":400,"url":null},"font_family_secondary":{"family":"Space Grotesk","style":"normal","weight":700,"url":null},"countdown_number_size":1.1,"current_date_size":0.5,"additional_words_size":0.8,"clock_size":0.9,"text_box_style_date":"Fill","text_box_style_additional":"None","text_box_style_labels":"Fill","text_box_stroke_width":2,"text_box_padding":0,"text_box_radius":0,"label_position":"Bottom","label_size_ratio":0.35,"label_spacing":5,"collider_shape":"Mask","custom_frame_path":null,"collider_width":1,"collider_height":1.2,"frame_offset_x":140,"frame_offset_y":-260,"frame_fill_type":"None","frame_fill_color":"#617594","frame_fill_image":"","collider_color":"#474683","frame_stroke_width":0,"time_speed":0.8,"gravity_strength":0,"updraft_force":0,"horizontal_wind":0,"vortex_force":0,"turbulence":0,"float_strength":1,"bounciness":0.6,"friction":0,"hand_impact_force":0.1,"hands_push_text":true,"color_text_primary":"#1C2540","color_text_accent":"#756D4B","color_text_additional":"#FFFFFF","color_box_fill_days":"#C7B7A5","color_box_fill_hours":"#8E825E","color_box_fill_mins":"#927864","color_box_fill_secs":"#AA8B53","color_dday_stroke":"#18141A","color_dday_number":"#7A98C7","color_dday_text":"#FFFFFF","color_text_box_fill_date":"#CCD7A4","color_text_box_stroke_date":"#1E1E20","color_text_box_fill_additional":"#F1E9D9","color_text_box_stroke_additional":"#1E1E20","color_hand_hour":"#B0A392","color_hand_minute":"#1E1E20","color_pivot":"#363B5E","grain_intensity":8,"grain_threshold":15,"melt_smear":0,"melt_scale":1,"line_jitter_effect":0,"line_jitter":6,"sensor_streaks":0};
+      var _defaults = JSON.parse(JSON.stringify(_v));
+      var _listeners = {};
+      var _anyListeners = [];
+      var _actionListeners = {};
+      function _notify(key, value) {
+        if (_listeners[key]) _listeners[key].forEach(function(fn) { fn(value); });
+        _anyListeners.forEach(function(fn) { fn(key, value); });
+      }
+      function _hexToRgb(hex) {
+        var h = String(hex || '').replace('#', '');
+        if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+        if (h.length !== 6 || !/^[0-9a-fA-F]{6}$/.test(h)) return null;
+        return {
+          r: parseInt(h.slice(0, 2), 16),
+          g: parseInt(h.slice(2, 4), 16),
+          b: parseInt(h.slice(4, 6), 16)
+        };
+      }
+      function _clamp(n, min, max) { return Math.min(max, Math.max(min, n)); }
+      function _hexToRgbaCss(hex, opacity0to100) {
+        var rgb = _hexToRgb(hex);
+        if (!rgb) return 'rgba(0,0,0,1)';
+        var op = opacity0to100 != null && !isNaN(Number(opacity0to100)) ? Number(opacity0to100) : 100;
+        var a = _clamp(op, 0, 100) / 100;
+        return 'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',' + a + ')';
+      }
+      var api = {
+        get: function(k) { return _v[k]; },
+        getAll: function() { return Object.assign({}, _v); },
+        getDefaults: function() { return JSON.parse(JSON.stringify(_defaults)); },
+        getColorWithAlpha: function(baseKey) { return _hexToRgbaCss(_v[baseKey], _v[baseKey + '_opacity']); },
+        set: function(k, v) { _v[k] = v; _notify(k, v); },
+        setValues: function(values) {
+          if (!values || typeof values !== 'object') return;
+          Object.keys(values).forEach(function(k) {
+            if (!(k in _v)) return;
+            try { _v[k] = JSON.parse(JSON.stringify(values[k])); }
+            catch (e) { _v[k] = values[k]; }
+            _notify(k, _v[k]);
+          });
+        },
+        setDefaults: function(values) {
+          if (!values || typeof values !== 'object') return;
+          Object.keys(values).forEach(function(k) {
+            try { _defaults[k] = JSON.parse(JSON.stringify(values[k])); }
+            catch (e) { _defaults[k] = values[k]; }
+          });
+        },
+        resetAll: function() {
+          Object.keys(_defaults).forEach(function(k) {
+            try { _v[k] = JSON.parse(JSON.stringify(_defaults[k])); }
+            catch (e) { _v[k] = _defaults[k]; }
+            _notify(k, _v[k]);
+          });
+        },
+        triggerAction: function(k) {
+          if (_actionListeners[k]) _actionListeners[k].forEach(function(fn) { fn(); });
+        },
+        onChange: function(k, cb) {
+          if (!_listeners[k]) _listeners[k] = [];
+          _listeners[k].push(cb);
+        },
+        onAny: function(cb) { _anyListeners.push(cb); },
+        onAction: function(k, cb) {
+          if (!_actionListeners[k]) _actionListeners[k] = [];
+          _actionListeners[k].push(cb);
+        }
+      };
+      window.ControlsAPI = api;
+      window.BrikControls = api;
+      return api;
+    })();
+
+
+
+    // Creative Code
+    {
+      // @clay-no-bg-control
+// Set default background color of the canvas to match the reference design
+canvas.style.backgroundColor = 'transparent';
+
+const { Engine, Bodies, Body, Composite, Mouse, MouseConstraint, Events } = Matter;
+
+const engine = Engine.create();
+const world = engine.world;
+
+// Set initial gravity
+engine.gravity.y = controls.get('gravity_strength');
+
+let textBodies = [];
+let boundaryBodies = [];
+let hourHandBody, minuteHandBody;
+
+let hourHandLength, hourHandThickness;
+let minuteHandLength, minuteHandThickness;
+
+// Ticking state variables
+let lastTickTime = performance.now();
+let prevMinuteAngle = Math.PI / 3;
+let targetMinuteAngle = Math.PI / 3;
+let prevHourAngle = -Math.PI / 4;
+let targetHourAngle = -Math.PI / 4;
+let currentMinuteAngle = Math.PI / 3;
+let currentHourAngle = -Math.PI / 4;
+let transitionStartTime = 0;
+let isTransitioning = false;
+
+// Grain overlay state (legacy offscreen canvases no longer used for effects,
+// kept only if referenced elsewhere)
+let grainCanvas = null;
+let paperTextureCanvas = null;
+let sensorStreaksCanvas = null;
+let __grainFrameCounter = 0;
+
+// ---- Compact 2D Simplex noise (static, seeded) ----
+const __grad2 = [[1,1],[-1,1],[1,-1],[-1,-1],[1,0],[-1,0],[0,1],[0,-1]];
+const __permTable = (() => {
+  const p = new Uint8Array(256);
+  let seed = 1337;
+  const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+  for (let i = 0; i < 256; i++) p[i] = i;
+  for (let i = 255; i > 0; i--) {
+    const j = Math.floor(rnd() * (i + 1));
+    const tmp = p[i]; p[i] = p[j]; p[j] = tmp;
+  }
+  const perm = new Uint8Array(512);
+  for (let i = 0; i < 512; i++) perm[i] = p[i & 255];
+  return perm;
+})();
+function __dot2(g, x, y) { return g[0] * x + g[1] * y; }
+function simplex2(xin, yin) {
+  const F2 = 0.3660254037844386, G2 = 0.21132486540518713;
+  const s = (xin + yin) * F2;
+  const i = Math.floor(xin + s), j = Math.floor(yin + s);
+  const t = (i + j) * G2;
+  const X0 = i - t, Y0 = j - t;
+  const x0 = xin - X0, y0 = yin - Y0;
+  let i1, j1;
+  if (x0 > y0) { i1 = 1; j1 = 0; } else { i1 = 0; j1 = 1; }
+  const x1 = x0 - i1 + G2, y1 = y0 - j1 + G2;
+  const x2 = x0 - 1 + 2 * G2, y2 = y0 - 1 + 2 * G2;
+  const ii = i & 255, jj = j & 255;
+  const gi0 = __permTable[ii + __permTable[jj]] % 8;
+  const gi1 = __permTable[ii + i1 + __permTable[jj + j1]] % 8;
+  const gi2 = __permTable[ii + 1 + __permTable[jj + 1]] % 8;
+  let n0 = 0, n1 = 0, n2 = 0;
+  let t0 = 0.5 - x0 * x0 - y0 * y0;
+  if (t0 >= 0) { t0 *= t0; n0 = t0 * t0 * __dot2(__grad2[gi0], x0, y0); }
+  let t1 = 0.5 - x1 * x1 - y1 * y1;
+  if (t1 >= 0) { t1 *= t1; n1 = t1 * t1 * __dot2(__grad2[gi1], x1, y1); }
+  let t2 = 0.5 - x2 * x2 - y2 * y2;
+  if (t2 >= 0) { t2 *= t2; n2 = t2 * t2 * __dot2(__grad2[gi2], x2, y2); }
+  return 70 * (n0 + n1 + n2); // roughly -1..1
+}
+
+// ---- Melt/Smear: static cached per-column noise map + 12-tap downward smear ----
+let meltSnapshotCanvas = null;
+let meltColumnOffsets = [];
+let __meltCachedScale = null;
+let __meltCachedW = 0;
+let __meltCachedH = 0;
+const MELT_COL_STEP = 2;
+const MELT_TAPS = 5; // fewer, wider-spaced taps for distinct bands instead of a blur
+const MELT_TAP_GAP = 1.8; // extra multiplier spreading taps apart so gaps are visually clear
+
+function buildMeltMap(w, h, meltScaleVal) {
+  const freq = 0.4 + meltScaleVal * 7.0; // widened: ~2x the spread across the 1-100 range vs previous 3.5 multiplier
+  const offsets = [];
+  for (let x = 0; x < w; x += MELT_COL_STEP) {
+    const n = simplex2(x * 0.0025 * freq, meltScaleVal * 12.34); // static: no time term
+    offsets.push(n);
+  }
+  meltColumnOffsets = offsets;
+  __meltCachedScale = meltScaleVal;
+  __meltCachedW = w;
+  __meltCachedH = h;
+}
+
+let __meltRCanvas = null;
+let __meltBCanvas = null;
+let __meltGCanvas = null;
+
+// 💡 tCanvas / tCtx = 효과를 줄 대상 (fx 레이어). 색 번짐(Color Bleed)은 compositeObjectLayer()로 옮김
+function applyMeltSmear(tCanvas, tCtx) {
+  const meltRaw = (controls.get('melt_smear') || 0) / 100;
+  // Widen the perceptual range: low values become near-imperceptible, high
+  // values ramp up much more heavily (exponential curve instead of linear).
+  const meltIntensity = Math.pow(meltRaw, 2.4);
+  if (meltIntensity <= 0) return;
+  const w = Math.max(1, tCanvas.width);
+  const h = Math.max(1, tCanvas.height);
+  const meltScaleVal = (controls.get('melt_scale') !== undefined ? controls.get('melt_scale') : 40) / 100;
+
+  if (!meltSnapshotCanvas || meltSnapshotCanvas.width !== w || meltSnapshotCanvas.height !== h) {
+    meltSnapshotCanvas = new OffscreenCanvas(w, h);
+  }
+
+  if (__meltCachedScale !== meltScaleVal || __meltCachedW !== w || __meltCachedH !== h) {
+    buildMeltMap(w, h, meltScaleVal);
+  }
+
+  // Pass 1: downward smear + slight upward component (per-column taps). No channel splitting here.
+  if (meltIntensity > 0) {
+    const mctx = meltSnapshotCanvas.getContext('2d');
+    mctx.clearRect(0, 0, w, h);
+    mctx.drawImage(tCanvas, 0, 0);
+
+    // Wider max range so heavy values produce a clearly heavier drip.
+    // Floor guarantees the Melt Scale-driven ripple narrowing/density stays visible
+    // even when Melt/Smear intensity is set low — only the overall drip AMOUNT
+    // scales with intensity, the ripple frequency/spacing itself is scale-only (see buildMeltMap).
+    const smearFloor = h * 0.012; // minimum visible smear so narrow ripples don't vanish at low intensity
+    const maxSmear = meltIntensity > 0 ? Math.max(smearFloor, meltIntensity * h * 0.34) : 0;
+    const maxSmearUp = maxSmear * 0.22;
+    tCtx.save();
+    for (let ci = 0; ci < meltColumnOffsets.length; ci++) {
+      const x = ci * MELT_COL_STEP;
+      const n = meltColumnOffsets[ci]; // -1..1
+      const colMax = (n * 0.5 + 0.5) * maxSmear;
+      const colMaxUp = (n * 0.5 + 0.5) * maxSmearUp;
+      const sx = Math.max(0, x - 1);
+      const sw = Math.min(MELT_COL_STEP + 2, w - sx);
+      const dx = sx;
+      const dw = sw;
+      for (let t = 0; t < MELT_TAPS; t++) {
+        const tt = (t / (MELT_TAPS - 1)) * MELT_TAP_GAP; // spread taps further apart -> wider gaps between bands
+        const falloff = Math.pow(Math.max(0, 1 - tt / MELT_TAP_GAP), 1.6);
+        const offDown = colMax * tt;
+        tCtx.globalAlpha = Math.min(1, falloff / MELT_TAPS * 3.2);
+        tCtx.drawImage(meltSnapshotCanvas, sx, 0, sw, h, dx, offDown, dw, h);
+        if (t > 0) {
+          const offUp = -colMaxUp * tt;
+          tCtx.globalAlpha = Math.min(1, falloff / MELT_TAPS * 3.2 * 0.5);
+          tCtx.drawImage(meltSnapshotCanvas, sx, 0, sw, h, dx, offUp, dw, h);
+        }
+      }
+    }
+    tCtx.restore();
+  }
+}
+
+// ---- 💡 fx 레이어: 필터(효과)를 움직이는 것(시계침·중심점·글자 블록)에만 주기 위한 별도 캔버스 ----
+let __fxCanvas = null;
+let __fxCtx = null;
+let __bgPixels = null;      // 배경(+프레임) 픽셀 복사본 — compositeObjectLayer에서 재사용
+let __bgPixelsKey = '';
+function getFxLayer(w, h) {
+  if (!__fxCanvas) {
+    __fxCanvas = document.createElement('canvas');
+    __fxCtx = __fxCanvas.getContext('2d', { willReadFrequently: true });
+  }
+  if (__fxCanvas.width !== w || __fxCanvas.height !== h) {
+    __fxCanvas.width = w;
+    __fxCanvas.height = h;
+  }
+  return __fxCtx;
+}
+
+// fx 레이어를 배경(효과 없음) 위에 합성.
+// 색 번짐(Color Bleed, line_jitter): 오브젝트의 빨강은 오른쪽, 파랑은 왼쪽으로 bleedPx만큼 어긋나게 합성
+// (예전처럼 화면 전체가 아니라 오브젝트가 있는 곳·그 가장자리만 바뀌고, 배경 픽셀은 그대로)
+function compositeObjectLayer() {
+  const w = canvas.width;
+  const h = canvas.height;
+  const colorBleed = (controls.get('line_jitter') || 0) / 100;
+  if (colorBleed <= 0) { ctx.drawImage(__fxCanvas, 0, 0); return; }
+  const bleedPx = Math.max(1, Math.round(colorBleed * w * 0.035));
+
+  let bg, ob;
+  try {
+    // 배경 + 프레임은 움직이지 않으므로 크기·배경 이미지 로드 상태가 바뀔 때만 다시 읽어 둠 (매 프레임 읽기 X)
+    const key = w + 'x' + h + ':' + __bgImageReady;
+    if (__bgPixelsKey !== key) {
+      __bgPixels = ctx.getImageData(0, 0, w, h).data;
+      __bgPixelsKey = key;
+    }
+    bg = new ImageData(new Uint8ClampedArray(__bgPixels), w, h);
+    ob = __fxCtx.getImageData(0, 0, w, h).data;         // 오브젝트 레이어
+  } catch (e) {
+    ctx.drawImage(__fxCanvas, 0, 0);                    // 픽셀을 읽을 수 없는 환경이면 효과 없이 합성
+    return;
+  }
+  const d = bg.data;
+  for (let y = 0; y < h; y++) {
+    const row = y * w * 4;
+    for (let x = 0; x < w; x++) {
+      const i = row + x * 4;
+      const ri = row + Math.max(0, x - bleedPx) * 4;      // 빨강: 왼쪽에서 가져옴 → 오른쪽으로 번짐
+      const bi = row + Math.min(w - 1, x + bleedPx) * 4;  // 파랑: 오른쪽에서 가져옴 → 왼쪽으로 번짐
+      const aR = ob[ri + 3], aG = ob[i + 3], aB = ob[bi + 3];
+      if (aR === 0 && aG === 0 && aB === 0) continue;     // 오브젝트와 상관없는 배경 픽셀은 그대로
+      d[i]     = (ob[ri]     * aR + d[i]     * (255 - aR)) / 255;
+      d[i + 1] = (ob[i + 1]  * aG + d[i + 1] * (255 - aG)) / 255;
+      d[i + 2] = (ob[bi + 2] * aB + d[i + 2] * (255 - aB)) / 255;
+    }
+  }
+  ctx.putImageData(bg, 0, 0);
+}
+
+// Line Jitter effect state (real canvas-based banded horizontal displacement, STATIC/cached)
+let lineJitterBuffer = null;
+let jitterBandOffsets = [];
+let __jitterCachedValue = null;
+let __jitterCachedW = 0;
+let __jitterCachedH = 0;
+
+function buildLineJitterOffsets(w, h, lineJitterVal) {
+  const bandHeight = Math.max(2, Math.round(h * 0.008));
+  const numBands = Math.ceil(h / bandHeight);
+  const maxOffset = (lineJitterVal / 100) * w * 0.03;
+  const offsets = [];
+  for (let i = 0; i < numBands; i++) {
+    // Static per-band random offset, seeded only by band index (no time component)
+    let seed = Math.sin(i * 127.1 + 311.7) * 43758.5453;
+    seed = seed - Math.floor(seed);
+    offsets.push((seed - 0.5) * 2 * maxOffset);
+  }
+  jitterBandOffsets = offsets;
+  __jitterCachedValue = lineJitterVal;
+  __jitterCachedW = w;
+  __jitterCachedH = h;
+}
+
+// ---- Real SVG filter (analog scanner / VHS artifact chain) ----
+const __svgFilterId = 'analog-scanner-' + Math.random().toString(36).slice(2, 10);
+let __svgFilterEl = null;
+let __svgRefs = {};
+
+function __buildSvgFilter() {
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('width', '0');
+  svg.setAttribute('height', '0');
+  svg.style.position = 'absolute';
+  svg.style.pointerEvents = 'none';
+  svg.style.opacity = '0';
+
+  const defs = document.createElementNS(NS, 'defs');
+  const filter = document.createElementNS(NS, 'filter');
+  filter.setAttribute('id', __svgFilterId);
+  filter.setAttribute('x', '-10%');
+  filter.setAttribute('y', '-10%');
+  filter.setAttribute('width', '120%');
+  filter.setAttribute('height', '120%');
+
+  function fe(tag, attrs) {
+    const el = document.createElementNS(NS, tag);
+    for (const k in attrs) el.setAttribute(k, attrs[k]);
+    filter.appendChild(el);
+    return el;
+  }
+
+  const noiseMap = fe('feTurbulence', { type: 'turbulence', baseFrequency: '0.01 0.4', numOctaves: '2', result: 'noiseMap' });
+  const displacement = fe('feDisplacementMap', { in: 'SourceGraphic', in2: 'noiseMap', scale: '0', xChannelSelector: 'R', yChannelSelector: 'G', result: 'distorted' });
+
+  fe('feColorMatrix', { in: 'distorted', type: 'matrix', values: '1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0', result: 'R' });
+  const rShift = fe('feOffset', { in: 'R', dx: '4', dy: '0', result: 'R_shift' });
+  fe('feColorMatrix', { in: 'distorted', type: 'matrix', values: '0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0', result: 'G' });
+  fe('feColorMatrix', { in: 'distorted', type: 'matrix', values: '0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0', result: 'B' });
+  const bShift = fe('feOffset', { in: 'B', dx: '-4', dy: '0', result: 'B_shift' });
+
+  fe('feComposite', { in: 'R_shift', in2: 'G', operator: 'arithmetic', k2: '1', k3: '1', result: 'RG' });
+  fe('feComposite', { in: 'RG', in2: 'B_shift', operator: 'arithmetic', k2: '1', k3: '1', result: 'colorBleed' });
+
+  const streakNoise = fe('feTurbulence', { type: 'fractalNoise', baseFrequency: '1.5 0.001', numOctaves: '1', result: 'streakNoise' });
+  const streaksMatrix = fe('feColorMatrix', { type: 'matrix', values: '1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.15 0', in: 'streakNoise', result: 'streaks' });
+  fe('feComposite', { in: 'streaks', in2: 'colorBleed', operator: 'over', result: 'withStreaks' });
+
+  const grainTurb = fe('feTurbulence', { type: 'fractalNoise', baseFrequency: '0.9', numOctaves: '3', result: 'grain' });
+  const grainMatrix = fe('feColorMatrix', { type: 'matrix', values: '0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.1 0', in: 'grain', result: 'grainAlpha' });
+  fe('feComposite', { in: 'grainAlpha', in2: 'withStreaks', operator: 'over', result: 'noisy' });
+
+  const transfer = document.createElementNS(NS, 'feComponentTransfer');
+  transfer.setAttribute('in', 'noisy');
+  transfer.setAttribute('result', 'final');
+  const funcR = document.createElementNS(NS, 'feFuncR');
+  const funcG = document.createElementNS(NS, 'feFuncG');
+  const funcB = document.createElementNS(NS, 'feFuncB');
+  const identityTable = '0 0.25 0.5 0.75 1';
+  funcR.setAttribute('type', 'table'); funcR.setAttribute('tableValues', identityTable);
+  funcG.setAttribute('type', 'table'); funcG.setAttribute('tableValues', identityTable);
+  funcB.setAttribute('type', 'table'); funcB.setAttribute('tableValues', identityTable);
+  transfer.appendChild(funcR); transfer.appendChild(funcG); transfer.appendChild(funcB);
+  filter.appendChild(transfer);
+
+  defs.appendChild(filter);
+  svg.appendChild(defs);
+  document.body.appendChild(svg);
+
+  __svgFilterEl = svg;
+  __svgRefs = {
+    noiseMap, displacement, rShift, bShift,
+    streakNoise, streaksMatrix, grainTurb, grainMatrix,
+    funcR, funcG, funcB
+  };
+}
+
+function __lerp(a, b, t) { return a + (b - a) * t; }
+
+// 💡 원본 px 값들(프레임 위치, 바늘 두께, 테두리 두께, 라벨 간격 등)은 brik 편집기의
+//    1080px 폭(9:16) 캔버스 기준입니다. 지금 캔버스의 짧은 변 / 1080 비율로 환산해서
+//    어떤 크기(정사각형 포함)에서도 원본과 같은 비율로 보이게 합니다.
+const REF_SIZE = 1080;
+function refScale() { return Math.min(canvas.width, canvas.height) / REF_SIZE; }
+function px(v) { return v * refScale(); }
+
+// 💡 프레임 형태 = images/dday/timer_mask.png (490 × 600, 불투명한 부분)
+//    위쪽은 가로 전체 직사각형, 아래쪽은 bg.jpg 초록 원의 아랫부분(중심 290,147 / 반지름 321)과 같은 곡선.
+//    마스크 그림의 윤곽을 미리 따 둔 좌표(마스크 px 기준) → 캔버스 크기에 맞춰 늘려 씀.
+//    시계 중심 = 초록 원 중심, 바늘 길이 기준 handRadius = 중심에서 위쪽 끝(147px)까지 여유를 남긴 값
+const MASK = {
+  w: 490, h: 600,
+  cx: 290, cy: 147,
+  handRadius: 260,
+  pts: [[0,0],[490,0],[490,396],[487,400],[482,404],[477,408],[471,412],[465,416],[459,420],[452,424],[445,428],[437,432],[429,436],[421,440],[411,444],[401,448],[395,450],[389,452],[383,454],[376,456],[369,458],[360,460],[351,462],[339,464],[323,466],[312,467],[290,468],[268,467],[257,466],[241,464],[229,462],[220,460],[211,458],[204,456],[197,454],[191,452],[185,450],[179,448],[169,444],[159,440],[151,436],[143,432],[135,428],[128,424],[121,420],[115,416],[109,412],[103,408],[98,404],[93,400],[88,396],[83,392],[78,388],[74,384],[69,380],[61,372],[50,360],[40,348],[31,336],[22,324],[15,312],[8,300],[2,288],[0,276]]
+};
+function isMaskFrame() { return controls.get('collider_shape') === 'Mask'; }
+function maskScaleX() { return canvas.width / MASK.w; }
+function maskScaleY() { return canvas.height / MASK.h; }
+// 바늘 길이·글자 블록 시작 위치에 쓰는 프레임 반지름
+function frameRadius() {
+  if (isMaskFrame()) return MASK.handRadius * Math.min(maskScaleX(), maskScaleY());
+  const unit = Math.min(canvas.width, canvas.height) * 0.4;
+  return Math.min(unit * (controls.get('collider_width') || 1.4), unit * (controls.get('collider_height') || 1.4));
+}
+
+// Global frame center helper (offsettable via Frame Offset X/Y controls)
+// 💡 가로 오프셋은 원본 비율 그대로(오른쪽으로 치우쳐 살짝 잘림).
+//    세로 오프셋은 원본(세로로 긴 9:16) 비율을 따르되, 프레임 위·아래가 캔버스 밖으로
+//    잘리지 않는 범위까지만 이동 (정사각형에서는 여유가 거의 없어 거의 가운데에 옴).
+function getFrameCenter() {
+  if (isMaskFrame()) return { x: MASK.cx * maskScaleX(), y: MASK.cy * maskScaleY() };
+  let ox = px(controls.get('frame_offset_x') || 0);
+  let oy = px(controls.get('frame_offset_y') || 0);
+  const Ry = Math.min(canvas.width, canvas.height) * 0.4 * (controls.get('collider_height') || 1.4);
+  const room = Math.max(0, canvas.height / 2 - Ry - px(controls.get('frame_stroke_width') || 0));
+  oy = Math.max(-room, Math.min(room, oy));
+  return {
+    x: canvas.width / 2 + ox,
+    y: canvas.height / 2 + oy
+  };
+}
+
+function __updateSvgFilter() {
+  if (!__svgRefs.displacement) return;
+
+  // NOTE: This legacy SVG filter chain is fully retired from live effect rendering.
+  const jitter = 0;
+  const bleed = 0;
+  const paper = 0;
+  const streaks = 0;
+  const grain = 0;
+
+  __svgRefs.displacement.setAttribute('scale', '0');
+  const noiseFreqX = __lerp(0.01, 0.06, paper);
+  const noiseFreqY = __lerp(0.05, 0.5, paper);
+  __svgRefs.noiseMap.setAttribute('baseFrequency', `${noiseFreqX} ${noiseFreqY}`);
+  __svgRefs.noiseMap.setAttribute('numOctaves', String(1 + Math.round(paper * 3)));
+
+  const jdx = __lerp(0, 10, jitter);
+  __svgRefs.rShift.setAttribute('dx', String(jdx));
+  __svgRefs.bShift.setAttribute('dx', String(-jdx));
+
+  const bleedAlpha = __lerp(0, 0.35, bleed);
+  __svgRefs.streaksMatrix.setAttribute('values', `1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 ${bleedAlpha} 0`);
+
+  const streakFreqX = __lerp(0.2, 3.0, streaks);
+  __svgRefs.streakNoise.setAttribute('baseFrequency', `${streakFreqX} 0.001`);
+  const curveT = streaks;
+  const identity = [0, 0.25, 0.5, 0.75, 1];
+  const target = [0.05, 0.1, 0.4, 0.9, 1];
+  const table = identity.map((v, i) => __lerp(v, target[i], curveT).toFixed(3)).join(' ');
+  __svgRefs.funcR.setAttribute('tableValues', table);
+  __svgRefs.funcG.setAttribute('tableValues', table);
+  __svgRefs.funcB.setAttribute('tableValues', table);
+
+  __svgRefs.grainTurb.setAttribute('baseFrequency', String(__lerp(0.3, 1.4, grain)));
+  __svgRefs.grainTurb.setAttribute('numOctaves', String(1 + Math.round(grain * 3)));
+  __svgRefs.grainMatrix.setAttribute('values', `0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 ${(grain * 0.35).toFixed(3)} 0`);
+
+  const anyActive = jitter > 0 || bleed > 0 || paper > 0 || streaks > 0;
+  if (anyActive) {
+    const contrast = __lerp(1, 1.2, Math.max(bleed, streaks));
+    const brightness = __lerp(1, 0.95, Math.max(bleed, streaks));
+    canvas.style.filter = `url(#${__svgFilterId}) contrast(${contrast.toFixed(3)}) brightness(${brightness.toFixed(3)})`;
+  } else {
+    canvas.style.filter = 'none';
+  }
+}
+
+// ---- Background layer assets ----
+let __bgImage = null;
+let __bgImageReady = false;
+function __setBackgroundImage(url) {
+  __bgImageReady = false;
+  __bgImage = null;
+  if (!url) return;
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => { __bgImage = img; __bgImageReady = true; };
+  img.onerror = () => { __bgImage = null; __bgImageReady = false; };
+  img.src = url;
+}
+
+// ---- Frame fill image assets (Image / Library fill type) ----
+let __frameFillImage = null;
+let __frameFillImageReady = false;
+function __setFrameFillImage(url) {
+  __frameFillImageReady = false;
+  __frameFillImage = null;
+  if (!url) return;
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => { __frameFillImage = img; __frameFillImageReady = true; };
+  img.onerror = () => { __frameFillImage = null; __frameFillImageReady = false; };
+  img.src = url;
+}
+
+// Draws an image "cover"-fit inside a bounding box (bx,by,bw,bh)
+function drawImageCoverInBox(context, img, bx, by, bw, bh) {
+  const imgRatio = img.width / img.height;
+  const boxRatio = bw / bh;
+  let dw, dh;
+  if (imgRatio > boxRatio) {
+    dh = bh;
+    dw = bh * imgRatio;
+  } else {
+    dw = bw;
+    dh = bw / imgRatio;
+  }
+  const dx = bx + (bw - dw) / 2;
+  const dy = by + (bh - dh) / 2;
+  context.drawImage(img, dx, dy, dw, dh);
+}
+
+
+// ---- Custom Drawn frame interaction state ----
+let isDrawingCustom = false;
+let drawPoints = []; // raw screen-space points while dragging
+
+// Inserts extra points along the start->end closing gap so it has the same
+// point density as the rest of the drawn path. Without this, closing a loop
+// whose start/end are far apart produces one long straight chord that Chaikin
+// cannot curve (there's no neighboring geometry to pull it into shape) — it
+// reads as an abrupt seam instead of a natural continuation of the stroke.
+function bridgeClosingGap(pts) {
+  if (!pts || pts.length < 3) return pts;
+  let totalLen = 0;
+  for (let i = 0; i < pts.length - 1; i++) {
+    totalLen += Math.hypot(pts[i + 1].x - pts[i].x, pts[i + 1].y - pts[i].y);
+  }
+  const avgSeg = totalLen / Math.max(1, pts.length - 1);
+  const first = pts[0];
+  const last = pts[pts.length - 1];
+  const gapLen = Math.hypot(first.x - last.x, first.y - last.y);
+  if (avgSeg <= 0 || gapLen <= avgSeg * 1.5) return pts; // gap already comparable in size, no bridging needed
+
+  const steps = Math.max(1, Math.round(gapLen / avgSeg) - 1);
+  const bridged = pts.slice();
+  for (let i = 1; i <= steps; i++) {
+    const t = i / (steps + 1);
+    bridged.push({
+      x: last.x + (first.x - last.x) * t,
+      y: last.y + (first.y - last.y) * t
+    });
+  }
+  return bridged;
+}
+
+// Chaikin corner-cutting smoothing — strongly rounds any jagged/angular path
+// into a smooth curvy shape. closed=true wraps around (used for the finalized
+// frame polygon); closed=false keeps endpoints fixed (used for live preview).
+function chaikinSmooth(pts, iterations, closed) {
+  if (!pts || pts.length < 3) return pts;
+  let out = pts;
+  for (let iter = 0; iter < iterations; iter++) {
+    const n = out.length;
+    const next = [];
+    const lim = closed ? n : n - 1;
+    for (let i = 0; i < lim; i++) {
+      const p0 = out[i];
+      const p1 = out[(i + 1) % n];
+      next.push({ x: p0.x * 0.8 + p1.x * 0.2, y: p0.y * 0.8 + p1.y * 0.2 });
+      next.push({ x: p0.x * 0.2 + p1.x * 0.8, y: p0.y * 0.2 + p1.y * 0.8 });
+    }
+    if (!closed) {
+      next.unshift(out[0]);
+      next.push(out[n - 1]);
+    }
+    out = next;
+  }
+  return out;
+}
+
+// ---- Sensor Streaks: real vertical line streaks over the frame ----
+let sensorStreakLines = [];
+let __lastStreakBuild = 0;
+function buildSensorStreakLines() {
+  const val = (controls.get('sensor_streaks') || 0) / 100;
+  const w = Math.max(1, canvas.width);
+  const h = Math.max(1, canvas.height);
+  const numLines = Math.round(__lerp(0, 60, val));
+  const lines = [];
+  if (numLines > 0) {
+    const cellW = w / numLines;
+    for (let i = 0; i < numLines; i++) {
+      const x = cellW * i + cellW * 0.1 + Math.random() * cellW * 0.8;
+      lines.push({ x, y: 0, len: h });
+    }
+  }
+  sensorStreakLines = lines;
+  __lastStreakBuild = performance.now();
+}
+
+// ---- Countdown helpers ----
+function parseTargetDate(str) {
+  if (!str) return null;
+  let d = new Date(str);
+  if (isNaN(d.getTime())) {
+    d = new Date(String(str).replace(' ', 'T'));
+  }
+  if (isNaN(d.getTime())) return null;
+  return d;
+}
+
+function getTimeRemaining() {
+  const target = parseTargetDate(controls.get('target_dday'));
+  const fallback = new Date(Date.now() + 30 * 24 * 3600 * 1000);
+  const t = (target || fallback).getTime();
+  let diff = Math.floor((t - Date.now()) / 1000);
+  if (diff < 0) diff = 0;
+  const days = Math.floor(diff / 86400);
+  const hours = Math.floor((diff % 86400) / 3600);
+  const mins = Math.floor((diff % 3600) / 60);
+  const secs = diff % 60;
+  return { days, hours, mins, secs };
+}
+
+const pad2 = (n) => String(n).padStart(2, '0');
+
+function countdownValue(unit) {
+  const r = getTimeRemaining();
+  if (unit === 'days') return String(r.days);
+  if (unit === 'hours') return pad2(r.hours);
+  if (unit === 'mins') return pad2(r.mins);
+  if (unit === 'secs') return pad2(r.secs);
+  return '';
+}
+
+// Content fields kept as separate inputs; only the size sliders are shared/unified.
+function parseCountdownLabelsStr() {
+  return [
+    controls.get('days_label') || 'DAYS',
+    controls.get('hours_label') || 'HOURS',
+    controls.get('mins_label') || 'MINUTES',
+    controls.get('secs_label') || 'SECONDS'
+  ];
+}
+
+// 💡 떠다니는 오브젝트 전체 기준 크기 = 시계 짧은 변 × 이 비율 (0.09 → 0.105, 약 17% 키움)
+function baseTypeUnit() {
+  return Math.min(canvas.width, canvas.height) * 0.105;
+}
+
+function buildGrain() {
+  const w = Math.max(1, canvas.width);
+  const h = Math.max(1, canvas.height);
+  const threshold = (controls.get('grain_threshold') !== undefined ? controls.get('grain_threshold') : 50) / 100;
+
+  const off = new OffscreenCanvas(w, h);
+  const octx = off.getContext('2d');
+  const imgData = octx.createImageData(w, h);
+  const data = imgData.data;
+
+  for (let i = 0; i < data.length; i += 4) {
+    const r = Math.random();
+    if (r > threshold) {
+      const shade = Math.random() > 0.5 ? 255 : 0;
+      data[i] = shade;
+      data[i + 1] = shade;
+      data[i + 2] = shade;
+      data[i + 3] = 255 * (Math.random() * 0.6 + 0.4);
+    } else {
+      data[i + 3] = 0;
+    }
+  }
+
+  octx.putImageData(imgData, 0, 0);
+  grainCanvas = off;
+}
+
+function buildPaperTexture() {
+  const w = Math.max(1, canvas.width);
+  const h = Math.max(1, canvas.height);
+  const off = new OffscreenCanvas(w, h);
+  const octx = off.getContext('2d');
+  octx.clearRect(0,0,w,h);
+  octx.fillStyle = '#ffffff';
+  octx.fillRect(0,0,w,h);
+  for (let i=0;i<140;i++){
+    const r = 20 + Math.random()*120;
+    const x = Math.random()*w;
+    const y = Math.random()*h;
+    const a = 0.01 + Math.random()*0.03;
+    octx.fillStyle = `rgba(0,0,0,${a})`;
+    octx.beginPath();
+    octx.arc(x,y,r,0,Math.PI*2);
+    octx.fill();
+  }
+  octx.save();
+  octx.globalAlpha = 0.05;
+  octx.strokeStyle = 'rgba(0,0,0,0.6)';
+  for (let i=0;i<60;i++){
+    const x = Math.random()*w;
+    const y = Math.random()*h;
+    const len = 40 + Math.random()*120;
+    const ang = Math.random()*Math.PI*2;
+    octx.lineWidth = 0.7;
+    octx.beginPath();
+    octx.moveTo(x - Math.cos(ang)*len*0.5, y - Math.sin(ang)*len*0.5);
+    octx.lineTo(x + Math.cos(ang)*len*0.5, y + Math.sin(ang)*len*0.5);
+    octx.stroke();
+  }
+  octx.restore();
+  paperTextureCanvas = off;
+}
+
+function buildSensorStreaks() {
+  const w = Math.max(1, canvas.width);
+  const h = Math.max(1, canvas.height);
+  const off = new OffscreenCanvas(w, h);
+  const octx = off.getContext('2d');
+  octx.clearRect(0,0,w,h);
+  for (let x=0; x<w; ){
+    const gap = 8 + Math.random()*28;
+    x += gap;
+    const lw = 1 + Math.floor(Math.random()*2);
+    const a = 0.02 + Math.random()*0.05;
+    octx.fillStyle = `rgba(255,255,255,${a})`;
+    octx.fillRect(Math.floor(x), 0, lw, h);
+  }
+  if (Math.random() < 0.6) {
+    const y = Math.random()*h;
+    const th = 1 + Math.random()*2;
+    octx.fillStyle = 'rgba(255,255,255,0.03)';
+    octx.fillRect(0, y, w, th);
+  }
+  sensorStreaksCanvas = off;
+}
+
+
+// ---- Frame geometry: Rectangle / Circle / Custom Drawn ----
+
+// Returns absolute canvas-space vertices for the current frame shape.
+function getFrameVertices() {
+  const shape = controls.get('collider_shape');
+  const __fc = getFrameCenter();
+  const centerX = __fc.x;
+  const centerY = __fc.y;
+  const widthScale = controls.get('collider_width') || 1.4;
+  const heightScale = controls.get('collider_height') || 1.4;
+  const unit = Math.min(canvas.width, canvas.height) * 0.4;
+  const Rx = unit * widthScale;
+  const Ry = unit * heightScale;
+
+  if (shape === 'Mask') {
+    const sx = maskScaleX(), sy = maskScaleY();
+    return MASK.pts.map(([x, y]) => ({ x: x * sx, y: y * sy }));
+  }
+
+  if (shape === 'Custom Drawn') {
+    const path = controls.get('custom_frame_path');
+    if (path && path.length > 2) {
+      const rawVerts = path.map(p => ({
+        x: centerX + p.ox * unit * widthScale,
+        y: centerY + p.oy * unit * widthScale
+      }));
+      // Strong rounding: always smooth the freehand path into a curvy closed
+      // shape, regardless of how jagged the original drawing was. Bridge the
+      // start->end gap first so the closing seam curves naturally instead of
+      // reading as an abrupt straight connector.
+      return chaikinSmooth(bridgeClosingGap(rawVerts), 5, true);
+    }
+  }
+
+  let N = 4;
+  let startAngle = Math.PI / 4;
+  if (shape === 'Circle') {
+    N = 48;
+    startAngle = -Math.PI / 2;
+  }
+
+  const vertices = [];
+  for (let i = 0; i < N; i++) {
+    const a = startAngle + (i * 2 * Math.PI) / N;
+    vertices.push({ x: centerX + Rx * Math.cos(a), y: centerY + Ry * Math.sin(a) });
+  }
+  return vertices;
+}
+
+// Ray (from cx,cy at angle) vs arbitrary polygon -> distance to nearest edge
+function getPolygonIntersection(angle, vertices, cx, cy) {
+  const rx = Math.cos(angle);
+  const ry = Math.sin(angle);
+  const N = vertices.length;
+  let best = Infinity;
+
+  for (let i = 0; i < N; i++) {
+    const A = vertices[i];
+    const B = vertices[(i + 1) % N];
+    const dx = B.x - A.x;
+    const dy = B.y - A.y;
+    const denom = rx * dy - ry * dx;
+    if (Math.abs(denom) < 1e-6) continue;
+
+    const t = (rx * (A.y - cy) - ry * (A.x - cx)) / denom;
+    const s = ((A.x - cx) * dy - (A.y - cy) * dx) / denom;
+
+    if (t >= 0 && t <= 1 && s > 0 && s < best) {
+      best = s;
+    }
+  }
+  return isFinite(best) ? best : Math.hypot(vertices[0].x - cx, vertices[0].y - cy);
+}
+
+// Initialize boundaries (Hollow polygon constructed from thick static segments)
+function initBoundaries() {
+  for (const body of boundaryBodies) {
+    Composite.remove(world, body);
+  }
+  boundaryBodies = [];
+
+  const __fc = getFrameCenter();
+  const centerX = __fc.x;
+  const centerY = __fc.y;
+  const vertices = getFrameVertices();
+  const N = vertices.length;
+
+  const T = 1000; // Thickness of the walls to prevent tunneling
+  const bounciness = controls.get('bounciness');
+  const friction = controls.get('friction');
+
+  for (let i = 0; i < N; i++) {
+    const A = vertices[i];
+    const B = vertices[(i + 1) % N];
+
+    const Mx = (A.x + B.x) / 2;
+    const My = (A.y + B.y) / 2;
+    const L = Math.hypot(B.x - A.x, B.y - A.y);
+    const phi = Math.atan2(B.y - A.y, B.x - A.x);
+
+    // 💡 벽은 변에 수직인 바깥 방향으로 밀어냄 (원본은 "중심→변 가운데" 방향이라
+    //    중심이 치우친 Mask 모양에서는 벽이 비스듬히 밀려 안쪽으로 파고들거나 틈이 생겼음)
+    if (L < 1e-6) continue;                      // 같은 점이 겹친 변은 건너뜀
+    let nx = (B.y - A.y) / L;
+    let ny = -(B.x - A.x) / L;
+    if (nx * (Mx - centerX) + ny * (My - centerY) < 0) { nx = -nx; ny = -ny; }
+
+    const Wx = Mx + nx * (T / 2);
+    const Wy = My + ny * (T / 2);
+
+    const wall = Bodies.rectangle(Wx, Wy, L + 20, T, {
+      isStatic: true,
+      restitution: bounciness,
+      friction: friction,
+      collisionFilter: {
+        category: 0x0004,
+        mask: 0x0001
+      }
+    });
+    Body.setAngle(wall, phi);
+    wall.isFrameWall = true;     // 💡 벽 충돌 감지용 표시 (turnAwayFromWall)
+
+    boundaryBodies.push(wall);
+  }
+
+  Composite.add(world, boundaryBodies);
+}
+
+// Initialize clock hands
+function initClockHands() {
+  if (hourHandBody) Composite.remove(world, hourHandBody);
+  if (minuteHandBody) Composite.remove(world, minuteHandBody);
+
+  const __fc = getFrameCenter();
+  const centerX = __fc.x;
+  const centerY = __fc.y;
+  const R = frameRadius();   // 💡 Mask 프레임이면 초록 원 중심 기준 handRadius, 아니면 원래 계산
+  const clockScale = controls.get('clock_size') || 1.0;
+
+  hourHandLength = R * 0.65 * clockScale;
+  hourHandThickness = px(18) * clockScale;     // 💡 1080px 기준 두께를 비율로 환산
+  minuteHandLength = R * 0.9 * clockScale;
+  minuteHandThickness = px(12) * clockScale;   // 💡 〃
+
+  hourHandBody = Bodies.rectangle(centerX, centerY, hourHandLength, hourHandThickness, {
+    isStatic: true,
+    collisionFilter: { category: 0x0002, mask: 0x0001 }
+  });
+
+  minuteHandBody = Bodies.rectangle(centerX, centerY, minuteHandLength, minuteHandThickness, {
+    isStatic: true,
+    collisionFilter: { category: 0x0002, mask: 0x0001 }
+  });
+
+  Composite.add(world, [hourHandBody, minuteHandBody]);
+}
+
+// Initialize text physics bodies
+function initPhysics() {
+  for (const body of textBodies) {
+    Composite.remove(world, body);
+  }
+  textBodies = [];
+
+  const fontPrimary = controls.get('font_family');
+  const fontSecondary = controls.get('font_family_secondary') || fontPrimary;
+
+  const baseUnit = baseTypeUnit();
+  const numScale = controls.get('countdown_number_size') || 0.9;
+  const dateScale = controls.get('current_date_size') || 0.9;
+  const addlScale = controls.get('additional_words_size') || 0.9;
+
+  const numberFontSize = baseUnit * numScale;
+  const dateFontSize = baseUnit * dateScale;
+  const addlFontSize = baseUnit * addlScale;
+
+  const [labDays, labHours, labMins, labSecs] = parseCountdownLabelsStr();
+  const labelPos = controls.get('label_position') || 'Bottom';
+  const labelRatio = controls.get('label_size_ratio') || 0.45; // strictly label only
+  const labelGap = px(controls.get('label_spacing') || 0); // 💡 1080px 기준 간격을 비율로 환산
+  const pad = px(controls.get('text_box_padding') || 0); // 💡 〃
+
+  const words = [
+    { unit: 'days',  label: labDays,  maxValue: '999', isCountdown: true, isAccent: false, isAdditional: false },
+    { unit: 'hours', label: labHours, maxValue: '99',  isCountdown: true, isAccent: false, isAdditional: false },
+    { unit: 'mins',  label: labMins,  maxValue: '99',  isCountdown: true, isAccent: false, isAdditional: false },
+    { unit: 'secs',  label: labSecs,  maxValue: '99',  isCountdown: true, isAccent: false, isAdditional: false },
+  ];
+
+  const monthText = (controls.get('month_text') || '').trim();
+  const dayYearText = (controls.get('day_year_text') || '').trim();
+  if (monthText.length) {
+    words.push({ text: monthText, isAccent: true, isAdditional: false, isCountdown: false });
+  }
+  if (dayYearText.length) {
+    words.push({ text: dayYearText, isAccent: true, isAdditional: false, isCountdown: false });
+  }
+
+  const additional = controls.get('additional_words') || '';
+  const lines = additional.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+  lines.forEach(line => {
+    words.push({ text: line, isAccent: false, isAdditional: true, isCountdown: false });
+  });
+
+  const frictionVal = controls.get('friction');
+  const __fc = getFrameCenter();
+  const centerX = __fc.x;
+  const centerY = __fc.y;
+  const Ry = isMaskFrame() ? frameRadius()
+    : Math.min(canvas.width, canvas.height) * 0.4 * (controls.get('collider_height') || 1.4);
+
+  // Preload fonts for measurement
+  const activePrimary = fontPrimary;
+  const activeSecondary = fontSecondary;
+
+  words.forEach((w, index) => {
+    const useAccent = w.isAccent;
+    const activeFont = useAccent ? activeSecondary : activePrimary;
+    const fontFamily = activeFont.family || 'Neue Haas Grotesk Display Pro';
+    const fontWeight = activeFont.weight || '700';
+    const fontStyle = activeFont.style || 'normal';
+
+    let bodyWidth, bodyHeight, textWidth;
+
+    if (w.isCountdown) {
+      // Measure number using maxValue at numberFontSize
+      ctx.font = `${fontStyle} ${fontWeight} ${numberFontSize}px "${fontFamily}", sans-serif`;
+      const numW = ctx.measureText(w.maxValue).width;
+      const labelFontSize = numberFontSize * labelRatio;
+      ctx.font = `${fontStyle} ${fontWeight} ${labelFontSize}px "${fontFamily}", sans-serif`;
+      const labW = w.label ? ctx.measureText(w.label).width : 0;
+
+      const horizontal = (labelPos === 'Left' || labelPos === 'Right');
+      let contentW, contentH;
+      if (!w.label) {
+        contentW = numW; contentH = numberFontSize;
+      } else if (horizontal) {
+        contentW = numW + labelGap + labW;
+        contentH = Math.max(numberFontSize, labelFontSize);
+      } else {
+        contentW = Math.max(numW, labW);
+        contentH = numberFontSize + labelGap + labelFontSize;
+      }
+      bodyWidth = contentW + pad * 2;
+      bodyHeight = contentH + pad * 2;
+
+      textWidth = contentW;
+
+    } else {
+      const fontPx = w.isAccent ? dateFontSize : addlFontSize;
+      ctx.font = `${fontStyle} ${fontWeight} ${fontPx}px "${fontFamily}", sans-serif`;
+      const metrics = w.text ? ctx.measureText(w.text) : { width: 0 };
+      textWidth = metrics.width;
+      bodyWidth = metrics.width + pad * 2;
+      bodyHeight = fontPx + pad * 2;
+    }
+
+    let spawnX = centerX + (index - words.length / 2) * (bodyWidth * 0.3) + (Math.random() - 0.5) * 10;
+    let spawnY = centerY - Ry * 0.4 + (index * 15);
+    // 💡 무중력: 프레임 안 아무 곳에나 흩어져서 시작 (프레임 가장자리에서 블록 크기만큼 안쪽)
+    if ((controls.get('float_strength') || 0) > 0) {
+      const verts = getFrameVertices();
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      verts.forEach((v) => { minX = Math.min(minX, v.x); maxX = Math.max(maxX, v.x); minY = Math.min(minY, v.y); maxY = Math.max(maxY, v.y); });
+      const m = Math.max(bodyWidth, bodyHeight) * 0.6;
+      for (let tries = 0; tries < 40; tries++) {
+        const px_ = minX + m + Math.random() * Math.max(0, maxX - minX - m * 2);
+        const py_ = minY + m + Math.random() * Math.max(0, maxY - minY - m * 2);
+        const dist = Math.hypot(px_ - centerX, py_ - centerY);
+        const edge = getPolygonIntersection(Math.atan2(py_ - centerY, px_ - centerX), verts, centerX, centerY);
+        if (dist < edge - m) { spawnX = px_; spawnY = py_; break; }
+      }
+    }
+
+    const body = Bodies.rectangle(spawnX, spawnY, bodyWidth, bodyHeight, {
+      restitution: controls.get('bounciness'),
+      friction: frictionVal,
+      frictionAir: 0.01 + frictionVal * 0.05,
+      angle: (Math.random() - 0.5) * 0.6,
+      collisionFilter: {
+        category: 0x0001,
+        mask: 0x0001 | 0x0002 | 0x0004
+      }
+    });
+
+    // Persist rendering metadata on the body
+    if (w.isCountdown) {
+      body.numberFontPx = numberFontSize;
+      body.labelFontPx = numberFontSize * labelRatio;
+      body.labelGap = labelGap;
+      body.labelPos = labelPos;
+      body.unit = w.unit;
+      body.label = w.label;
+    } else {
+      body.fontPx = w.isAccent ? dateFontSize : addlFontSize;
+    }
+
+    body.text = w.text;
+    body.isAccent = !!w.isAccent;
+    body.isAdditional = !!w.isAdditional;
+    body.isCountdown = !!w.isCountdown;
+
+    body.textWidth = textWidth;
+    body.bodyWidth = bodyWidth;
+    body.bodyHeight = bodyHeight;
+
+    textBodies.push(body);
+    Composite.add(world, body);
+  });
+}
+
+async function checkAndInitPhysics() {
+  const fontPrimary = controls.get('font_family');
+  const fontSecondary = controls.get('font_family_secondary') || fontPrimary;
+
+  const spec1 = `${fontPrimary.style || 'normal'} ${fontPrimary.weight || '700'} 16px "${fontPrimary.family || 'Neue Haas Grotesk Display Pro'}"`;
+  const spec2 = `${fontSecondary.style || 'normal'} ${fontSecondary.weight || '700'} 16px "${fontSecondary.family || 'Neue Haas Grotesk Display Pro'}"`;
+
+  try {
+    await Promise.all([
+      document.fonts.load(spec1),
+      document.fonts.load(spec2)
+    ]);
+  } catch (e) {
+    console.warn('Fonts failed to load, using fallbacks:', e);
+  }
+
+  initPhysics();
+}
+
+// Set up mouse constraint for dragging
+const mouse = Mouse.create(canvas);
+const mouseConstraint = MouseConstraint.create(engine, {
+  mouse: mouse,
+  constraint: { stiffness: 0.2, render: { visible: false } }
+});
+Composite.add(world, mouseConstraint);
+
+// 💡 청첩장 페이지 스크롤이 막히지 않게:
+//    Matter.Mouse는 캔버스의 wheel / touchstart / touchmove / touchend 에서 항상
+//    preventDefault()를 호출해 시계 위에서는 페이지가 스크롤되지 않습니다.
+//    → 휠 가로채기는 없애고, 터치는 "글자 블록을 짚고 시작했을 때만" Matter로 넘깁니다.
+//      (빈 곳을 짚고 밀면 그대로 페이지 스크롤, 블록을 짚고 밀면 블록 드래그)
+canvas.removeEventListener('wheel', mouse.mousewheel);
+canvas.removeEventListener('touchstart', mouse.mousedown);
+canvas.removeEventListener('touchmove', mouse.mousemove);
+canvas.removeEventListener('touchend', mouse.mouseup);
+
+let __touchDragging = false;
+canvas.addEventListener('touchstart', (e) => {
+  const pos = CanvasRuntimeAPI.getMousePos(e);
+  if (Matter.Query.point(textBodies, pos).length) {
+    __touchDragging = true;
+    mouse.mousedown(e);            // 내부에서 preventDefault → 이 터치 동안 스크롤 안 함
+  }
+}, { passive: false });
+canvas.addEventListener('touchmove', (e) => {
+  if (__touchDragging) mouse.mousemove(e);
+}, { passive: false });
+const __endTouchDrag = (e) => {
+  if (!__touchDragging) return;
+  __touchDragging = false;
+  mouse.mouseup(e);
+};
+canvas.addEventListener('touchend', __endTouchDrag, { passive: false });
+canvas.addEventListener('touchcancel', __endTouchDrag, { passive: false });
+
+Events.on(engine, 'beforeUpdate', () => {
+  if (mouse.position.x < 0) mouse.position.x = 0;
+  if (mouse.position.x > canvas.width) mouse.position.x = canvas.width;
+  if (mouse.position.y < 0) mouse.position.y = 0;
+  if (mouse.position.y > canvas.height) mouse.position.y = canvas.height;
+});
+
+// Persist a freshly drawn custom path (normalized so it survives resize)
+function finalizeCustomPath(points) {
+  const __fc = getFrameCenter();
+  const centerX = __fc.x;
+  const centerY = __fc.y;
+  const widthScale = controls.get('collider_width') || 1.4;
+  const unit = Math.min(canvas.width, canvas.height) * 0.4;
+  const normalized = points.map(p => ({
+    ox: (p.x - centerX) / (unit * widthScale),
+    oy: (p.y - centerY) / (unit * widthScale)
+  }));
+  controls.set('custom_frame_path', normalized);
+  initBoundaries();
+  initClockHands();
+  checkAndInitPhysics();
+}
+
+// Canvas pointer interaction: draw custom frame
+// 💡 원본에 있던 "빈 곳을 누르면 글자 블록 초기화(checkAndInitPhysics)" 기능은 껐습니다.
+//    (글자 블록 드래그는 위의 MouseConstraint가 그대로 처리)
+canvas.addEventListener('pointerdown', (e) => {
+  const shape = controls.get('collider_shape');
+  const hasPath = controls.get('custom_frame_path');
+  if (shape === 'Custom Drawn' && !hasPath) {
+    isDrawingCustom = true;
+    drawPoints = [CanvasRuntimeAPI.getMousePos(e)];
+    e.preventDefault();
+    return;
+  }
+});
+
+canvas.addEventListener('pointermove', (e) => {
+  if (!isDrawingCustom) return;
+  const pos = CanvasRuntimeAPI.getMousePos(e);
+  const last = drawPoints[drawPoints.length - 1];
+  if (!last || Math.hypot(pos.x - last.x) > 6) {
+    drawPoints.push(pos);
+  }
+});
+
+window.addEventListener('pointerup', () => {
+  if (!isDrawingCustom) return;
+  isDrawingCustom = false;
+  if (drawPoints.length > 3) {
+    finalizeCustomPath(drawPoints);
+  }
+  drawPoints = [];
+});
+
+// Wire up control changes
+controls.onChange('gravity_strength', (val) => {
+  engine.gravity.y = val;
+});
+
+controls.onAny((key, val) => {
+  if (key === 'hands_' + 'push_' + 'text') {
+    const handMask = val ? 0x0001 : 0;
+    if (hourHandBody) hourHandBody.collisionFilter.mask = handMask;
+    if (minuteHandBody) minuteHandBody.collisionFilter.mask = handMask;
+  }
+});
+
+controls.onChange('bounciness', (val) => {
+  for (const body of textBodies) body.restitution = val;
+  initBoundaries();
+});
+
+controls.onChange('friction', (val) => {
+  for (const body of textBodies) {
+    body.friction = val;
+    body.frictionAir = 0.01 + val * 0.05;
+  }
+  initBoundaries();
+});
+
+controls.onChange('font_family', checkAndInitPhysics);
+controls.onChange('font_family_secondary', checkAndInitPhysics);
+controls.onChange('days_label', checkAndInitPhysics);
+controls.onChange('hours_label', checkAndInitPhysics);
+controls.onChange('mins_label', checkAndInitPhysics);
+controls.onChange('secs_label', checkAndInitPhysics);
+controls.onChange('label_position', checkAndInitPhysics);
+controls.onChange('label_size_ratio', checkAndInitPhysics);
+controls.onChange('label_spacing', checkAndInitPhysics);
+controls.onChange('month_text', checkAndInitPhysics);
+controls.onChange('day_year_text', checkAndInitPhysics);
+controls.onChange('additional_words', checkAndInitPhysics);
+controls.onChange('countdown_number_size', checkAndInitPhysics);
+controls.onChange('current_date_size', checkAndInitPhysics);
+controls.onChange('additional_words_size', checkAndInitPhysics);
+controls.onChange('grain_threshold', buildGrain);
+controls.onChange('background_image', (val) => { __setBackgroundImage(val); });
+controls.onChange('frame_fill_image', (val) => { __setFrameFillImage(val); });
+controls.onChange('frame_fill_type', () => {});
+
+controls.onChange('clock_size', () => {
+  initClockHands();
+});
+
+controls.onChange('collider_shape', () => {
+  initBoundaries();
+  initClockHands();
+  checkAndInitPhysics();
+});
+
+controls.onChange('collider_width', () => {
+  initBoundaries();
+  initClockHands();
+  checkAndInitPhysics();
+});
+
+controls.onChange('collider_height', () => {
+  initBoundaries();
+  initClockHands();
+  checkAndInitPhysics();
+});
+
+controls.onChange('frame_offset_x', () => {
+  initBoundaries();
+  initClockHands();
+  checkAndInitPhysics();
+});
+controls.onChange('frame_offset_y', () => {
+  initBoundaries();
+  initClockHands();
+  checkAndInitPhysics();
+});
+
+// custom_frame_path changes (e.g. Reset restoring an older path) rebuild bounds too
+controls.onChange('custom_frame_path', () => {
+  initBoundaries();
+  initClockHands();
+  checkAndInitPhysics();
+});
+
+controls.onAction('reset_sim', () => {
+  initPhysics();
+});
+
+controls.onAction('clear_custom_shape', () => {
+  controls.set('custom_frame_path', null);
+  initBoundaries();
+  initClockHands();
+  checkAndInitPhysics();
+});
+
+// Setup — canvas.width/height already hold the runtime's export pixel dimensions
+initBoundaries();
+initClockHands();
+checkAndInitPhysics();
+buildGrain();
+buildPaperTexture();
+buildSensorStreaks();
+buildSensorStreakLines();
+__setBackgroundImage(controls.get('background_image'));
+__setFrameFillImage(controls.get('frame_fill_image'));
+__buildSvgFilter();
+__updateSvgFilter();
+
+['line_jitter', 'grain_intensity'].forEach((k) => {
+  controls.onChange(k, __updateSvgFilter);
+});
+controls.onChange('sensor_streaks', buildSensorStreakLines);
+controls.onChange('background_type', () => {});
+
+window.addEventListener('resize', () => {
+  initBoundaries();
+  initClockHands();
+  checkAndInitPhysics();
+  buildGrain();
+  buildPaperTexture();
+  buildSensorStreaks();
+  buildSensorStreakLines();
+});
+
+// Foolproof manual clamp and reflection logic (DVD Screensaver style, adapted for arbitrary shapes)
+function clampAndReflectBoundaries(body) {
+  const __fc = getFrameCenter();
+  const centerX = __fc.x;
+  const centerY = __fc.y;
+  const vertices = getFrameVertices();
+
+  const dx = body.position.x - centerX;
+  const dy = body.position.y - centerY;
+  const dist = Math.hypot(dx, dy);
+  if (dist === 0) return;
+
+  const angle = Math.atan2(dy, dx);
+  const maxDistRaw = getPolygonIntersection(angle, vertices, centerX, centerY);
+
+  // 💡 떨림 줄이기: 평소 벽 충돌은 물리 엔진의 실제 벽(initBoundaries)이 처리하고,
+  //    이 코드는 블록이 벽을 뚫고 깊이 파고들었을 때만 꺼내 주는 "안전장치"로만 씀.
+  //    (원래는 블록의 긴 쪽 × 0.45 만큼 여유를 둬서, 납작한 블록이 벽에 닿기도 전에
+  //     매번 안쪽으로 순간이동 + 무작위 회전 → 벽 근처에서 벌벌 떨렸음)
+  const pad = Math.min(body.bodyWidth, body.bodyHeight) * 0.3;
+  const maxDist = Math.max(20, maxDistRaw - pad);
+
+  if (dist > maxDist) {
+    const nx = dx / dist;
+    const ny = dy / dist;
+
+    Body.setPosition(body, {
+      x: centerX + nx * (maxDist - 2),
+      y: centerY + ny * (maxDist - 2)
+    });
+
+    const dot = body.velocity.x * nx + body.velocity.y * ny;
+    if (dot > 0) {
+      const bounce = Math.max(0.1, controls.get('bounciness'));
+      Body.setVelocity(body, {
+        x: body.velocity.x - (1 + bounce) * dot * nx,
+        y: body.velocity.y - (1 + bounce) * dot * ny
+      });
+    }
+    turnAwayFromWall(body);
+  }
+}
+
+// 💡 벽에 닿은 블록은 떠다니는 방향(wander)을 프레임 중심 쪽으로 돌림
+//    → 부유하는 힘이 계속 벽 쪽으로 밀어서 "밀림 → 튕김"을 반복하며 떨리는 것을 막음
+function turnAwayFromWall(body) {
+  const fc = getFrameCenter();
+  body.wander = Math.atan2(fc.y - body.position.y, fc.x - body.position.x) + (Math.random() - 0.5) * 1.6;
+}
+Events.on(engine, 'collisionStart', (event) => {
+  for (const pair of event.pairs) {
+    if (pair.bodyA.isFrameWall && textBodies.includes(pair.bodyB)) turnAwayFromWall(pair.bodyB);
+    else if (pair.bodyB.isFrameWall && textBodies.includes(pair.bodyA)) turnAwayFromWall(pair.bodyA);
+  }
+});
+
+// Main animation loop
+// 💡 청첩장 화면에서 시계(iframe)가 안 보이면 물리 계산·그리기를 멈춤 (top video 섹션과 같은 방식)
+//    iframe 안의 IntersectionObserver는 바깥 페이지 화면 기준으로 보이는지 판단함
+let __clockVisible = true;
+let __clockRunning = false;
+function startClockLoop() {
+  if (__clockRunning) return;
+  __clockRunning = true;
+  lastTickTime = performance.now();     // 멈춰 있던 동안의 바늘 이동을 한꺼번에 처리하지 않게
+  requestAnimationFrame(draw);
+}
+if ('IntersectionObserver' in window) {
+  new IntersectionObserver((entries) => {
+    __clockVisible = entries[0].isIntersecting;
+    if (__clockVisible) startClockLoop();
+  }, { rootMargin: '100px 0px' }).observe(canvas);
+}
+
+function draw() {
+  if (!__clockVisible) { __clockRunning = false; return; }
+  const __fc = getFrameCenter();
+  const centerX = __fc.x;
+  const centerY = __fc.y;
+
+  const now = performance.now();
+  const tickInterval = 1500 / controls.get('time_speed');
+
+  if (now - lastTickTime >= tickInterval) {
+    lastTickTime = now;
+    prevMinuteAngle = targetMinuteAngle;
+    targetMinuteAngle += Math.PI / 12;
+    prevHourAngle = targetHourAngle;
+    targetHourAngle += (Math.PI / 12) / 12;
+    transitionStartTime = now;
+    isTransitioning = true;
+  }
+
+  let nextMinuteAngle, nextHourAngle;
+
+  if (isTransitioning) {
+    const elapsed = now - transitionStartTime;
+    const duration = Math.min(250, tickInterval * 0.6);
+    const t = Math.min(1, elapsed / duration);
+    const s = 1.5;
+    const ease = (t) => {
+      const t1 = t - 1;
+      return t1 * t1 * ((s + 1) * t1 + s) + 1;
+    };
+    const progress = ease(t);
+    nextMinuteAngle = prevMinuteAngle + (targetMinuteAngle - prevMinuteAngle) * progress;
+    nextHourAngle = prevHourAngle + (targetHourAngle - prevHourAngle) * progress;
+    if (t >= 1) isTransitioning = false;
+  } else {
+    nextMinuteAngle = targetMinuteAngle;
+    nextHourAngle = targetHourAngle;
+  }
+
+  const subSteps = 6;
+  const stepSize = (1000 / 60) / subSteps;
+
+  const lastFrameMinuteAngle = currentMinuteAngle;
+  const lastFrameHourAngle = currentHourAngle;
+
+  const updraft = controls.get('updraft_force');
+  const wind = controls.get('horizontal_wind');
+  const vortex = controls.get('vortex_force');
+  const turbulence = controls.get('turbulence');
+  const floatStrength = controls.get('float_strength') || 0;
+
+  for (let step = 1; step <= subSteps; step++) {
+    const ratio = step / subSteps;
+    const subMinuteAngle = lastFrameMinuteAngle + (nextMinuteAngle - lastFrameMinuteAngle) * ratio;
+    const subHourAngle = lastFrameHourAngle + (nextHourAngle - lastFrameHourAngle) * ratio;
+
+    const hx = centerX + (hourHandLength / 2) * Math.cos(subHourAngle);
+    const hy = centerY + (hourHandLength / 2) * Math.sin(subHourAngle);
+    const prevHx = hourHandBody.position.x;
+    const prevHy = hourHandBody.position.y;
+    const prevHAngle = hourHandBody.angle;
+
+    Body.setPosition(hourHandBody, { x: hx, y: hy });
+    Body.setAngle(hourHandBody, subHourAngle);
+    Body.setVelocity(hourHandBody, { x: (hx - prevHx) / stepSize, y: (hy - prevHy) / stepSize });
+    Body.setAngularVelocity(hourHandBody, (subHourAngle - prevHAngle) / stepSize);
+
+    const mx = centerX + (minuteHandLength / 2) * Math.cos(subMinuteAngle);
+    const my = centerY + (minuteHandLength / 2) * Math.sin(subMinuteAngle);
+    const prevMx = minuteHandBody.position.x;
+    const prevMy = minuteHandBody.position.y;
+    const prevMAngle = minuteHandBody.angle;
+
+    Body.setPosition(minuteHandBody, { x: mx, y: my });
+    Body.setAngle(minuteHandBody, subMinuteAngle);
+    Body.setVelocity(minuteHandBody, { x: (mx - prevMx) / stepSize, y: (my - prevMy) / stepSize });
+    Body.setAngularVelocity(minuteHandBody, (subMinuteAngle - prevMAngle) / stepSize);
+
+    for (const body of textBodies) {
+      if (updraft > 0) {
+        Body.applyForce(body, body.position, { x: 0, y: -updraft * 0.00015 * body.mass });
+      }
+      if (wind !== 0) {
+        Body.applyForce(body, body.position, { x: wind * 0.00015 * body.mass, y: 0 });
+      }
+      if (vortex > 0) {
+        const dx = body.position.x - centerX;
+        const dy = body.position.y - centerY;
+        const dist = Math.hypot(dx, dy);
+        if (dist > 10) {
+          const tx = -dy / dist;
+          const ty = dx / dist;
+          const px = -dx / dist;
+          const py = -dy / dist;
+          const fx = (tx * vortex + px * vortex * 0.2) * 0.00012 * body.mass;
+          const fy = (ty * vortex + py * vortex * 0.2) * 0.00012 * body.mass;
+          Body.applyForce(body, body.position, { x: fx, y: fy });
+        }
+      }
+      if (turbulence > 0) {
+        const rx = (Math.random() - 0.5) * turbulence * 0.0003 * body.mass;
+        const ry = (Math.random() - 0.5) * turbulence * 0.0003 * body.mass;
+        Body.applyForce(body, body.position, { x: rx, y: ry });
+      }
+      // 💡 무중력 부유: 블록마다 천천히 바뀌는 방향(wander)으로 아주 약하게 계속 밀어줌
+      //    → 공기 저항(frictionAir)과 균형을 이뤄 일정한 느린 속도로 둥둥 떠다님 (float_strength로 세기 조절)
+      if (floatStrength > 0) {
+        body.wander = (body.wander !== undefined ? body.wander : Math.random() * Math.PI * 2) + (Math.random() - 0.5) * 0.06;
+        const f = floatStrength * 0.00025 * refScale() * body.mass;
+        Body.applyForce(body, body.position, { x: Math.cos(body.wander) * f, y: Math.sin(body.wander) * f });
+      }
+    }
+
+    Engine.update(engine, stepSize);
+
+    const hands = [hourHandBody, minuteHandBody];
+    for (const hand of hands) {
+      const collisions = Matter.Query.collides(hand, textBodies);
+      for (const collision of collisions) {
+        const body = collision.bodyA === hand ? collision.bodyB : collision.bodyA;
+        const normal = collision.normal;
+        const depth = collision.depth;
+
+        const toBlock = { x: body.position.x - centerX, y: body.position.y - centerY };
+        const tangent = { x: -toBlock.y, y: toBlock.x };
+        const len = Math.hypot(tangent.x, tangent.y);
+        if (len > 0) {
+          tangent.x /= len;
+          tangent.y /= len;
+        }
+
+        const pushDir = {
+          x: normal.x * 0.4 + tangent.x * 0.6,
+          y: normal.y * 0.4 + tangent.y * 0.6
+        };
+        const pushLen = Math.hypot(pushDir.x, pushDir.y);
+        if (pushLen > 0) {
+          pushDir.x /= pushLen;
+          pushDir.y /= pushLen;
+        }
+
+        Body.setPosition(body, {
+          x: body.position.x + pushDir.x * (depth + 2),
+          y: body.position.y + pushDir.y * (depth + 2)
+        });
+
+        const impactForce = controls.get('hand_impact_force') !== undefined ? controls.get('hand_impact_force') : 1.0;
+        const baseSpeed = Math.max(4, controls.get('time_speed') * 3);
+        const speedBoost = baseSpeed * impactForce;
+
+        Body.setVelocity(body, {
+          x: pushDir.x * speedBoost,
+          y: pushDir.y * speedBoost
+        });
+
+        const torque = ((Math.random() - 0.5) * 0.1 + 0.1 * controls.get('time_speed')) * impactForce;
+        Body.setAngularVelocity(body, torque);
+      }
+    }
+
+    for (const body of textBodies) {
+      clampAndReflectBoundaries(body);
+
+      const maxVelocity = 25;
+      const speed = Math.hypot(body.velocity.x, body.velocity.y);
+      if (speed > maxVelocity) {
+        Body.setVelocity(body, {
+          x: (body.velocity.x / speed) * maxVelocity,
+          y: (body.velocity.y / speed) * maxVelocity
+        });
+      }
+
+      const maxAngularVelocity = 0.3;
+      if (Math.abs(body.angularVelocity) > maxAngularVelocity) {
+        Body.setAngularVelocity(body, Math.sign(body.angularVelocity) * maxAngularVelocity);
+      }
+    }
+  }
+
+  for (const body of textBodies) {
+    clampAndReflectBoundaries(body);
+  }
+
+  currentMinuteAngle = nextMinuteAngle;
+  currentHourAngle = nextHourAngle;
+
+  // Clear canvas
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // Background layer (custom) — drawn first, behind frame and content
+  const __bgType = controls.get('background_type') || 'Color';
+  if (__bgType === 'Color') {
+    const __bgColor = controls.get('background_color') || '#0E0E10';
+    if (__bgColor && __bgColor !== 'transparent') {
+      ctx.save();
+      ctx.fillStyle = __bgColor;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.restore();
+    }
+  } else {
+    // Image / Library both use the same image-picker (its Library tab covers "Library")
+    if (__bgImageReady && __bgImage) {
+      CanvasRuntimeAPI.drawImage(ctx, __bgImage, 0, 0, canvas.width, canvas.height, 'cover');
+    } else {
+      const __bgColor = controls.get('background_color') || '#0E0E10';
+      ctx.save();
+      ctx.fillStyle = __bgColor;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.restore();
+    }
+  }
+
+  // ---- Render Clock Frame: fill -> clipped grain -> stroke ----
+  const frameVerts = getFrameVertices();
+  if (frameVerts.length > 2) {
+    ctx.save();
+    ctx.beginPath();
+    frameVerts.forEach((v, i) => (i === 0 ? ctx.moveTo(v.x, v.y) : ctx.lineTo(v.x, v.y)));
+    ctx.closePath();
+
+    const fillType = controls.get('frame_fill_type') || 'Color';
+    if (fillType === 'None') {
+      // 💡 투명 프레임: 채우지 않음 (배경 bg.jpg가 그대로 보임)
+    } else if (fillType === 'Color') {
+      ctx.fillStyle = controls.get('frame_fill_color') || '#ffffff';
+      ctx.fill();
+    } else if (__frameFillImageReady && __frameFillImage) {
+      // Clip to the exact frame path, then cover-fit the image across the
+      // shape's own bounding box (not the whole canvas) so it scales correctly.
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      for (const v of frameVerts) {
+        if (v.x < minX) minX = v.x;
+        if (v.x > maxX) maxX = v.x;
+        if (v.y < minY) minY = v.y;
+        if (v.y > maxY) maxY = v.y;
+      }
+      ctx.save();
+      ctx.clip();
+      drawImageCoverInBox(ctx, __frameFillImage, minX, minY, maxX - minX, maxY - minY);
+      ctx.restore();
+    } else {
+      // Fallback while the chosen image loads
+      ctx.fillStyle = controls.get('frame_fill_color') || '#ffffff';
+      ctx.fill();
+    }
+
+    const strokeW = px(controls.get('frame_stroke_width'));   // 💡 1080px 기준 두께를 비율로 환산
+    if (strokeW > 0) {
+      ctx.strokeStyle = controls.get('collider_color');
+      ctx.lineWidth = strokeW;
+      ctx.lineJoin = 'round';
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // Sensor Streaks — real vertical line streaks spanning the FULL canvas
+  const streaksVal = controls.get('sensor_streaks') || 0;
+  if (streaksVal > 0 && sensorStreakLines.length) {
+    ctx.save();
+    ctx.lineWidth = 2.5;
+    for (const line of sensorStreakLines) {
+      const grad = ctx.createLinearGradient(line.x, line.y, line.x, line.y + line.len);
+      grad.addColorStop(0, `rgba(255,255,255,0)`);
+      grad.addColorStop(1, `rgba(255,255,255,0.35)`);
+      ctx.strokeStyle = grad;
+      ctx.beginPath();
+      ctx.moveTo(line.x, line.y);
+      ctx.lineTo(line.x, line.y + line.len);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // Live feedback while drawing a custom frame path — smoothed the same way
+  // as the finalized shape, so it always looks rounded/curvy even mid-draw.
+  if (isDrawingCustom && drawPoints.length > 1) {
+    ctx.save();
+    ctx.strokeStyle = controls.get('collider_color') || '#334433';
+    ctx.lineWidth = 3;
+    ctx.setLineDash([8, 6]);
+    ctx.beginPath();
+    const previewPts = drawPoints.length > 2 ? chaikinSmooth(drawPoints, 3, false) : drawPoints;
+    previewPts.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // 💡 여기부터 그리는 시계침·중심점·글자 블록은 따로 fx 레이어에 그림
+  //    → 필터(노이즈·색 번짐 등)를 이 레이어에만 준 뒤, 맨 아래에서 배경 위에 합성 (배경 bg.jpg에는 효과 없음)
+  const __mainCtx = ctx;
+  ctx = getFxLayer(canvas.width, canvas.height);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // 💡 Mask 프레임: 바늘·중심점·글자 블록을 마스크 모양 안쪽만 보이게 자름 (블록이 기울어 모서리가 삐져나와도 잘림)
+  const __clipToMask = isMaskFrame() && frameVerts.length > 2;
+  if (__clipToMask) {
+    ctx.save();
+    ctx.beginPath();
+    frameVerts.forEach((v, i) => (i === 0 ? ctx.moveTo(v.x, v.y) : ctx.lineTo(v.x, v.y)));
+    ctx.closePath();
+    ctx.clip();
+  }
+
+  // Render Hour Hand
+  ctx.save();
+  ctx.translate(hourHandBody.position.x, hourHandBody.position.y);
+  ctx.rotate(hourHandBody.angle);
+  ctx.fillStyle = controls.get('color_hand_hour');
+  ctx.fillRect(-hourHandLength / 2, -hourHandThickness / 2, hourHandLength, hourHandThickness);
+  ctx.restore();
+
+  // Render Minute Hand
+  ctx.save();
+  ctx.translate(minuteHandBody.position.x, minuteHandBody.position.y);
+  ctx.rotate(minuteHandBody.angle);
+  ctx.fillStyle = controls.get('color_hand_minute');
+  ctx.fillRect(-minuteHandLength / 2, -minuteHandThickness / 2, minuteHandLength, minuteHandThickness);
+  ctx.restore();
+
+  // Render Pivot
+  ctx.save();
+  ctx.translate(centerX, centerY);
+  ctx.fillStyle = controls.get('color_pivot');
+  const pivotSize = px(24);   // 💡 1080px 기준 크기를 비율로 환산
+  ctx.fillRect(-pivotSize / 2, -pivotSize / 2, pivotSize, pivotSize);
+  ctx.restore();
+
+  // Render Text Blocks
+  const fontPrimary = controls.get('font_family');
+  const fontSecondary = controls.get('font_family_secondary') || fontPrimary;
+
+  const primaryColor = controls.get('color_text_primary');
+  const accentColor = controls.get('color_text_accent');
+  const boxStyleDate = controls.get('text_box_style_date') || 'None';
+  const boxStyleAdditional = controls.get('text_box_style_additional') || 'None';
+  const boxStyleLabels = controls.get('text_box_style_labels') || 'None';
+
+  const boxFillDate = controls.get('color_text_box_fill_date') || '#F5F5DC';
+  const boxStrokeDate = controls.get('color_text_box_stroke_date') || '#000000';
+
+  const strokeWidth = px(controls.get('text_box_stroke_width') || 2);   // 💡 〃
+  const radius = px(controls.get('text_box_radius') !== undefined ? controls.get('text_box_radius') : 8);   // 💡 〃
+
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  for (const body of textBodies) {
+    ctx.save();
+    ctx.translate(body.position.x, body.position.y);
+    ctx.rotate(body.angle);
+
+    const activeFont = body.isAccent ? fontSecondary : fontPrimary;
+    const fontFamily = activeFont.family || 'Neue Haas Grotesk Display Pro';
+    const fontWeight = activeFont.weight || '700';
+    const fontStyle = activeFont.style || 'normal';
+
+    const boxStyle = body.isCountdown ? boxStyleLabels : (body.isAdditional ? boxStyleAdditional : boxStyleDate);
+
+    if (boxStyle !== 'None') {
+      ctx.beginPath();
+      const w = body.bodyWidth;
+      const h = body.bodyHeight;
+
+      if (ctx.roundRect) {
+        ctx.roundRect(-w / 2, -h / 2, w, h, radius);
+      } else {
+        const x = -w / 2;
+        const y = -h / 2;
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + w - radius, y);
+        ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
+        ctx.lineTo(x + w, y + h - radius);
+        ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+        ctx.lineTo(x + radius, y + h);
+        ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
+        ctx.lineTo(x, y + radius);
+        ctx.quadraticCurveTo(x, y, x + radius, y);
+      }
+      ctx.closePath();
+
+      let currentFillColor;
+      let currentStrokeColor;
+      const allVals = controls.getAll();
+      if (body.isCountdown) {
+        const unitKey = body.unit === 'days' ? 'days' : body.unit === 'hours' ? 'hours' : body.unit === 'mins' ? 'mins' : 'secs';
+        currentFillColor = allVals['color_box_fill_' + unitKey] || '#FFFFFF';
+        currentStrokeColor = allVals['color_dday_stroke'] || '#334433';
+      } else if (body.isAdditional) {
+        currentFillColor = allVals['color_text_box_fill_additional'] || '#FFFFFF';
+        currentStrokeColor = allVals['color_text_box_stroke_additional'] || '#334433';
+      } else if (body.isAccent) {
+        currentFillColor = boxFillDate;
+        currentStrokeColor = boxStrokeDate;
+      } else {
+        currentFillColor = boxFillDate;
+        currentStrokeColor = boxStrokeDate;
+      }
+
+      if (boxStyle === 'Fill' || boxStyle === 'Fill & Stroke') {
+        ctx.fillStyle = currentFillColor;
+        ctx.fill();
+      }
+      if (boxStyle === 'Stroke' || boxStyle === 'Fill & Stroke') {
+        ctx.strokeStyle = currentStrokeColor;
+        ctx.lineWidth = strokeWidth;
+        ctx.stroke();
+      }
+    }
+
+    if (body.isCountdown) {
+      const numStr = countdownValue(body.unit);
+      const labelStr = body.label || '';
+
+      const numberColor = controls.get('color_dday_number') || primaryColor;
+      const labelColor = controls.get('color_dday_text') || primaryColor;
+
+      // Number metrics
+      ctx.font = `${fontStyle} ${fontWeight} ${body.numberFontPx}px "${fontFamily}", sans-serif`;
+      const numW = ctx.measureText(numStr).width;
+      // Label metrics
+      ctx.font = `${fontStyle} ${fontWeight} ${body.labelFontPx}px "${fontFamily}", sans-serif`;
+      const labW = labelStr ? ctx.measureText(labelStr).width : 0;
+
+      const horizontal = (body.labelPos === 'Left' || body.labelPos === 'Right');
+      let numX = 0, numY = 0, labX = 0, labY = 0;
+
+      if (!labelStr) {
+        numX = 0; numY = 0;
+      } else if (horizontal) {
+        const totalW = numW + body.labelGap + labW;
+        if (body.labelPos === 'Right') {
+          numX = -totalW / 2 + numW / 2;
+          labX = totalW / 2 - labW / 2;
+        } else {
+          labX = -totalW / 2 + labW / 2;
+          numX = totalW / 2 - numW / 2;
+        }
+        numY = 0; labY = 0;
+      } else {
+        const totalH = body.numberFontPx + body.labelGap + body.labelFontPx;
+        if (body.labelPos === 'Bottom') {
+          numY = -totalH / 2 + body.numberFontPx / 2;
+          labY = totalH / 2 - body.labelFontPx / 2;
+        } else {
+          labY = -totalH / 2 + body.labelFontPx / 2;
+          numY = totalH / 2 - body.numberFontPx / 2;
+        }
+        numX = 0; labX = 0;
+      }
+
+      ctx.font = `${fontStyle} ${fontWeight} ${body.numberFontPx}px "${fontFamily}", sans-serif`;
+      ctx.fillStyle = numberColor;
+      ctx.fillText(numStr, numX, numY);
+      if (labelStr) {
+        ctx.font = `${fontStyle} ${fontWeight} ${body.labelFontPx}px "${fontFamily}", sans-serif`;
+        ctx.fillStyle = labelColor;
+        ctx.fillText(labelStr, labX, labY);
+      }
+      ctx.restore();
+      continue;
+    }
+
+    // Non-countdown blocks (date / additional words)
+    const fillCol = body.isAdditional ? (controls.get('color_text_additional') || primaryColor) : (body.isAccent ? accentColor : primaryColor);
+    const fontPx = body.fontPx || baseTypeUnit() * 0.9;
+    ctx.font = `${fontStyle} ${fontWeight} ${fontPx}px "${fontFamily}", sans-serif`;
+    ctx.fillStyle = fillCol;
+    if (body.text) ctx.fillText(body.text, 0, 0);
+
+    ctx.restore();
+  }
+  if (__clipToMask) ctx.restore();
+
+  // 💡 아래 효과들은 모두 fx 레이어(시계침·중심점·글자 블록)에만 적용됨 (ctx = fx 레이어 상태)
+
+  // ---- Melt/Smear: static cached per-column noise-driven downward smear (12-tap) ----
+  applyMeltSmear(__fxCanvas, ctx);
+
+  // ---- Line Jitter: real canvas-based stepped horizontal band displacement ----
+  const lineJitterVal = controls.get('line_jitter_effect') || 0;
+  if (lineJitterVal > 0) {
+    const w = Math.max(1, canvas.width);
+    const h = Math.max(1, canvas.height);
+    if (!lineJitterBuffer || lineJitterBuffer.width !== w || lineJitterBuffer.height !== h) {
+      lineJitterBuffer = new OffscreenCanvas(w, h);
+    }
+    const bctx = lineJitterBuffer.getContext('2d');
+    bctx.clearRect(0, 0, w, h);
+    bctx.drawImage(__fxCanvas, 0, 0);
+
+    const bandHeight = Math.max(2, Math.round(h * 0.008));
+    const numBands = Math.ceil(h / bandHeight);
+
+    if (__jitterCachedValue !== lineJitterVal || __jitterCachedW !== w || __jitterCachedH !== h) {
+      buildLineJitterOffsets(w, h, lineJitterVal);
+    }
+
+    ctx.clearRect(0, 0, w, h);
+    for (let i = 0; i < numBands; i++) {
+      const y = i * bandHeight;
+      const bh = Math.min(bandHeight, h - y);
+      const off = jitterBandOffsets[i] || 0;
+      ctx.drawImage(lineJitterBuffer, 0, y, w, bh, off, y, w, bh);
+    }
+  }
+
+  // ---- Static grain overlay (cached once, only re-cached when threshold/resize changes) ----
+  const grainIntensity = (controls.get('grain_intensity') !== undefined ? controls.get('grain_intensity') : 15) / 100;
+  if (grainCanvas && grainIntensity > 0) {
+    ctx.save();
+    ctx.globalAlpha = grainIntensity;
+    ctx.globalCompositeOperation = 'source-atop';   // 💡 노이즈는 이미 그려진 오브젝트 위에만 (투명한 곳엔 안 그림)
+    ctx.drawImage(grainCanvas, 0, 0);
+    ctx.restore();
+  }
+
+  // 💡 fx 레이어 → 원래 캔버스로 되돌리고, 효과 없는 배경 위에 합성 (색 번짐은 합성하면서 적용)
+  ctx = __mainCtx;
+  compositeObjectLayer();
+
+  requestAnimationFrame(draw);
+}
+
+startClockLoop();
+
+    }
+
+
+  </script>
+  <script>
+    (function() {
+      if (!document.fonts || !document.fonts.load) return;
+      var _fams = ["system-ui","Space Grotesk"];
+      var _replay = function() {
+        var _api = window.ControlsAPI;
+        if (!_api || !_api.getAll || !_api.set) return;
+        var _all = _api.getAll();
+        Object.keys(_all).forEach(function(k) { _api.set(k, _all[k]); });
+      };
+      Promise.all(_fams.map(function(f) {
+        return document.fonts.load('1em "' + f + '"').catch(function() {});
+      })).then(_replay);
+      // The sheet can still be in flight when the promises settle empty; a late sweep costs
+      // one extra repaint and covers a slow CDN.
+      setTimeout(_replay, 2500);
+    })();
+  </script>
+</body>
+</html>

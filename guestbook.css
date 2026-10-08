@@ -1,0 +1,537 @@
+/* ═══════════════════════════════════════════
+   방명록 [06] — 디지털 축하 화환 전시장
+   레이아웃 원본: guestbook_main / _main_info / _main_te_option / _edit / _edit_x_option .svg
+   💡 모든 좌표는 SVG 기준 px 그대로입니다. 메인은 490×860, 만들기 팝업은 470×860,
+      작은 팝업은 424×271(234) 크기로 그린 뒤 화면 폭에 맞춰 통째로 축소합니다
+      (축소 비율 --gb-s / --gb-es / --gb-ps 는 guestbook.js 가 계산).
+   ═══════════════════════════════════════════ */
+
+/* 제목 글꼴: EF_cucumbersalad (눈누) */
+@font-face {
+  font-family: 'EF_cucumbersalad';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2210-EF@1.0/EF_cucumbersalad.woff2') format('woff2');
+  font-weight: normal;
+  font-display: swap;
+}
+/* 리본 글씨: 궁서체 — 컴퓨터에 궁서체가 있으면 그걸 쓰고, 없으면(휴대폰 등) 조선궁서체 웹폰트 */
+@font-face {
+  font-family: 'GbGungsuh';
+  src: local('Gungsuh'), local('궁서'), local('GungsuhChe'), local('GungSeo'), local('Gungseo'),
+       url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-04@1.0/ChosunGs.woff') format('woff');
+  font-weight: normal;
+  font-display: swap;
+}
+
+.guestbook {
+  --gb-green: #6b7b71;
+  --gb-paper: #e7e2dc;
+  --gb-ui-font: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  position: relative;
+  padding: 0;
+  height: calc(1000px * var(--gb-s, 1));
+  background-color: var(--gb-paper);
+  overflow: hidden;
+  font-family: var(--gb-ui-font);
+}
+
+/* ─── 메인 (490 × 1000) — SVG(860) 배치에서 위아래 여백만 넓힘 ─── */
+.gb-main {
+  position: absolute;
+  top: 0; left: 0;
+  width: 490px; height: 1000px;
+  transform: scale(var(--gb-s, 1));
+  transform-origin: 0 0;
+}
+.gb-main button { font-family: inherit; -webkit-tap-highlight-color: transparent; }
+
+/* 오른쪽 위 꽃다발 그림 (28%) */
+.gb-main__bouquet {
+  position: absolute; left: 250px; top: 156px;
+  width: 240px; height: 375px;
+  overflow: hidden;
+  opacity: 0.28;
+  pointer-events: none;
+  z-index: 1;                               /* SVG 순서대로 찢어진 종이·전시장 위 (설명 글·버튼보다는 아래) */
+}
+.gb-main__info, .gb-main__desc, .gb-main__make { z-index: 2; }
+.gb-main__bouquet img {
+  position: absolute; left: -87.3px; top: -153.76px;
+  width: 520px; max-width: none; height: auto;
+  transform: rotate(1.83deg);
+  transform-origin: 0 0;
+}
+
+.gb-main__title {
+  position: absolute; left: 36px; top: 120px;
+  margin: 0;
+  font-family: 'EF_cucumbersalad', var(--gb-ui-font);
+  font-size: 53.79px; font-weight: normal;
+  line-height: 70px;
+  letter-spacing: 0;
+  color: #454648;
+  white-space: nowrap;
+}
+.gb-main__info {
+  position: absolute; left: 160px; top: 214px;           /* 아이콘(26px) 중심 = (181, 235), 누르는 범위 42px */
+  width: 42px; height: 42px;
+  padding: 8px; border: 0; background: none;
+  cursor: pointer;
+}
+.gb-main__info svg { display: block; width: 26px; height: 26px; fill: #454648; }
+
+.gb-main__desc {
+  position: absolute; left: 39px; top: 290px;
+  margin: 0;
+  font-size: 17px; font-weight: 300;
+  line-height: 28px;
+  color: #828282;
+  text-align: left;
+  white-space: nowrap;
+}
+.gb-main__make {
+  position: absolute; left: 39px; top: 398px;
+  width: 206px; height: 50px;
+  border: 0; border-radius: 10px;
+  background: var(--gb-green);
+  color: #f7f7f7;
+  font-size: 18px; font-weight: 500;
+  cursor: pointer;
+  transition: filter 0.2s;
+}
+.gb-main__make:active { filter: brightness(0.92); }
+
+/* 전시장 — 배경(bg.jpg 1900×410 → 84% 크기) 한 장에 화환 7개 = 1페이지 */
+.gb-stage {
+  position: absolute; left: 0; top: 502px;
+  width: 490px; height: 344.4px;
+  overflow: hidden;
+  touch-action: pan-y;                       /* 가로 끌기는 직접 처리, 세로 스크롤은 페이지에 맡김 */
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.gb-stage.is-dragging { cursor: grabbing; }
+.gb-stage__track { position: absolute; top: 0; left: 0; height: 100%; will-change: transform; }
+.gb-stage__track.is-fading { transition: opacity 0.4s; opacity: 0; }
+.gb-stage__list {
+  position: relative;
+  height: 100%;
+  margin: 0; padding: 0;
+  list-style: none;
+}
+.gb-stage__list::before {                   /* 배경만 71% (화환은 100%) */
+  content: '';
+  position: absolute; inset: 0;
+  background: url('images/guestbook/bg.jpg') repeat-x 0 0 / 1596px 344.4px;
+  opacity: 0.71;
+}
+.gb-stage__item {
+  position: absolute; top: 48px;
+  width: 244.8px; height: 278.8px;           /* 화환(360×410)의 68% */
+  margin: 0; padding: 0;
+  cursor: pointer;
+}
+
+/* 찢어진 종이 테두리 (전시장 위아래) */
+.gb-main__frame {
+  position: absolute; left: -15px; top: 440px;
+  width: 520px; max-width: none; height: 458px;
+  pointer-events: none;
+}
+
+/* 스크롤바 */
+.gb-scroll {
+  position: absolute; left: 36px; top: 872px;            /* 높이 43 → 35 (가운데 줄은 그대로) */
+  width: 418px; height: 35px;
+}
+.gb-scroll::before {                         /* 테두리(2px) + 안쪽 배경 그림 43% + 안으로 파인 그림자 */
+  content: '';
+  position: absolute; inset: 0;
+  border: 2px solid #bec9bc;
+  border-radius: 5px;
+  background: url('images/guestbook/bg.jpg') 0 0 / 100% 100%;
+  box-shadow:
+    inset 3px 3px 6px rgba(70, 60, 50, 0.28),      /* 위·왼쪽 안쪽 그림자 = 파인 느낌 */
+    inset -2px -2px 5px rgba(255, 255, 255, 0.75), /* 아래·오른쪽 안쪽 밝은 빛 */
+    inset 0 0 0 100px rgba(231, 226, 220, 0.57);   /* 그림을 43%만 보이게 */
+}
+.gb-scroll__thumb {
+  position: absolute; left: 4px; top: 4px;              /* 레일 안쪽 (테두리 2px + 틈 2px) — guestbook.js RANGE_LEFT와 같게 */
+  width: 40px; height: 27px;
+  border-radius: 3px;
+  background: linear-gradient(145deg, #cbd5c9 0%, #bec9bc 55%, #b1bdaf 100%);   /* 위에서 빛을 받은 듯한 볼록한 면 */
+  box-shadow:
+    2px 2px 4px rgba(60, 55, 45, 0.3),             /* 아래·오른쪽으로 떨어지는 그림자 = 튀어나온 느낌 */
+    -1px -1px 3px rgba(255, 255, 255, 0.7),        /* 위·왼쪽 밝은 빛 */
+    inset 1px 1px 1px rgba(255, 255, 255, 0.55),   /* 위·왼쪽 모서리 하이라이트 */
+    inset -1px -1px 2px rgba(0, 0, 0, 0.08);
+  display: flex; align-items: center; justify-content: center;
+  cursor: grab;
+  touch-action: none;
+  outline: none;
+}
+.gb-scroll__thumb:focus-visible { outline: 2px solid var(--gb-green); outline-offset: 2px; }
+.gb-scroll__thumb svg { width: 25px; height: 26px; flex: none; fill: #e7e2dc; }
+
+/* 페이지 번호 */
+.gb-pages {
+  position: absolute; left: 0; top: 942px;
+  width: 490px; height: 28.67px;
+  display: flex; justify-content: center; gap: 6px;
+}
+.gb-pages button {
+  width: 22px; height: 28.67px;
+  padding: 0; border: 0; border-radius: 5px;
+  background: none;
+  color: #454648;
+  font-size: 18px; font-weight: 300; line-height: 28.67px;
+  cursor: pointer;
+  transition: background-color 0.25s, color 0.25s;
+}
+.gb-pages button.is-active { background: #bec9bc; color: #454648; }   /* 밝은 바탕이라 글자는 진한 색 */
+
+/* ─── 화환 한 개 (원본 360 × 410, --k 배율) ─── */
+.gb-wreath {
+  position: relative;
+  width: calc(360px * var(--k, 1));
+  height: calc(410px * var(--k, 1));
+  font-size: calc(1px * var(--k, 1));
+  pointer-events: none;
+}
+.gb-wreath img {
+  position: absolute;
+  max-width: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.gb-wreath__text {
+  position: absolute;
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  font-family: 'GbGungsuh', 'Gungsuh', '궁서', 'GungSeo', serif;
+  font-size: 20.88em;                       /* 리본 원본 이미지 기준 58px × 0.36 (guestbook.js TEXT.size와 같게) */
+  line-height: 1;
+  letter-spacing: 0;
+  color: #000;
+  white-space: pre;
+  transform: translate(-50%, -50%) rotate(var(--rot));
+}
+.gb-wreath__glow { display: none; }
+.gb-wreath__glow img { filter: brightness(0) invert(1); }
+.gb-stage__item.is-selected .gb-wreath__glow { display: block; opacity: 0.6; }
+
+/* ─── 팝업 공통 ─── */
+.gb-modal {
+  position: fixed; inset: 0;
+  z-index: 9700;                            /* 다른 팝업(9500~9600) 위, 알림(10000) 아래 */
+  display: flex;
+  align-items: center; justify-content: center;
+  padding: 12px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background: rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  transition: opacity 0.25s;
+  font-family: var(--gb-ui-font);
+}
+.gb-modal[hidden] { display: none; }
+.gb-modal.is-open { opacity: 1; }
+.gb-modal--top { z-index: 9710; }
+.gb-modal button { font-family: inherit; color: inherit; -webkit-tap-highlight-color: transparent; }
+
+.gb-modal__frame { position: relative; flex: none; margin: auto; }
+.gb-modal__frame--small {
+  width: calc(424px * var(--gb-ps, 1));
+  height: calc(var(--h) * 1px * var(--gb-ps, 1));
+}
+.gb-modal__frame--edit {
+  width: calc(470px * var(--gb-es, 1));
+  height: calc(860px * var(--gb-es, 1));
+}
+
+.gb-input {
+  display: block;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0 14px;
+  border: 0.75px solid #919191;
+  border-radius: 5.5px;
+  background: #fff;
+  color: #333;
+  font-family: var(--gb-ui-font);
+  font-size: 16px;                          /* 16px 미만이면 아이폰이 입력할 때 화면을 확대함 */
+  font-weight: 300;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.gb-input::placeholder { color: #919191; opacity: 1; }
+.gb-input:focus { border-color: #5e715e; box-shadow: 0 0 0 1px #5e715e; }
+
+/* 작은 팝업 (안내 / 수정·삭제 / 나가기 확인) — 424 × 271(234) */
+.gb-pop {
+  position: absolute; top: 0; left: 0;
+  width: 424px; height: calc(var(--h) * 1px);
+  margin: 0;
+  border-radius: 11.5px;
+  background: var(--gb-paper, #e7e2dc);
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.36);
+  color: #222;
+  text-align: center;
+  transform: scale(var(--gb-ps, 1)) translateY(8px);
+  transform-origin: 0 0;
+  transition: transform 0.25s;
+  outline: none;
+}
+.gb-modal.is-open .gb-pop { transform: scale(var(--gb-ps, 1)); }
+.gb-pop__close {
+  position: absolute; top: 2px; right: 2px;
+  z-index: 2;                               /* 💡 제목·안내 글 영역(가로 전체)이 버튼 아래쪽을 덮어 눌리지 않던 것 방지 */
+  width: 44px; height: 44px;
+  padding: 12px; border: 0; background: none;
+  cursor: pointer;
+}
+.gb-pop__close svg { display: block; width: 19.2px; height: 19.2px; fill: #000; }
+.gb-pop__info-text {
+  position: absolute; left: 0; right: 0; top: 50%;
+  transform: translateY(-50%);              /* 위아래 가운데 */
+  margin: 0; padding: 4px 20px 0;
+  font-size: 19px; font-weight: 300; line-height: 25px;
+}
+.gb-pop__title {
+  margin: 0;
+  font-size: 20px; font-weight: 500; line-height: 1.4;
+  letter-spacing: 0;
+}
+.gb-pop__body {
+  margin: 0;
+  font-size: 16px; font-weight: 300; line-height: 21px;
+}
+.gb-pop__actions {
+  position: absolute; left: 17.64px; right: 17.64px;
+  display: flex; justify-content: space-between;
+}
+.gb-pop__btn {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  width: 174px; height: 50px;
+  padding: 0; border: 0; border-radius: 10px;
+  background: #adbca7;
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.15);
+  color: #222;
+  font-size: 17px; font-weight: 500;
+  cursor: pointer;
+  transition: filter 0.2s;
+}
+.gb-pop__btn:active { filter: brightness(0.93); }
+.gb-pop__btn:disabled { opacity: 0.6; cursor: default; }
+.gb-pop__btn svg { width: 20px; height: 24px; fill: #000; flex: none; }
+
+.gb-pop--option .gb-pop__title { position: absolute; left: 0; right: 0; top: 18px; }
+.gb-pop--option .gb-pop__body { position: absolute; left: 0; right: 0; top: 57px; }
+.gb-pop__password {
+  position: absolute; left: 48.75px; top: 124px;
+  width: 326.5px; height: 44.57px;
+}
+.gb-pop__error {
+  position: absolute; left: 0; right: 0; top: 172px;
+  margin: 0;
+  font-size: 13px; font-weight: 400; line-height: 18px;
+  color: #d64545;
+}
+.gb-pop--option .gb-pop__actions { top: 196.22px; }
+
+.gb-pop--exit .gb-pop__title { position: absolute; left: 0; right: 0; top: 50px; }
+.gb-pop--exit .gb-pop__body { position: absolute; left: 0; right: 0; top: 91px; }
+.gb-pop--exit .gb-pop__actions { top: 159.22px; }
+
+/* ─── 축하 화환 만들기 팝업 (470 × 860) ─── */
+.gb-edit {
+  --panel: #778878;
+  --cream: #f4ece4;
+  position: absolute; top: 0; left: 0;
+  width: 470px; height: 860px;
+  margin: 0;
+  border-radius: 40px;
+  overflow: hidden;                         /* 초록 판이 둥근 모서리 밖으로 비어 보이지 않게 */
+  background: var(--cream);
+  color: #222;
+  transform: scale(var(--gb-es, 1)) translateY(10px);
+  transform-origin: 0 0;
+  transition: transform 0.25s;
+  outline: none;
+}
+.gb-modal.is-open .gb-edit { transform: scale(var(--gb-es, 1)); }
+.gb-edit__panel {
+  position: absolute; top: 0; left: 0;
+  width: 470px; height: 528px;
+  background: var(--panel);
+  border-bottom-right-radius: 58.5px 62px;
+}
+.gb-edit__title {
+  position: absolute; left: 33px; top: 28px;
+  margin: 0;
+  font-family: 'EF_cucumbersalad', var(--gb-ui-font);
+  font-size: 53.79px; font-weight: normal;
+  line-height: 70px;
+  color: #1f1f1f;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.gb-edit__close {
+  position: absolute; left: 409px; top: 13.5px;           /* 아이콘 중심 (431, 35.5) */
+  z-index: 3;
+  width: 44px; height: 44px;
+  padding: 11.5px; border: 0; background: none;
+  cursor: pointer;
+}
+.gb-edit__close svg { display: block; width: 20.9px; height: 20.9px; fill: #000; }
+
+/* 왼쪽 탭: 선택된 탭만 초록 판과 이어지고 글자·아이콘이 흰색 */
+.gb-edit__tabs {
+  position: absolute; left: 0; top: 197px;
+  width: 95px; height: 281px;
+  display: flex; flex-direction: column;
+  border-radius: 10px;
+  background: var(--cream);
+}
+.gb-edit__tab {
+  position: relative;
+  flex: 1 1 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  padding: 0; border: 0;
+  background: transparent;
+  font-size: 13.45px; font-weight: 300; line-height: 1;
+  color: #222;
+  cursor: pointer;
+}
+.gb-edit__tab[aria-selected="true"] {
+  margin-left: 6px;
+  margin-right: -2px;                       /* 💡 오른쪽으로 2px 더 덮음: 휴대폰에서 축소될 때 탭 테두리에
+                                               아래 크림색이 비쳐 흰 줄처럼 보이던 것 방지 (초록 판과 같은 색이라 티 안 남) */
+  padding-right: 2px;
+  border-radius: 10px 0 0 10px;
+  background: var(--panel);
+  color: #fff;
+  cursor: default;
+}
+.gb-edit__tab:first-child[aria-selected="true"] { margin-top: -1px; padding-top: 1px; }      /* 위·아래 끝 탭도 같은 이유로 1px 더 덮음 */
+.gb-edit__tab:last-child[aria-selected="true"] { margin-bottom: -1px; padding-bottom: 1px; }
+/* 선택된 탭 위·아래로 크림색이 둥글게 말려 들어가는 모서리 (탭과 같이 오른쪽 2px 더 덮음) */
+.gb-edit__tab[aria-selected="true"]::before,
+.gb-edit__tab[aria-selected="true"]::after {
+  content: '';
+  position: absolute; right: 0;
+  width: 12px; height: 11px;                /* 💡 10px + 1px: 탭 안쪽으로 1px 겹쳐서 이음새에 흰 줄이 안 생기게 */
+}
+.gb-edit__tab[aria-selected="true"]::before { top: -10px; background: radial-gradient(circle at 0 0, var(--cream) 9.5px, var(--panel) 10px); }
+.gb-edit__tab[aria-selected="true"]::after { bottom: -10px; background: radial-gradient(circle at 0 100%, var(--cream) 9.5px, var(--panel) 10px); }
+.gb-edit__tab:first-child[aria-selected="true"]::before,
+.gb-edit__tab:last-child[aria-selected="true"]::after { display: none; }
+.gb-edit__tab-icon {
+  display: block;
+  width: 46px; height: 46px;
+  background-color: currentColor;
+  opacity: 0.6;
+  -webkit-mask: var(--icon) center / contain no-repeat;
+  mask: var(--icon) center / contain no-repeat;
+}
+.gb-edit__tab[aria-selected="true"] .gb-edit__tab-icon { opacity: 0.81; }
+.gb-edit__tab-icon--ribbon { --icon: url('images/guestbook/ui/icon_ribbon.png'); }
+.gb-edit__tab-icon--flower { --icon: url('images/guestbook/ui/icon_flower.png'); }
+.gb-edit__tab-icon--belt {
+  width: 74px; height: 33px;                /* SVG 원본 크기 그대로 */
+  margin: 6.5px 0;                          /* 다른 아이콘(46px)과 글자 줄 높이 맞춤 */
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='10 308 75 33'%3E%3Cpath d='m48.68,308.67c6.08.06,12.52.93,18.68,3.38,1.37.55,2.7,1.19,3.97,1.94.86.51,1.02.94.66,1.87-.31.81-.61,1.62-.97,2.41-.25.55-.21.82.42,1.08,3.18,1.28,6.2,2.89,8.92,5,.72.56,1.42,1.15,2.07,1.8.95.94.7,1.8-.57,2.15-1.99.54-3.98,1.07-5.97,1.61-.97.26-.96.27-.71,1.2.55,2.06,1.09,4.12,1.65,6.17.14.5.08.93-.32,1.27-.48.4-1.01.34-1.55-.22-1-1.02-2.04-2-3.19-2.85-3.56-2.67-7.47-4.64-11.69-6.01-1.4-.46-1.57-.82-1.02-2.16.28-.67.54-1.35.84-2.01.19-.42.07-.57-.35-.69-2.03-.57-4.1-.97-6.19-1.22-5.41-.66-10.75-.27-16.01,1.1-.18.05-.36.11-.54.15-.38.08-.43.28-.28.61.31.71.6,1.42.89,2.14.5,1.22.31,1.63-.94,2.04-3.95,1.28-7.64,3.09-11.03,5.48-1.44,1.02-2.75,2.17-3.98,3.44-.71.73-1.71.5-1.92-.39-.08-.34.05-.65.13-.96.54-2.04,1.07-4.08,1.65-6.1.16-.56.04-.79-.53-.93-2.02-.51-4.03-1.07-6.04-1.61-.55-.15-1.13-.26-1.28-.93-.16-.68.31-1.09.74-1.49,2.5-2.36,5.4-4.11,8.48-5.58.8-.38,1.62-.74,2.45-1.06.46-.18.54-.4.34-.84-.37-.86-.71-1.73-1.04-2.61-.36-.94-.2-1.35.67-1.86,3.81-2.23,7.96-3.5,12.26-4.32,3.57-.68,7.18-.99,11.32-1Zm-1.97,2.17c-1.97-.02-5.37.28-8.74.9-3.7.67-7.28,1.73-10.66,3.44-.53.27-.71.51-.45,1.12,1.07,2.57,2.09,5.16,3.1,7.76.22.56.45.6.98.38,6.39-2.65,13.03-3.85,19.96-3.42,5.08.32,9.94,1.48,14.62,3.44.49.2.7.15.89-.35,1.04-2.66,2.09-5.32,3.18-7.96.21-.5.05-.7-.38-.92-1.4-.71-2.84-1.34-4.33-1.85-5.42-1.84-11.02-2.54-18.18-2.56Zm16.52,17.51c3.83,1.59,7.26,3.46,10.39,5.89.2-.34.02-.58-.04-.81-.29-1.16-.63-2.3-.93-3.46-.24-.92.03-1.37.94-1.63,1.22-.34,2.44-.65,3.66-.98.8-.22,1.61-.45,2.48-.69-.12-.15-.17-.23-.24-.28-2.77-2.21-5.87-3.85-9.13-5.19-.43-.17-.53.05-.65.36-.59,1.5-1.22,2.99-1.78,4.51-.25.68-.67,1.07-1.37,1.26-1.05.28-2.09.64-3.33,1.02Zm-30.28-.08c-1.05-.32-2.09-.67-3.150-.96-.64-.18-1.05-.53-1.29-1.16-.58-1.53-1.22-3.04-1.81-4.57-.16-.43-.34-.52-.77-.34-3.15,1.31-6.15,2.87-8.84,5-.13.1-.35.16-.31.45.23.07.47.16.72.23,1.65.44,3.3.88,4.96,1.32,1.35.36,1.57.73,1.21,2.06-.04.14-.08.27-.11.41-.3,1.14-.6,2.29-.9,3.43.05.04.09.07.14.11,3.12-2.41,6.55-4.29,10.16-5.97Z'/%3E%3C/svg%3E");
+}
+
+/* 미리보기 (화환 원본 360×410을 그대로) */
+.gb-edit__preview {
+  position: absolute; left: 109px; top: 74px;
+  pointer-events: none;
+}
+.gb-edit__arrow {
+  position: absolute; top: 318.5px;
+  z-index: 2;
+  width: 32.28px; height: 32.28px;
+  padding: 0; border: 0; border-radius: 50%;
+  background: rgba(230, 230, 230, 0.85);
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+}
+.gb-edit__arrow::after {                    /* 꺾쇠 */
+  content: '';
+  position: absolute; top: 50%; left: 50%;
+  width: 8px; height: 8px;
+  border: solid var(--panel);
+  border-width: 0 0 2.5px 2.5px;
+}
+.gb-edit__arrow--prev { left: 133px; }
+.gb-edit__arrow--prev::after { transform: translate(-30%, -50%) rotate(45deg); }
+.gb-edit__arrow--next { left: 415.72px; }
+.gb-edit__arrow--next::after { transform: translate(-70%, -50%) rotate(-135deg); }
+.gb-edit__arrow:active { transform: scale(0.92); }
+
+.gb-edit__tools {
+  position: absolute; left: 0; right: 0; top: 540px;
+  display: flex; justify-content: center; gap: 40.65px;
+}
+.gb-edit__tool {
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  width: 115.33px; height: 39.68px;
+  padding: 0;
+  border-radius: 19.84px;
+  font-size: 13.31px; font-weight: 300;
+  cursor: pointer;
+}
+.gb-edit__tool--random { border: 0.75px solid #000; background: transparent; color: #000; }
+.gb-edit__tool--random svg { width: 13.17px; height: 14.2px; fill: #000; }
+.gb-edit__tool--png { border: 0; background: #5e715e; color: #fff; }
+.gb-edit__tool:active { filter: brightness(0.92); }
+
+.gb-edit__row {
+  position: absolute; left: 44px;
+  display: flex; align-items: center;
+  height: 44.15px;
+}
+.gb-edit__row--left { top: 598.5px; }
+.gb-edit__row--right { top: 656.5px; }
+.gb-edit__label {
+  width: 130.5px;
+  font-size: 17px; font-weight: 300;
+  white-space: nowrap;
+}
+.gb-edit__row .gb-input { width: 251px; height: 44.15px; }
+.gb-edit__row--password { left: 75px; top: 722.7px; height: 44.57px; }
+.gb-edit__row--password .gb-input { width: 320px; height: 44.57px; }
+.gb-edit__req {
+  position: absolute; left: 100%; top: 50%;
+  margin-left: 5px;
+  transform: translateY(-50%);
+  font-size: 20px; font-weight: 500; line-height: 1;
+  color: #e03131;
+  visibility: hidden;
+}
+.gb-edit__row.is-missing .gb-edit__req { visibility: visible; }
+.gb-edit__row.is-missing .gb-input { border-color: #e03131; }
+.gb-edit__msg {
+  position: absolute; left: 0; right: 0; top: 768px;
+  margin: 0;
+  font-size: 12.5px; font-weight: 400; line-height: 15px;
+  text-align: center;
+  color: #e03131;
+}
+.gb-edit__submit {
+  position: absolute; left: 75px; top: 783px;
+  width: 320px; height: 50px;
+  border: 0; border-radius: 10px;
+  background: #5e715e;
+  color: #e6e6e6;
+  font-size: 17px; font-weight: 500;
+  cursor: pointer;
+}
+.gb-edit__submit:active { filter: brightness(0.92); }
+.gb-edit__submit:disabled { opacity: 0.7; cursor: default; }
+
+@media (prefers-reduced-motion: reduce) {
+  .gb-modal, .gb-pop, .gb-edit, .gb-stage__track.is-fading { transition: none; }
+}
