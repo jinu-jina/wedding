@@ -11,7 +11,7 @@
   <meta property="og:url" content="https://jinu-jina.github.io/wedding/">
   <meta property="og:title" content="진우 🤍 진아 결혼합니다.">
   <meta property="og:description" content="2026년 12월 5일, 소중한 분들을 초대합니다.">
-  <meta property="og:image" content="https://jinu-jina.github.io/wedding/images/og/1.jpg?v=20261008">
+  <meta property="og:image" content="https://jinu-jina.github.io/wedding/images/og/1.jpg?v=20261012">
   <meta property="og:image:width" content="800">
   <meta property="og:image:height" content="800">
   <meta name="description" content="2026년 12월 5일, 소중한 분들을 초대합니다.">
@@ -74,7 +74,7 @@
       <li class="side-menu__item"><a href="#location" class="side-menu__link"><span class="side-menu__label">오시는 길 안내</span><span class="side-menu__index">[03]</span></a></li>
       <li class="side-menu__item"><a href="#account" class="side-menu__link"><span class="side-menu__label">계좌번호 안내</span><span class="side-menu__index">[04]</span></a></li>
       <li class="side-menu__item"><a href="#rsvp" class="side-menu__link"><span class="side-menu__label">참석 의사 전달</span><span class="side-menu__index">[05]</span></a></li>
-      <li class="side-menu__item"><a href="#guestbook" class="side-menu__link"><span class="side-menu__label">메시지 남기기</span><span class="side-menu__index">[06]</span></a></li>
+      <li class="side-menu__item"><a href="#guestbook" class="side-menu__link"><span class="side-menu__label">축하 메시지 남기기</span><span class="side-menu__index">[06]</span></a></li>
     </ul>
     <!-- 메뉴 하단 공유 버튼 (script.js initShareButtons / 설정: config.js share) -->
     <div class="side-menu__share">
@@ -222,6 +222,11 @@
         <canvas id="catCanvas"></canvas>
         <!-- 💡 고양이 영역 터치 시 잠깐 나타나는 말풍선 -->
         <img src="images/video/meow.png" id="meowBubble" class="top-video-section__meow" alt="야옹" aria-hidden="true">
+        <!-- 💡 이스터에그: 가끔(랜덤) 손이 나타나 고양이를 쓰다듬음 (펼친 손 → 모은 손으로 쓰다듬기 → 펼친 손으로 떠남) -->
+        <div class="cat-pet" id="catPetHand" aria-hidden="true">
+          <img class="cat-pet__open" src="images/video/hand_1.png" alt="">
+          <img class="cat-pet__closed" src="images/video/hand_2.png" alt="">
+        </div>
       </div>
       <audio id="meowSound" src="images/video/meow_sound.mp3" preload="auto"></audio>
     </section>
@@ -435,8 +440,10 @@
         </div>
         <img class="gb-main__frame" src="images/guestbook/ui/paper_frame.png" alt="" aria-hidden="true">
 
-        <!-- 스크롤바: 꽃 아이콘 손잡이를 끌어서 이동 -->
+        <!-- 스크롤바: 꽃 아이콘 손잡이를 끌어서 이동 / 양 끝 화살표를 누르면 화환 한 칸씩 이동 -->
         <div class="gb-scroll">
+          <button type="button" class="gb-scroll__arrow gb-scroll__arrow--prev" aria-label="왼쪽으로 이동"><span class="gb-scroll__tri" aria-hidden="true"></span></button>
+          <button type="button" class="gb-scroll__arrow gb-scroll__arrow--next" aria-label="오른쪽으로 이동"><span class="gb-scroll__tri" aria-hidden="true"></span></button>
           <div class="gb-scroll__thumb" role="slider" tabindex="0" aria-label="전시장 스크롤" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
             <svg viewBox="32.51 858 51.97 54.64" aria-hidden="true"><path d="m74.17,873.31c.2-.56.31-1.17.31-1.8,0-2.99-2.42-5.4-5.4-5.4-1.22,0-2.340.41-3.24,1.09-.9-.68-2.020-1.09-3.24-1.09-2.99,0-5.4,2.42-5.4,5.4,0,.54.08,1.07.23,1.56-.81.65-1.31,1.14-1.31,1.14,3.78,1.62,4.86,6.49,4.86,6.49,4.32.54,7.03,5.4,7.03,5.4,1.56-.78,2.28-2.41,2.55-3.25.05,0,.1,0,.15,0,2.99,0,5.4-2.420,5.4-5.4,0-1.66-.75-3.15-1.94-4.140Zm-8.33,5.76c-1.79,0-3.24-1.45-3.24-3.24s1.45-3.24,3.24-3.24,3.24,1.45,3.24,3.24-1.45,3.24-3.24,3.24Z"/><path d="m56.29,877.45c-2.7-2.7-7.57-2.16-7.57-2.16-2.16-2.7-3.78-3.24-3.78-3.24-2.7-1.080-5.95,0-5.95,0l-.4.81,4.81,16.76.65,2.1,3.32,3.04c.44.4.47,1.09.07,1.53-.21.23-.5.35-.8.35-.26,0-.52-.09-.73-.28l-3.39-3.11-6.27,6.27c-.81.81-.81,2.120,0,2.93l2.99,2.99c.81.81,2.12.81,2.93,0l6.9-6.9v8.65c0,.6.48,1.08,1.08,1.08s1.08-.48,1.08-1.08v-7.31l.11.23c1.62,3.24,2.07,5.12,2.61,7.84.1.51.55.87,1.06.87.07,0,.14,0,.21-.02.59-.12.97-.69.85-1.27-.56-2.79-1.05-4.89-2.77-8.33l15.76,3.8.81-.4s1.08-3.24,0-5.95c0,0-.54-1.62-3.24-3.78,0,0,.54-4.86-2.16-7.57,0,0-1.68-2.34-5.16-2.79,0,0,.03-2.34-3.03-5.04Z"/><path d="m55.73,864.18c-.97-1.45-2.62-2.4-4.49-2.4-2.99,0-5.4,2.42-5.4,5.4,0,.06,0,.12,0,.18-1.75.95-2.71,1.98-2.71,1.98,1.37-.11,2.65.37,3.71.98,1.11.64,1.97,1.43,2.42,1.89.22.23.35.38.35.38v-.25s0,0,.01,0c.13-1.68,1.52-3,3.23-3,.87,0,1.66.35,2.25.91.44-1.46.98-2.58,1.52-3.45,1.23-1.97,2.45-2.59,2.45-2.59-1.32-.22-2.46-.17-3.35-.03Z"/><path d="m71.78,886.1c.92.57,1.62,1.54,1.62,2.7,0,1.79-1.45,3.24-3.24,3.24-.1,0-.45,0-.54,0,.12.37.52.71.7,1.04h0s.01.02.02.03c.18.31.38.6.61.86,1.33,2.16,1.91,5.1,1.91,5.1,1.08-1.08,1.91-2.42,2.29-3.25,2.92-.07,5.270-2.46,5.27-5.4,0-1.66-.75-3.14-1.93-4.14.54-4.16-.77-5.05-.77-5.05-2.7,3.24-4.86,4.32-4.86,4.32l-1.08.54Z"/></svg>
           </div>
@@ -450,7 +457,7 @@
         <div class="gb-modal__frame gb-modal__frame--small" style="--h: 271">
           <div class="gb-pop gb-pop--info" role="dialog" aria-modal="true" aria-label="방명록 안내" tabindex="-1">
             <button type="button" class="gb-pop__close" data-gb-close aria-label="닫기"><svg viewBox="0 0 19.2 19.2" aria-hidden="true"><path d="M1.35,0L0,1.35l8.26,8.26L0,17.86l1.35,1.35,8.26-8.26,8.26,8.26,1.35-1.35-8.26-8.26,8.26-8.26L17.86,0,9.6,8.26,1.35,0Z"/></svg></button>
-            <p class="gb-pop__info-text">축하 화환은 정중히 사양합니다.<br>대신 디지털 축하 화환을 만들어 축하<br>메세지를 전달해보세요!<br><br>축하 화환 만들기 버튼을 클릭하여 화환을<br>생성할 수 있습니다.<br>화면 하단에 생성된 화환을 터치하여<br>수정하시거나 삭제도 가능합니다.</p>
+            <p class="gb-pop__info-text">축하 화환은 정중히 사양합니다.<br>대신 디지털 축하 화환을 만들어 축하<br>메시지를 전달해보세요!<br><br>축하 화환 만들기 버튼을 클릭하여 화환을<br>생성할 수 있습니다.<br>화면 하단에 생성된 화환을 터치하여<br>수정하시거나 삭제도 가능합니다.</p>
           </div>
         </div>
       </div>
@@ -521,6 +528,18 @@
             </label>
             <p class="gb-edit__msg" role="alert"></p>
             <button type="submit" class="gb-edit__submit">화환 보내기</button>
+
+            <!-- 💡 '화환 보내기'를 누르면 나오는 로딩 화면: 화환을 실은 트럭이 왼쪽으로 출발 -->
+            <div class="gb-sending" aria-hidden="true">
+              <span class="gb-sending__road"></span>
+              <div class="gb-sending__truck">
+                <div class="gb-sending__body">
+                  <img class="gb-sending__flower" src="images/guestbook/ui/loading_flower.png" alt="">
+                  <img class="gb-sending__car" src="images/guestbook/ui/loading_car.png" alt="">
+                </div>
+              </div>
+              <p class="gb-sending__text">화환 배송 중입니다<span>.</span><span>.</span><span>.</span></p>
+            </div>
           </form>
         </div>
       </div>

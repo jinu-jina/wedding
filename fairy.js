@@ -7,8 +7,8 @@ const FAIRY_EVENT = {
   title: '정진우 ♥ 배진아 결혼식',
   start: '20261205T110000', // config.js wedding.time(11:00)과 맞춤 (한국시간)
   end: '20261205T130000',
-  location: '베뉴비안 웨딩홀 2층 에메랄드홀',
-  details: '저희 두 사람의 결혼식에 초대합니다.',
+  location: '베뉴비안 에메랄드홀 2층, 서울특별시 영등포구 신길로 89',
+  details: '결혼식에 초대합니다.',
   icsUrl: 'wedding.ics',
 };
 const FAIRY_FLIP = 1;
@@ -45,6 +45,7 @@ function initFairy(zoneSelector) {
     location: FAIRY_EVENT.location, details: FAIRY_EVENT.details,
   });
   // 💡 갤럭시: 구글 캘린더 일정 추가 (script.js가 페이지 준비 후 만들므로 누를 때 읽음)
+  //    갤럭시는 보통 구글 계정이 삼성 캘린더와 연동돼 있어 삼성 캘린더에도 일정이 보임
   gcal.href = fallbackGcal;
   gcal.addEventListener('click', () => {
     if (window.weddingCalendar) gcal.href = window.weddingCalendar.googleUrl;

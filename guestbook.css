@@ -141,9 +141,37 @@
 
 /* 스크롤바 */
 .gb-scroll {
-  position: absolute; left: 36px; top: 872px;            /* 높이 43 → 35 (가운데 줄은 그대로) */
-  width: 418px; height: 35px;
+  position: absolute; left: 115px; top: 872px;           /* 높이 43 → 35 (가운데 줄은 그대로) */
+  width: 260px; height: 35px;                            /* 💡 폭 418 → 260, 가운데 정렬 (left = (490 - 260) / 2). 바꾸면 guestbook.js RANGE_W(= 폭 - 56)도 같이 */
 }
+/* 💡 레일 양 끝 화살표 (누르면 화환 한 칸씩 이동, guestbook.js) — 폭 26px, 손잡이는 그 사이(28px ~ 폭-28px)에서만 움직임 */
+.gb-scroll__arrow {
+  position: absolute; top: 0; z-index: 1;
+  width: 26px; height: 100%;
+  padding: 0; border: 0; background: none;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.25s;
+}
+.gb-scroll__arrow--prev { left: 2px; }
+.gb-scroll__arrow--next { right: 2px; }
+/* 💡 채워진 삼각형 ◀ ▶ — 색·볼록한 느낌·그림자는 스크롤 손잡이(.gb-scroll__thumb)와 같은 스타일
+      (삼각형으로 잘라낸 모양에는 box-shadow가 안 붙어서, 그림자는 버튼에 drop-shadow로 줌) */
+.gb-scroll__arrow {
+  filter:
+    drop-shadow(1.5px 1.5px 1.5px rgba(60, 55, 45, 0.3))     /* 아래·오른쪽으로 떨어지는 그림자 = 튀어나온 느낌 */
+    drop-shadow(-1px -1px 1.5px rgba(255, 255, 255, 0.7));   /* 위·왼쪽 밝은 빛 */
+}
+.gb-scroll__tri {
+  display: block;
+  width: 10px; height: 13px;
+  background: linear-gradient(145deg, #cbd5c9 0%, #bec9bc 55%, #b1bdaf 100%);   /* 손잡이와 같은 색 */
+}
+.gb-scroll__arrow--prev .gb-scroll__tri { clip-path: polygon(0 50%, 100% 0, 100% 100%); }   /* ◀ */
+.gb-scroll__arrow--next .gb-scroll__tri { clip-path: polygon(0 0, 100% 50%, 0 100%); }      /* ▶ */
+.gb-scroll__arrow:disabled { opacity: 0.3; cursor: default; }   /* 끝에 닿으면 흐리게 */
+.gb-scroll__arrow:focus-visible { outline: 2px solid var(--gb-green); outline-offset: -2px; }
 .gb-scroll::before {                         /* 테두리(2px) + 안쪽 배경 그림 43% + 안으로 파인 그림자 */
   content: '';
   position: absolute; inset: 0;
@@ -156,8 +184,8 @@
     inset 0 0 0 100px rgba(231, 226, 220, 0.57);   /* 그림을 43%만 보이게 */
 }
 .gb-scroll__thumb {
-  position: absolute; left: 4px; top: 4px;              /* 레일 안쪽 (테두리 2px + 틈 2px) — guestbook.js RANGE_LEFT와 같게 */
-  width: 40px; height: 27px;
+  position: absolute; left: 28px; top: 8px;             /* 💡 왼쪽 화살표 바로 옆 — guestbook.js RANGE_LEFT와 같게. 위아래로 레일과 6px 틈 */
+  width: 36px; height: 19px;                            /* 💡 27 → 19 (레일 안에 쏙 들어가게) */
   border-radius: 3px;
   background: linear-gradient(145deg, #cbd5c9 0%, #bec9bc 55%, #b1bdaf 100%);   /* 위에서 빛을 받은 듯한 볼록한 면 */
   box-shadow:
@@ -171,7 +199,7 @@
   outline: none;
 }
 .gb-scroll__thumb:focus-visible { outline: 2px solid var(--gb-green); outline-offset: 2px; }
-.gb-scroll__thumb svg { width: 25px; height: 26px; flex: none; fill: #e7e2dc; }
+.gb-scroll__thumb svg { width: 15px; height: 16px; flex: none; fill: #e7e2dc; }   /* 💡 25×26 → 15×16 */
 
 /* 페이지 번호 */
 .gb-pages {
@@ -184,7 +212,7 @@
   padding: 0; border: 0; border-radius: 5px;
   background: none;
   color: #454648;
-  font-size: 18px; font-weight: 300; line-height: 28.67px;
+  font-size: 18px; font-weight: 400; line-height: 28.67px;   /* 💡 굵기 300 → 400 (살짝 굵게) */
   cursor: pointer;
   transition: background-color 0.25s, color 0.25s;
 }
@@ -346,7 +374,7 @@
 
 /* ─── 축하 화환 만들기 팝업 (470 × 860) ─── */
 .gb-edit {
-  --panel: #778878;
+  --panel: #6b7b71;   /* 💡 #778878 → #6b7b71 (위 화환 패널·선택된 탭, PNG 저장·화환 보내기 버튼과 같은 색) */
   --cream: #f4ece4;
   position: absolute; top: 0; left: 0;
   width: 470px; height: 860px;
@@ -485,7 +513,7 @@
 }
 .gb-edit__tool--random { border: 0.75px solid #000; background: transparent; color: #000; }
 .gb-edit__tool--random svg { width: 13.17px; height: 14.2px; fill: #000; }
-.gb-edit__tool--png { border: 0; background: #5e715e; color: #fff; }
+.gb-edit__tool--png { border: 0; background: var(--panel); color: #fff; }   /* 💡 #5e715e → 패널 색(#6b7b71) */
 .gb-edit__tool:active { filter: brightness(0.92); }
 
 .gb-edit__row {
@@ -524,12 +552,98 @@
   position: absolute; left: 75px; top: 783px;
   width: 320px; height: 50px;
   border: 0; border-radius: 10px;
-  background: #5e715e;
+  background: var(--panel);   /* 💡 #5e715e → 패널 색(#6b7b71) */
   color: #e6e6e6;
   font-size: 17px; font-weight: 500;
   cursor: pointer;
 }
 .gb-edit__submit:active { filter: brightness(0.92); }
+
+/* ─── 화환 보내기 로딩 화면 (만들기 팝업 470 × 860 위를 통째로 덮음, guestbook.js가 .is-on을 붙임) ───
+   💡 위치는 470×860 기준 px. 도로 윗변 = 위에서 430px(가운데), 트럭은 도로 오른쪽 끝에 서 있다가 왼쪽으로 출발 */
+.gb-sending {
+  position: absolute; inset: 0;
+  z-index: 20;
+  background: #6b7b71;
+  overflow: hidden;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s, visibility 0s 0.3s;
+}
+.gb-sending.is-on { opacity: 1; visibility: visible; transition: opacity 0.3s; }
+.gb-sending__road {
+  position: absolute; left: 40px; top: 430px;
+  width: 391px; height: 4px;
+  border-radius: 2px;
+  background: #222;
+}
+.gb-sending__truck {
+  position: absolute; left: 309px; top: 432px;   /* 바퀴 아래가 도로에 닿게 */
+  width: 146px;                                   /* 💡 트럭 크기 (화환은 트럭 폭 기준 비율로 따라감) */
+  transform: translateY(-100%);
+}
+.gb-sending__body { position: relative; }
+.gb-sending__car { position: relative; display: block; width: 100%; }
+.gb-sending__flower {
+  position: absolute; left: 65%; bottom: 40%;     /* 화환 가운데 = 짐칸 가운데쯤. 💡 52% → 40%: 짐칸 안으로 살짝 내려서 다리를 짐칸 옆판이 가림 (화환은 트럭 뒤에 그려짐) */
+  width: 30.5%;
+  transform-origin: 50% 100%;
+}
+.gb-sending__text {
+  position: absolute; left: 0; right: 0; top: 488px;
+  margin: 0;
+  text-align: center;
+  font-family: 'EF_cucumbersalad', var(--gb-ui-font);   /* 방명록 섹션 제목과 같은 글꼴 */
+  font-size: 30px; font-weight: normal;
+  color: #1e2023;
+}
+
+/* 움직임: 트럭이 서 있다가 → 점점 빨라지며 왼쪽으로 나감 → 오른쪽에서 다시 들어와 천천히 멈춤 (반복)
+   달리는 동안 차체가 덜덜 떨리고, 출발할 때 화환이 뒤로(오른쪽) 살짝 기울었다 돌아옴 */
+/* 💡 속도: 트럭·화환 5.5초(3초 → 4.5초 → 5.5초), 점 2.1초(예전 1.5초). 트럭 시간을 바꾸면 guestbook.js SENDING_MIN도 같이 */
+.gb-sending.is-on .gb-sending__truck { animation: gbTruckDrive 5.5s infinite; }
+.gb-sending.is-on .gb-sending__body { animation: gbTruckRumble 0.22s linear infinite alternate; }
+.gb-sending.is-on .gb-sending__flower { animation: gbFlowerSway 5.5s ease-in-out infinite; }
+.gb-sending.is-on .gb-sending__text { animation: gbTextIn 0.7s ease-out both; }
+.gb-sending.is-on .gb-sending__text span { animation: gbDot 2.1s infinite; }
+.gb-sending__text span:nth-child(2) { animation-delay: 0.35s !important; }
+.gb-sending__text span:nth-child(3) { animation-delay: 0.7s !important; }
+
+@keyframes gbTruckDrive {
+  0%     { transform: translate(0, -100%); animation-timing-function: linear; }
+  15%    { transform: translate(0, -100%); animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.6); }   /* 잠깐 섰다가 출발 */
+  55%    { transform: translate(-480px, -100%); }                                                      /* 왼쪽 밖으로 나감 */
+  55.01% { transform: translate(200px, -100%); animation-timing-function: cubic-bezier(0.15, 0.5, 0.35, 1); }   /* 오른쪽 밖에서 */
+  100%   { transform: translate(0, -100%); }                                                           /* 들어와서 멈춤 */
+}
+@keyframes gbTruckRumble {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-1px); }
+}
+@keyframes gbFlowerSway {
+  0%, 15% { transform: translateX(-50%) rotate(0deg); }
+  24%     { transform: translateX(-50%) rotate(5deg); }    /* 출발할 때 뒤로 쏠림 */
+  40%     { transform: translateX(-50%) rotate(1deg); }
+  55%     { transform: translateX(-50%) rotate(1deg); }
+  85%     { transform: translateX(-50%) rotate(-3deg); }   /* 멈출 때 앞으로 쏠림 */
+  100%    { transform: translateX(-50%) rotate(0deg); }
+}
+.gb-sending__flower { transform: translateX(-50%); }
+@keyframes gbTextIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+/* 점 세 개가 하나씩 차례로 나타났다가 사라짐 (로딩 중... 느낌) */
+@keyframes gbDot {
+  0%, 15%  { opacity: 0; }
+  30%, 75% { opacity: 1; }
+  90%, 100% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gb-sending.is-on .gb-sending__truck,
+  .gb-sending.is-on .gb-sending__body,
+  .gb-sending.is-on .gb-sending__flower { animation: none; }
+}
 .gb-edit__submit:disabled { opacity: 0.7; cursor: default; }
 
 @media (prefers-reduced-motion: reduce) {

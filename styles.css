@@ -909,6 +909,57 @@ a {
   transform: translate(-50%, -6px);
 }
 
+/* 💡 이스터에그: 고양이 쓰다듬는 손 (script.js가 랜덤 간격으로 .is-petting을 붙임)
+      위치·크기는 고양이 영역(.top-video-section__cat) 기준 %. 손이 머리 위에 오도록 left/bottom 조절
+      움직임: 오른쪽 위에서 펼친 손이 날아옴 → 머리 위에서 모은 손으로 바뀜 → 머리~등을 3번 쓰다듬음 → 펼친 손으로 떠남 */
+.cat-pet {
+  position: absolute;
+  left: 2%;
+  bottom: 38%;
+  width: 46%;
+  aspect-ratio: 1;
+  z-index: 48;
+  pointer-events: none;
+  opacity: 0;
+}
+.cat-pet img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.cat-pet__closed { opacity: 0; }
+.cat-pet.is-petting { animation: catPetMove 5.2s ease-in-out forwards; }
+.cat-pet.is-petting .cat-pet__open { animation: catPetOpen 5.2s linear forwards; }
+.cat-pet.is-petting .cat-pet__closed { animation: catPetClosed 5.2s linear forwards; }
+
+@keyframes catPetMove {
+  0%   { opacity: 0; transform: translate(70%, -90%) rotate(14deg); }
+  12%  { opacity: 1; }
+  24%  { transform: translate(5%, -14%) rotate(2deg); }    /* 머리 위 도착 */
+  28%  { transform: translate(0, -4%) rotate(0deg); }      /* 살짝 내려앉으며 손을 모음 */
+  38%  { transform: translate(42%, 2%) rotate(-5deg); }    /* 등 쪽으로 쓰다듬 */
+  48%  { transform: translate(0, -4%) rotate(0deg); }
+  58%  { transform: translate(42%, 2%) rotate(-5deg); }
+  68%  { transform: translate(0, -4%) rotate(0deg); }
+  78%  { transform: translate(42%, 2%) rotate(-5deg); }
+  84%  { opacity: 1; transform: translate(35%, -16%) rotate(4deg); }   /* 손을 펴며 떼기 */
+  100% { opacity: 0; transform: translate(80%, -90%) rotate(14deg); }
+}
+@keyframes catPetOpen {
+  0%, 27%   { opacity: 1; }
+  28%, 82%  { opacity: 0; }
+  83%, 100% { opacity: 1; }
+}
+@keyframes catPetClosed {
+  0%, 27%   { opacity: 0; }
+  28%, 82%  { opacity: 1; }
+  83%, 100% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cat-pet { display: none; }
+}
+
 /* 💡 영상/캔버스/파티클(카세트테이프, 재생버튼)이 그려지는 영역.
    기존 top-video-section의 비율(1080:750, main.mp4 원본)과 크기 로직을 그대로 유지합니다. */
 .top-video-section__stage {
@@ -924,7 +975,9 @@ a {
   display: flex;
   justify-content: center;
   align-items: center;
-  overflow: hidden;
+  /* 💡 위로 늘린 파티클 캔버스(60px)는 보이고, 좌우·아래는 예전처럼 잘림 */
+  overflow: visible;
+  clip-path: inset(-60px 0 0 0);
 }
 
 #topVideo {
@@ -943,10 +996,12 @@ a {
 #particleCanvas {
   position: absolute;
   z-index: 10;
-  top: 0;
+  /* 💡 카세트가 기울며 스테이지 위로 넘어가도 잘리지 않게 캔버스를 위로 60px 더 늘림
+        (script.js initParticles의 EXTRA_TOP과 같은 값. 스테이지 margin-top 66px 안쪽) */
+  top: -60px;
   left: 0;
   width: 100%;
-  height: 100%;
+  height: calc(100% + 60px);
   cursor: pointer;
   pointer-events: auto;
 }
@@ -1041,6 +1096,8 @@ a {
   font-family: 'DungGeunMo', 'Noto Sans KR', sans-serif;
   font-size: 11pt;
   letter-spacing: 0.05em;
+  cursor: pointer;                       /* 💡 터치하면 히어로 섹션으로 이동 (script.js) */
+  -webkit-tap-highlight-color: transparent;
 }
 
 .top-video-section__scroll-arrow {
@@ -1849,7 +1906,7 @@ a {
 
 /* ─── 응답 완료 애니메이션 (script.js의 playRsvpThanks가 클래스를 순서대로 붙임) ───
    1) .is-closing : 내용 위치 고정(가운데 기준) + 넘치는 부분 숨김
-   2) .is-shut    : 위아래 회색 판이 한 번에 스르륵 닫히고, 섹션은 감사 문구 높이 + 위아래 5px까지 줄어듦
+   2) .is-shut    : 위아래 회색 판이 한 번에 스르륵 닫히고, 섹션은 상단 메뉴 바 높이 + 감사 문구 + 위아래 15px까지 줄어듦
    3) .is-thanked : "응답해 주셔서 감사합니다!" 가 튀어나옴 */
 .rsvp__card {
   position: relative;
@@ -1900,6 +1957,8 @@ a {
   display: flex;
   align-items: center;
   justify-content: center;
+  padding-top: var(--rsvp-nav-h, 0px);   /* 💡 위쪽 상단 메뉴 바 높이만큼 비우고 그 아래 가운데에 문구 (script.js가 값을 넣음) */
+  box-sizing: border-box;
   font-family: 'Diphylleia', var(--font-serif);
   font-size: var(--rsvp-thanks-size);
   line-height: 1;

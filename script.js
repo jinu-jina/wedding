@@ -184,7 +184,7 @@
           content: {
             title: m.title || document.title,
             description: m.description || '',
-            imageUrl: new URL('images/og/1.jpg?v=20261008', url).href,   // 카카오 서버가 가져갈 수 있도록 전체 주소
+            imageUrl: new URL('images/og/1.jpg?v=20261012', url).href,   // 카카오 서버가 가져갈 수 있도록 전체 주소
             imageWidth: 800,                                              // images/og/1.jpg = 800 × 800 정사각형
             imageHeight: 800,
             link
@@ -288,7 +288,9 @@ envelopeOpening.addEventListener('click', () => {
         entries.forEach((entry) => {
           topNav.classList.toggle('top-nav--hidden', entry.isIntersecting);
         });
-      }, { threshold: 0 });
+      // 💡 rootMargin 위쪽 -2px: 히어로 윗변이 화면 맨 위에 딱 맞으면 영상 섹션 아랫변이 화면 윗변에
+      //    '맞닿기만' 해도 보이는 걸로 판단돼 메뉴 바가 숨겨졌음 → 2px 이상 실제로 보일 때만 숨김
+      }, { threshold: 0, rootMargin: '-2px 0px 0px 0px' });
       visibilityObserver.observe(topVideoSection);
     }
 
@@ -606,13 +608,17 @@ function initHero() {
      ═══════════════════════════════════════════ */
 
   function initCalendarLinks() {
-    const dt = getWeddingDateTime();
+    // 💡 한국시간(+09:00)으로 고정 → 해외에서 열어도 12/5 오전 11시~오후 1시로 들어감
+    const dt = new Date(`${CONFIG.wedding.date}T${CONFIG.wedding.time}:00+09:00`);
+    const title = `${CONFIG.groom.name} ♥ ${CONFIG.bride.name} 결혼식`;
+    const place = `${CONFIG.wedding.venue} ${CONFIG.wedding.hall}, ${CONFIG.wedding.address}`;
+    const memo = '결혼식에 초대합니다.';
 
     // Google Calendar link
     const startDate = dt.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
     const endDt = new Date(dt.getTime() + 2 * 60 * 60 * 1000);
     const endDate = endDt.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-    const gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(CONFIG.groom.name + ' ♥ ' + CONFIG.bride.name + ' 결혼식')}&dates=${startDate}/${endDate}&location=${encodeURIComponent(CONFIG.wedding.venue + ' ' + CONFIG.wedding.address)}&details=${encodeURIComponent('결혼식에 초대합니다.')}`;
+    const gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${startDate}/${endDate}&location=${encodeURIComponent(place)}&details=${encodeURIComponent(memo)}`;
 
     // ICS download (Apple Calendar)
     const downloadIcs = () => {
@@ -621,11 +627,13 @@ function initHero() {
         'VERSION:2.0',
         'PRODID:-//Wedding//Invitation//KO',
         'BEGIN:VEVENT',
+        `UID:wedding-${CONFIG.wedding.date}@jinu-jina.github.io`,
+        `DTSTAMP:${startDate}`,
         `DTSTART:${startDate}`,
         `DTEND:${endDate}`,
-        `SUMMARY:${CONFIG.groom.name} ♥ ${CONFIG.bride.name} 결혼식`,
-        `LOCATION:${CONFIG.wedding.venue} ${CONFIG.wedding.address}`,
-        'DESCRIPTION:결혼식에 초대합니다.',
+        `SUMMARY:${title}`,
+        `LOCATION:${place.replace(/,/g, '\\,')}`,
+        `DESCRIPTION:${memo}`,
         'END:VEVENT',
         'END:VCALENDAR'
       ].join('\r\n');
@@ -1039,9 +1047,14 @@ function handleSwipe() {
       card.style.height = card.offsetHeight + 'px';   // auto → px로 고정해야 높이가 부드럽게 줄어듦
       card.classList.add('is-closing');
       void card.offsetHeight;                          // 위 상태를 먼저 그리게 함
-      // 한 번에 스르륵 닫힘(1.1초, CSS --rsvp-close) → 최종 높이 = 감사 문구 + 위아래 5px
+      // 한 번에 스르륵 닫힘(1.1초, CSS --rsvp-close) → 최종 높이 = 상단 메뉴 바 높이 + 감사 문구 + 위아래 15px
+      // 💡 카드 윗변이 화면 맨 위에 와도 메뉴 바 아래에 감사 문구가 보이도록, 메뉴 바 높이만큼 위를 비워 둠
+      const nav = $('.top-nav');
+      // 💡 메뉴 바의 아래쪽 안쪽 여백(padding-bottom)은 빼서 메뉴 글자와 감사 문구 사이를 좁게
+      const navH = nav ? nav.offsetHeight - parseFloat(getComputedStyle(nav).paddingBottom) : 42;
+      card.style.setProperty('--rsvp-nav-h', `${navH}px`);
       card.classList.add('is-shut');
-      card.style.height = 'calc(var(--rsvp-thanks-size) + 30px)';
+      card.style.height = 'calc(var(--rsvp-nav-h) + var(--rsvp-thanks-size) + 30px)';
       if (reduce) { card.classList.add('is-thanked'); return; }
       setTimeout(() => card.classList.add('is-thanked'), 900);   // 거의 닫혔을 때 감사 문구가 튀어나옴
     };
@@ -1184,6 +1197,8 @@ function initParticles() {
     let stageTopInSection = 0;
     // 고밀도 화면에서 불필요하게 과도한 캔버스 해상도가 생성되지 않도록 상한을 둡니다.
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    // 💡 카세트 윗부분이 잘리지 않도록 캔버스를 스테이지 위로 더 늘린 높이(px) — styles.css #particleCanvas의 60px과 같게
+    const EXTRA_TOP = 60;
 
     // 🛠️ 파티클 커스텀 설정
     const numPlayParticles = 400;
@@ -1212,9 +1227,10 @@ function initParticles() {
       const rect = stage.getBoundingClientRect();
       width = Math.max(1, Math.round(rect.width));
       height = Math.max(1, Math.round(rect.height));
+      // 💡 캔버스는 스테이지보다 위로 EXTRA_TOP만큼 더 큼 → 그리는 좌표는 그대로 두고 원점만 아래로 옮김
       canvas.width = Math.round(width * dpr);
-      canvas.height = Math.round(height * dpr);
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      canvas.height = Math.round((height + EXTRA_TOP) * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, EXTRA_TOP * dpr);
 
       // 💡 버튼 파티클은 섹션 전체를 덮는 별도 캔버스에 그려지므로, 스테이지 기준 좌표를
       // 섹션 기준 좌표로 변환하기 위해 스테이지의 섹션 내 상대 위치를 미리 구해 둡니다.
@@ -1382,6 +1398,18 @@ function initParticles() {
       toggleMedia();
     });
 
+    // 💡 "⌄ 스크롤 내리기" 터치 → 히어로 섹션 윗변이 화면 맨 위에 오도록 이동
+    //    (stopPropagation: 위의 섹션 전체 클릭(음악 on/off)이 같이 일어나지 않게)
+    const scrollCue = $('.top-video-section__scroll-cue');
+    const heroEl = $('#hero');
+    if (scrollCue && heroEl) {
+      scrollCue.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        window.scrollTo({ top: window.scrollY + heroEl.getBoundingClientRect().top, behavior: reduce ? 'auto' : 'smooth' });
+      });
+    }
+
     // 💡 isExploded 파라미터로 마찰력 및 복원력 차단
     function drawParticle(p, targetCtx, isExploded = false) {
         if (!isExploded) {
@@ -1411,7 +1439,7 @@ function initParticles() {
 
     function animate() {
       if (!particleVisible) { particleRunning = false; return; }
-      ctx.clearRect(0, 0, width, height);
+      ctx.clearRect(0, -EXTRA_TOP, width, height + EXTRA_TOP);
       if (buttonCtx) buttonCtx.clearRect(0, 0, sectionWidth, sectionHeight);
 
       const btnCtx = buttonCtx || ctx;
@@ -1561,6 +1589,29 @@ function initParticles() {
       }, { rootMargin: '100px 0px' }).observe(canvas);
     }
     startCatLoop();
+
+    // 💡 이스터에그: 가끔 손이 나타나 고양이를 쓰다듬음 (애니메이션은 styles.css .cat-pet)
+    //    첫 등장은 페이지를 연 뒤 PET_FIRST초 사이 랜덤, 그다음부터는 PET_GAP초 사이 랜덤 간격.
+    //    고양이가 화면에 안 보이거나 다른 탭에 가 있을 때는 건너뜀 (다음 차례를 기다림)
+    const petHand = $('#catPetHand');
+    const PET_FIRST = [12, 25];   // 초
+    const PET_GAP = [40, 90];     // 초 — 줄이면 더 자주 나타남
+    const randSec = ([min, max]) => (min + Math.random() * (max - min)) * 1000;
+    if (petHand && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      petHand.addEventListener('animationend', (e) => {
+        if (e.target === petHand) petHand.classList.remove('is-petting');
+      });
+      const petOnce = () => {
+        // 봉투 화면·팝업 등으로 스크롤이 잠겨 있을 때(no-scroll)도 건너뜀
+        if (catVisible && !document.hidden && !document.body.classList.contains('no-scroll')) {
+          petHand.classList.remove('is-petting');
+          void petHand.offsetWidth;                 // 애니메이션 처음부터 다시
+          petHand.classList.add('is-petting');
+        }
+        setTimeout(petOnce, randSec(PET_GAP));
+      };
+      setTimeout(petOnce, randSec(PET_FIRST));
+    }
   }
 
   /* ═══════════════════════════════════════════
@@ -1850,7 +1901,7 @@ function initParticles() {
     const bookLabels = section.querySelector('.gallery-book__labels');   // 펼쳐진 페이지 위 글자: 책이 펼쳐진 뒤 나타남
     loadImagesFromFolder('gallery').then((imgs) => strip.setImages(imgs));
 
-    const FIRST_FRAME_HOLD = 2000;   // 첫 프레임에서 멈춰 있는 시간(ms)
+    const FIRST_FRAME_HOLD = 1000;   // 첫 프레임에서 멈춰 있는 시간(ms) — 💡 2000 → 1000 (책이 1초 빨리 펼쳐짐)
     const STRIP_EARLY = 1.2;         // 영상이 끝나기 이만큼(초) 전에 사진 띠를 먼저 등장시킴 (클수록 더 빨리)
     let stripShown = false;
     let state = 'idle';        // idle → playing → done
