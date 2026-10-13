@@ -22,9 +22,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&family=Noto+Serif+KR:wght@300;400&family=Diphylleia&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="styles.css?v=20261008h">
+  <link rel="stylesheet" href="styles.css?v=20261014a">
   <link rel="stylesheet" href="fairy.css?v=20261002g">
-  <link rel="stylesheet" href="guestbook.css?v=20261006i">
+  <link rel="stylesheet" href="guestbook.css?v=20261014b">
   <script src="config.js?v=20261008d"></script>
 </head>
 <body>
@@ -246,12 +246,6 @@
           <img src="images/hero/1_top.png" class="layer-4-top" alt="메인 텍스트">
         </div>
 
-        <!-- 2번째 사진 묶음: 1.jpg 바로 아래, 2_bg.jpg(바닥) + 2_tex.png(맨 위, 이 묶음 높이에 꼭 맞게 덮임) -->
-        <div class="hero__layer hero__layer--2">
-          <img src="images/hero/2_bg.jpg" class="layer-2-bg" alt="배경 사진 2">
-          <img src="images/hero/2_tex.png" class="layer-2-tex" alt="" aria-hidden="true">
-        </div>
-
       </div>
     </section>
 
@@ -452,6 +446,11 @@
         <div class="gb-pages" role="group" aria-label="전시장 페이지"></div>
       </div>
 
+      <!-- 인트로: 섹션이 85% 이상 보이면 intro.mp4(배경 #6B7B71)를 재생한 뒤 사라지고 메인 화면이 나옴 (guestbook.js initIntro) -->
+      <div class="gb-intro" aria-hidden="true">
+        <video class="gb-intro__video" src="images/guestbook/ui/intro.mp4" muted playsinline preload="auto"></video>
+      </div>
+
       <!-- 안내 팝업 — guestbook_main_info.svg -->
       <div class="gb-modal" id="gbInfoModal" hidden>
         <div class="gb-modal__frame gb-modal__frame--small" style="--h: 271">
@@ -575,9 +574,9 @@
     </footer>
 
   </main> <script src="brik.js?v=20261008a"></script>
-  <script src="script.js?v=20261008g"></script>
+  <script src="script.js?v=20261014a"></script>
   <script src="fairy.js?v=20261005a"></script>
-  <script src="guestbook.js?v=20261008b"></script>
+  <script src="guestbook.js?v=20261014b"></script>
   <script src="section-snap.js?v=20261006b"></script>
 </body>
 </html>

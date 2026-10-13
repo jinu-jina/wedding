@@ -248,6 +248,24 @@
 .gb-wreath__glow img { filter: brightness(0) invert(1); }
 .gb-stage__item.is-selected .gb-wreath__glow { display: block; opacity: 0.6; }
 
+/* ─── 인트로 (intro.mp4) — 섹션 전체를 영상 배경색(#6B7B71)으로 덮고, 영상이 끝나면 서서히 사라짐 ─── */
+.gb-intro {
+  position: absolute; inset: 0;
+  z-index: 5;                               /* 메인 화면(.gb-main) 위 */
+  background: #6B7B71;
+  opacity: 1;                               /* 💡 0.99 → 1 (휴대폰에서 뒤 메인 화면이 희미하게 비쳐서 완전히 덮음) */
+  transition: opacity 0.3s ease;           /* 💡 사라지는 속도: 0.6s → 0.3s (guestbook.js FADE_MS와 같게) */
+}
+.gb-intro.is-done { opacity: 0; pointer-events: none; }
+.gb-intro__video {
+  position: absolute; top: 50%; left: 50%;
+  display: block;
+  width: 80%; height: auto;                 /* 💡 영상 크기: 섹션 가로의 80% (세로는 영상 비율대로) */
+  max-height: 90%; object-fit: contain;     /* 세로로 긴 영상이어도 섹션 밖으로 넘치거나 찌그러지지 않게 */
+  background: #6B7B71;                      /* 영상 바깥 빈 부분·불러오기 전에도 같은 색 → 경계 티 안 남 */
+  transform: translate(-50%, -50%);
+}
+
 /* ─── 팝업 공통 ─── */
 .gb-modal {
   position: fixed; inset: 0;

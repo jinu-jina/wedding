@@ -830,5 +830,72 @@
     document.fonts.load('53.79px EF_cucumbersalad', '디지털 축하 화환 전시장 만들기 수정하기').catch(() => {});
   }
 
+  /* ─── 인트로: 섹션이 화면에 85% 이상 보이는 순간 intro.mp4 재생 → 끝나면 메인 화면 ───
+     영상 배경이 섹션 배경색(#6B7B71)과 같아서 그대로 재생만 함. 처음 한 번만 재생 */
+  function initIntro() {
+    const intro = $('.gb-intro');
+    const video = $('.gb-intro__video');
+    if (!intro || !video) return;
+
+    const SHOW_RATIO = 0.85;  // 💡 섹션이 이만큼(85%) 보이면 재생. 섹션이 화면보다 길면 "화면 높이의 85%"를 채울 때
+    // 💡 영상의 이 시점(초)에서 메인 화면으로 넘어가기 시작. intro.mp4(8초)는 5.8초에 움직임이 끝나고
+    //    나머지 2.2초는 같은 장면이 멈춰 있어서 그 부분을 건너뜀. 줄이면 더 빨리 넘어감 (영상을 바꾸면 다시 맞추기)
+    const END_AT = 5.9;
+    const FADE_MS = 300;      // 💡 인트로가 사라지는 시간(ms) — guestbook.css .gb-intro transition 값과 같게
+    let state = 'wait';       // wait → playing → done
+    let raf = null;
+
+    // 💡 END_AT초에 도달했는지 매 프레임 확인 (시간만 확인하므로 가벼움). 영상이 END_AT보다 짧으면 끝날 때(ended) 넘어감
+    function loop() {
+      if (state !== 'playing') return;
+      if (video.currentTime >= END_AT) { finish(); return; }
+      raf = requestAnimationFrame(loop);
+    }
+    function finish() {
+      if (state === 'done') return;
+      state = 'done';
+      intro.classList.add('is-done');   // 서서히 사라짐 (guestbook.css .gb-intro transition)
+      setTimeout(() => {
+        intro.hidden = true;
+        if (raf) cancelAnimationFrame(raf);
+        video.removeAttribute('src'); video.load();
+      }, FADE_MS + 50);
+    }
+    // 💡 인트로가 덮고 있는 동안 메인 화면 그림(화환·전시장 배경)을 미리 풀어 둠 → 인트로가 걷히자마자 바로 보이게
+    function predecode() {
+      const imgs = $$('.gb-main img');
+      ['images/guestbook/bg.jpg'].forEach((url) => { const im = new Image(); im.src = url; imgs.push(im); });
+      imgs.forEach((im) => { if (im.decode) im.decode().catch(() => {}); });
+    }
+    function play() {
+      if (state !== 'wait') return;
+      state = 'playing';
+      predecode();
+      const p = video.play();
+      if (p && p.catch) p.catch(finish);              // 재생이 막히면 인트로 없이 바로 메인 화면
+      raf = requestAnimationFrame(loop);
+      setTimeout(() => { if (video.currentTime === 0) finish(); }, 4000);   // 4초 안에 시작 못 하면 건너뜀
+    }
+
+    video.muted = true;   // 소리 없는 영상이어야 자동 재생이 허용됨
+    video.addEventListener('ended', finish);
+    video.addEventListener('error', finish);
+
+    if (!('IntersectionObserver' in window)) { finish(); return; }
+    const thresholds = [];
+    for (let i = 0; i <= 100; i++) thresholds.push(i / 100);
+    const io = new IntersectionObserver((entries) => {
+      const e = entries[0];
+      const viewH = e.rootBounds ? e.rootBounds.height : window.innerHeight;
+      const base = Math.min(e.boundingClientRect.height, viewH);
+      if (base > 0 && e.intersectionRect.height / base >= SHOW_RATIO - 0.001) {
+        io.disconnect();
+        play();
+      }
+    }, { threshold: thresholds });
+    io.observe(section);
+  }
+  initIntro();
+
   loadItems();
 })();
