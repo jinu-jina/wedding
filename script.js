@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Jin woo Jin a Wedding Invitation
  * 지누지나 모바일 청첩장 - Script
  */
@@ -54,7 +54,9 @@
      Image Auto-Detection
      ═══════════════════════════════════════════ */
 
-  function loadImagesFromFolder(folder, maxAttempts = 50) {
+  // 💡 ext: 파일 확장자 / probeSub: 몇 장인지 셀 때 원본 대신 확인할 하위 폴더(예: 'thumb').
+  //    갤러리는 작은 썸네일로 장수를 세서, 큰 원본은 사진을 눌렀을 때(전체화면)만 받게 함
+  function loadImagesFromFolder(folder, maxAttempts = 50, { ext = 'jpg', probeSub = '' } = {}) {
     return new Promise(resolve => {
         const images = [];
         let current = 1;
@@ -66,7 +68,8 @@
                 return;
             }
             const img = new Image();
-            const path = `images/${folder}/${current}.jpg`;
+            const path = `images/${folder}/${current}.${ext}`;
+            const probePath = probeSub ? `images/${folder}/${probeSub}/${current}.${ext}` : path;
             img.onload = function() {
                 images.push(path);
                 consecutiveFails = 0;
@@ -78,7 +81,7 @@
                 current++;
                 tryNext();
             };
-            img.src = path;
+            img.src = probePath;
         }
 
         tryNext();
@@ -1733,7 +1736,7 @@ function initParticles() {
 
   /* ═══════════════════════════════════════════
      Gallery Strip (앨범 위를 좌 → 우로 계속 흘러가는 사진 띠)
-     · images/gallery/1~N.jpg 가 1, 2, 3 … N, 다시 1 … 순서로 왼쪽에서 들어와 오른쪽으로 흐릅니다.
+     · images/gallery/1~N.webp 가 1, 2, 3 … N, 다시 1 … 순서로 왼쪽에서 들어와 오른쪽으로 흐릅니다.
        처음에는 1이 맨 앞(오른쪽에 아무것도 없음)이고, N 바로 뒤(왼쪽)에 다시 1이 이어집니다.
      · 사진을 터치하면 회전이 멈추고 photo modal이 열립니다. 모달을 닫으면 다시 이어서 회전합니다.
      · 앨범 영상이 끝난 뒤(책이 펼쳐진 뒤) 나타나고, 섹션을 벗어나면 초기화됩니다.
@@ -1832,9 +1835,9 @@ function initParticles() {
           img.dataset.index = i;
           pending++;
           img.addEventListener('load', done, { once: true });
-          // 💡 띠에는 작은 썸네일(images/gallery/thumb/N.jpg, 가로 300px)을 씁니다. 없으면 원본으로 대신합니다.
+          // 💡 띠에는 작은 썸네일(images/gallery/thumb/N.webp, 가로 300px)을 씁니다. 없으면 원본으로 대신합니다.
           // (띠는 같은 사진을 3세트 = 63장 디코딩해서, 큰 사진이면 흐를 때 버벅입니다.
-          //  사진을 터치했을 때 뜨는 전체화면(모달)은 images/gallery/N.jpg(가로 1000px)를 씁니다.)
+          //  사진을 터치했을 때 뜨는 전체화면(모달)은 images/gallery/N.webp(가로 1000px)를 씁니다. 원본은 누를 때만 받음)
           img.addEventListener('error', () => {
             if (img.dataset.fallback) { done(); return; }   // 원본도 실패하면 그냥 넘어감
             img.dataset.fallback = '1';
@@ -1919,7 +1922,21 @@ function initParticles() {
     // 💡 앨범 위를 흐르는 사진 띠 — 책이 펼쳐진 뒤(영상 종료) 나타납니다.
     const strip = createGalleryStrip(section);
     const bookLabels = section.querySelector('.gallery-book__labels');   // 펼쳐진 페이지 위 글자: 책이 펼쳐진 뒤 나타남
-    loadImagesFromFolder('gallery').then((imgs) => strip.setImages(imgs));
+    // 💡 사진은 갤러리가 화면 1.5배 거리 안으로 다가오면 그때 받음 (WebP 썸네일로 장수 확인 → 원본은 사진을 누를 때만)
+    let galleryRequested = false;
+    const requestGallery = () => {
+      if (galleryRequested) return;
+      galleryRequested = true;
+      loadImagesFromFolder('gallery', 50, { ext: 'webp', probeSub: 'thumb' }).then((imgs) => strip.setImages(imgs));
+    };
+    if ('IntersectionObserver' in window) {
+      const nearIo = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) { nearIo.disconnect(); requestGallery(); }
+      }, { rootMargin: '150% 0px' });
+      nearIo.observe(section);
+    } else {
+      requestGallery();
+    }
 
     const FIRST_FRAME_HOLD = 1000;   // 첫 프레임에서 멈춰 있는 시간(ms) — 💡 2000 → 1000 (책이 1초 빨리 펼쳐짐)
     const STRIP_EARLY = 1.2;         // 영상이 끝나기 이만큼(초) 전에 사진 띠를 먼저 등장시킴 (클수록 더 빨리)
@@ -2077,6 +2094,27 @@ function initParticles() {
   }
 
   /* ═══════════════════════════════════════════
+     영상 미리 받기를 "가까워졌을 때"로 미룸
+     · index.html에서 data-preload-near가 붙은 영상(앨범 bg_album.mp4, 방명록 intro.mp4)은
+       preload="none"으로 시작해서 데이터를 안 쓰다가, 화면 1.5배 거리 안으로 다가오면 미리 받기 시작
+     ═══════════════════════════════════════════ */
+  function initPreloadNear() {
+    const videos = $$('video[data-preload-near]');
+    if (!videos.length) return;
+    if (!('IntersectionObserver' in window)) { videos.forEach((v) => { v.preload = 'auto'; }); return; }
+    // 숨겨진(크기 0) 영상도 있어서 영상이 들어 있는 섹션을 기준으로 거리를 잼
+    const owners = new Map(videos.map((v) => [v.closest('section, .alet-gallery') || v, v]));
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (!e.isIntersecting) return;
+        owners.get(e.target).preload = 'auto';
+        io.unobserve(e.target);
+      });
+    }, { rootMargin: '150% 0px' });
+    owners.forEach((_, el) => io.observe(el));
+  }
+
+  /* ═══════════════════════════════════════════
      Init
      ═══════════════════════════════════════════ */
 
@@ -2099,6 +2137,7 @@ function initParticles() {
     initGreeting();
     initGalleryBook();
     initCalendarLinks();
+    initPreloadNear();
 
     initPhotoModal();
     initLocation();

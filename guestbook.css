@@ -236,14 +236,16 @@
   position: absolute;
   writing-mode: vertical-rl;
   text-orientation: upright;
-  font-family: 'GbGungsuh', 'Gungsuh', '궁서', 'GungSeo', serif;
-  font-size: 20.88em;                       /* 리본 원본 이미지 기준 58px × 0.36 (guestbook.js TEXT.size와 같게) */
+  font-family: 'Gungsuh', '궁서', 'GungSeo', serif;   /* 💡 방명록에 가까워지기 전: 웹폰트(3.6MB)를 안 받는 글꼴만 */
+  font-size: 20.88em;                      /* 리본 원본 이미지 기준 58px × 0.36 (guestbook.js TEXT.size와 같게) */
   line-height: 1;
   letter-spacing: 0;
   color: #000;
   white-space: pre;
   transform: translate(-50%, -50%) rotate(var(--rot));
 }
+/* 💡 방명록이 가까워지면(guestbook.js가 .gb-font-on을 붙임) 그때 조선궁서 웹폰트로 */
+.guestbook.gb-font-on .gb-wreath__text { font-family: 'GbGungsuh', 'Gungsuh', '궁서', 'GungSeo', serif; }
 .gb-wreath__glow { display: none; }
 .gb-wreath__glow img { filter: brightness(0) invert(1); }
 .gb-stage__item.is-selected .gb-wreath__glow { display: block; opacity: 0.6; }

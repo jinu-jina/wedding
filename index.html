@@ -24,8 +24,8 @@
 
   <link rel="stylesheet" href="styles.css?v=20261014b">
   <link rel="stylesheet" href="fairy.css?v=20261002g">
-  <link rel="stylesheet" href="guestbook.css?v=20261014b">
-  <script src="config.js?v=20261008d"></script>
+  <link rel="stylesheet" href="guestbook.css?v=20261014c">
+  <script src="config.js?v=20261014a"></script>
 </head>
 <body>
 
@@ -200,9 +200,11 @@
 
     <section class="top-video-section">
       <div class="top-video-section__stage">
-        <video id="topVideo" src="images/video/main.mp4" loop muted playsinline preload="auto"></video>
+        <!-- 💡 preload="metadata": 영상 전체(5MB)를 미리 받지 않고 첫 장면만 받음. 아이폰은 script.js primeFirstFrame()이 첫 장면을 불러옴 -->
+        <video id="topVideo" src="images/video/main.mp4" loop muted playsinline preload="metadata"></video>
         <canvas id="particleCanvas"></canvas>
-        <audio id="bgm" src="images/video/song.mp3" loop preload="auto"></audio>
+        <!-- 💡 preload="none": 배경음악(12.6MB)은 음악을 켤 때만 받음 -->
+        <audio id="bgm" src="images/video/song.mp3" loop preload="none"></audio>
       </div>
       <div class="top-video-section__greeting">
         <p class="top-video-section__heading">♪ 화면 터치 시 음악 on/off</p>
@@ -284,7 +286,7 @@
     <!-- ─── 갤러리 ─── -->
     <div class="alet-gallery" id="gallery">
       <!-- 앨범 영상(소리 없음, 초록 배경): 화면에는 안 보이고, 초록 배경을 지운 결과를 캔버스에 그립니다 -->
-      <video class="gallery-book__video" id="galleryBookVideo" src="images/gallery/bg_album.mp4" muted playsinline preload="auto" aria-hidden="true" tabindex="-1"></video>
+      <video class="gallery-book__video" id="galleryBookVideo" src="images/gallery/bg_album.mp4" muted playsinline preload="none" data-preload-near aria-hidden="true" tabindex="-1"></video>
       <!-- 앨범(캔버스) + 펼쳐진 양쪽 페이지 위의 글자. 글자 위치는 앨범 폭 기준(cqw)이라 앨범 크기에 맞춰 함께 커지고 줄어듭니다 -->
       <div class="gallery-book">
         <canvas class="gallery-book__canvas" id="galleryBookCanvas" aria-hidden="true"></canvas>
@@ -294,7 +296,7 @@
         </div>
       </div>
       <!-- 상단 중앙 카메라 일러스트 -->
-      <img class="gallery-camera" src="images/gallery/vintage_camera.png" alt="" aria-hidden="true" draggable="false">
+      <img class="gallery-camera" src="images/gallery/vintage_camera.png" loading="lazy" alt="" aria-hidden="true" draggable="false">
       <!-- 갤러리 제목 (좌측 상단, 좌측 정렬) -->
       <h2 class="gallery-title">웨딩 갤러리</h2>
       <!-- 안내 문구 (우측, 우측 정렬, 2줄) -->
@@ -381,11 +383,11 @@
             <a class="fairy__ics">아이폰</a>
           </div>
         </div>
-        <div class="fairy__calendar"><img src="images/location/fairy/mini_calender.png" alt="2026년 12월 5일 달력"></div>
+        <div class="fairy__calendar"><img src="images/location/fairy/mini_calender.png" loading="lazy" alt="2026년 12월 5일 달력"></div>
         <div class="fairy__body">
-          <img class="fairy__img" src="images/location/fairy/cha.png" alt="">
+          <img class="fairy__img" src="images/location/fairy/cha.png" loading="lazy" alt="">
           <div class="fairy__wand">
-            <img src="images/location/fairy/wand.png" alt="">
+            <img src="images/location/fairy/wand.png" loading="lazy" alt="">
             <span class="fairy__tip"></span>
           </div>
         </div>
@@ -418,7 +420,7 @@
          레이아웃: guestbook_main.svg (490×1000 기준으로 그린 뒤 화면 폭에 맞춰 축소) -->
     <section class="section guestbook" id="guestbook" aria-label="방명록">
       <div class="gb-main">
-        <div class="gb-main__bouquet" aria-hidden="true"><img src="images/guestbook/ui/bouquet.png" alt=""></div>
+        <div class="gb-main__bouquet" aria-hidden="true"><img src="images/guestbook/ui/bouquet.png" loading="lazy" alt=""></div>
         <h2 class="gb-main__title">디지털 축하 화환<br>전시장</h2>
         <button type="button" class="gb-main__info" aria-label="방명록 안내 보기" aria-haspopup="dialog">
           <svg viewBox="0 0 26 26" aria-hidden="true"><path d="M13,0C5.83,0,0,5.83,0,13s5.83,13,13,13,13-5.83,13-13S20.17,0,13,0Zm0,2c6.09,0,11,4.91,11,11s-4.91,11-11,11S2,19.09,2,13,6.91,2,13,2Zm-1,5v2h2v-2h-2Zm0,4v8h2v-8h-2Z"/></svg>
@@ -448,7 +450,7 @@
 
       <!-- 인트로: 섹션이 85% 이상 보이면 intro.mp4(배경 #6B7B71)를 재생한 뒤 사라지고 메인 화면이 나옴 (guestbook.js initIntro) -->
       <div class="gb-intro" aria-hidden="true">
-        <video class="gb-intro__video" src="images/guestbook/ui/intro.mp4" muted playsinline preload="auto"></video>
+        <video class="gb-intro__video" src="images/guestbook/ui/intro.mp4" muted playsinline preload="none" data-preload-near></video>
       </div>
 
       <!-- 안내 팝업 — guestbook_main_info.svg -->
@@ -574,9 +576,9 @@
     </footer>
 
   </main> <script src="brik.js?v=20261014a"></script>
-  <script src="script.js?v=20261014b"></script>
+  <script src="script.js?v=20261014c"></script>
   <script src="fairy.js?v=20261005a"></script>
-  <script src="guestbook.js?v=20261014b"></script>
+  <script src="guestbook.js?v=20261014c"></script>
   <script src="section-snap.js?v=20261006b"></script>
 </body>
 </html>

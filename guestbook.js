@@ -26,8 +26,9 @@
     flower: [['f1', 996, 997], ['f2', 975, 976], ['f3', 996, 1006], ['f4', 991, 990], ['f5', 996, 1074],
       ['f6', 668, 999], ['f7', 660, 1035]]
   };
-  // 💡 ?v= : 이미지를 바꿨을 때 브라우저가 예전 파일을 쓰지 않도록 (꽃 이미지 교체 2026-10-08)
-  const src = (part, name) => 'images/guestbook/' + part + '/' + name + '.png?v=20261008';
+  // 💡 WebP(투명 배경 유지, PNG보다 약 4~5배 가벼움). PNG 저장 버튼은 캔버스에 다시 그려 PNG로 만들므로 결과는 그대로 투명 PNG
+  //    ?v= : 이미지를 바꿨을 때 브라우저가 예전 파일을 쓰지 않도록 (WebP로 교체 2026-10-14)
+  const src = (part, name) => 'images/guestbook/' + part + '/' + name + '.webp?v=20261014';
   const partInfo = (part, name) => PARTS[part].find((p) => p[0] === name) || PARTS[part][0];
 
   /* ─── 화환 배치 (360×410 상자 기준, 원본 이미지 × 0.36) ─── */
@@ -824,10 +825,22 @@
     });
   });
 
-  // 리본 글꼴은 미리 받아 둠 (처음 입력할 때 다른 글꼴이 잠깐 보이지 않게)
-  if (document.fonts && document.fonts.load) {
-    document.fonts.load(TEXT.size + 'px ' + FONT_STACK, '결혼을 축하드립니다 대학교 총학생회').catch(() => {});
-    document.fonts.load('53.79px EF_cucumbersalad', '디지털 축하 화환 전시장 만들기 수정하기').catch(() => {});
+  // 💡 리본 글꼴(조선궁서 3.6MB)은 방명록이 화면 1.5배 거리 안으로 다가오면 그때 받음.
+  //    그 전까지는 guestbook.css에서 리본 글씨에 이 글꼴을 안 쓰게 해 둬서(.gb-font-on이 붙어야 사용) 사이트를 열 때 받지 않음
+  function loadRibbonFont() {
+    section.classList.add('gb-font-on');
+    if (document.fonts && document.fonts.load) {
+      document.fonts.load(TEXT.size + 'px ' + FONT_STACK, '결혼을 축하드립니다 대학교 총학생회').catch(() => {});
+      document.fonts.load('53.79px EF_cucumbersalad', '디지털 축하 화환 전시장 만들기 수정하기').catch(() => {});
+    }
+  }
+  if ('IntersectionObserver' in window) {
+    const fontIo = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) { fontIo.disconnect(); loadRibbonFont(); }
+    }, { rootMargin: '150% 0px' });
+    fontIo.observe(section);
+  } else {
+    loadRibbonFont();
   }
 
   /* ─── 인트로: 섹션이 화면에 85% 이상 보이는 순간 intro.mp4 재생 → 끝나면 메인 화면 ───

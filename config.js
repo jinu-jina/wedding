@@ -7,7 +7,8 @@
  *
  * 이미지 폴더 구조 (파일명 규칙):
  *   images/hero/1.jpg      - 메인 사진 (1장, 필수)
- *   images/gallery/1.jpg, 2.jpg, ... - 갤러리 사진들 (순번, 자동 감지)
+ *   images/gallery/1.webp, 2.webp, ... - 갤러리 사진들 (순번, 자동 감지. thumb/ 폴더에 같은 이름의 작은 WebP도 필요 —
+ *                                        장수는 thumb/로 세므로 thumb/N.webp가 없으면 그 사진은 안 나옴)
  *   images/location/1.jpg  - 약도/지도 이미지 (1장)
  *   images/og/1.jpg        - 카카오톡 공유 썸네일 (1장)
  */
