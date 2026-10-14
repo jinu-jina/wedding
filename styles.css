@@ -560,8 +560,9 @@ a {
   bottom: 0;
   left: 50%;
   width: 100%;
-  /* 💡 여유분을 더해 확실히 프레임 전체를 덮도록 함(envelope-opening과 동일한 이유) */
-  max-width: calc(var(--app-max-width) + 40px);
+  /* 💡 프레임(490px) 폭에 딱 맞춤. 예전엔 여유분 40px를 더했는데, PC·아이패드에서 프레임 양옆으로
+        어두운 띠가 삐져나와 보여서 0으로 */
+  max-width: var(--app-max-width);
   transform: translateX(-50%);
   z-index: 650;
   background: rgba(0, 0, 0, 0.2);   /* 💡 메뉴 바깥 화면 어둡게: 0.45 → 0.2 (유리 패널이 칙칙한 회색으로 보이지 않게) */
@@ -620,11 +621,11 @@ a {
 }
 
 /* 💡 PC 등 넓은 화면(--app-max-width보다 넓을 때)에서는 모니터 우측 끝이 아니라
-   .main-content 프레임의 우측 끝에 패널이 붙도록 오프셋을 줌. 정확히 프레임 끝에
-   맞추면 미세한 오차로 옆에 틈이 생겨서, 여유분(20px)만큼 더 밀어 확실히 덮음 */
+   .main-content 프레임의 우측 끝에 패널이 붙도록 오프셋을 줌.
+   패널이 반투명 유리라서 여유분만큼 프레임 밖으로 삐져나오면 바깥에 박스가 보임 → 여유분 20px → 0 (프레임 끝에 딱 맞춤) */
 @media (min-width: 480px) {
   .side-menu {
-    right: calc(50% - (var(--app-max-width) / 2) - 20px);
+    right: calc(50% - (var(--app-max-width) / 2));
   }
 }
 

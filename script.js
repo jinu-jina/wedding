@@ -1372,8 +1372,27 @@ function initParticles() {
         });
     }
 
+    // 💡 iOS 사파리는 재생 전인(멈춘) 영상의 첫 장면을 안 불러올 때가 있어서, 카세트 파티클이
+    //    읽을 그림이 없어 터치(재생)하기 전까지 안 보였음 → 첫 장면을 강제로 불러옴
+    //    1) 아주 조금(0.01초) 이동시키면 그 장면을 불러옴  2) 그래도 안 되면 소리 없이 잠깐 재생했다가 바로 멈춤
+    let userToggled = false;
+    function primeFirstFrame() {
+      if (video.readyState >= 2) return;
+      const seek = () => { if (video.readyState < 2 && video.currentTime < 0.01) { try { video.currentTime = 0.01; } catch (e) {} } };
+      if (video.readyState >= 1) seek(); else video.addEventListener('loadedmetadata', seek, { once: true });
+      setTimeout(() => {
+        if (video.readyState >= 2 || userToggled || !video.paused) return;
+        video.muted = true;
+        const p = video.play();
+        const stop = () => { if (!userToggled) video.pause(); };
+        if (p && p.then) p.then(stop).catch(() => {}); else stop();
+      }, 1200);
+    }
+    primeFirstFrame();
+
     // 💡 상단 네비게이션의 사운드 버튼에서도 동일하게 호출할 수 있도록 함수로 분리
     function toggleMedia() {
+      userToggled = true;
       const bgm = document.getElementById('bgm');
 
       if (video.paused) {

@@ -19,8 +19,11 @@ function resizeCanvas() {
   var cs = getComputedStyle(__ctArea);
   var w = Math.max(1, __ctArea.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight));
   var h = Math.max(1, __ctArea.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom));
-  canvas.width = Math.min(__maxDim, w);
-  canvas.height = Math.min(__maxDim, h);
+  w = Math.min(__maxDim, w); h = Math.min(__maxDim, h);
+  // 💡 크기가 그대로면 건드리지 않음 — canvas.width에 같은 값을 넣어도 화면이 지워져서,
+  //    iOS에서 스크롤할 때마다(주소창이 접히며 resize 발생) 유체가 깜빡였음
+  if (canvas.width !== w) canvas.width = w;
+  if (canvas.height !== h) canvas.height = h;
 }
 window.addEventListener('resize', resizeCanvas);
 window.addEventListener('load', resizeCanvas);
@@ -177,6 +180,7 @@ uniform float uTime; uniform vec2 uResolution; uniform vec3 uColor1; uniform vec
 uniform float uSpeed; uniform float uGrainSpeed; uniform float uFlow; uniform float uNoise; uniform float uSharpness; uniform float uOpacity;
 uniform sampler2D uMask; uniform sampler2D uBg; uniform float uHasBg; uniform float uBgAspect; uniform float uCanvasAspect; uniform float uBlur;
 uniform vec2 uGyro; // 💡 자이로스코프 좌표 수신용 엔진 탑재 완료!
+uniform sampler2D uBlurImg; uniform float uHasBlurImg; // 💡 1_blur.png — 유체 모양대로 비치는 블러 사진
 in vec2 vUv; out vec4 fragColor;
 
 float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233)))*43758.5453); }
@@ -239,7 +243,12 @@ void main(){
   // CSS 레이어(원본 1.jpg + 블러 처리된 1_blur.png)에 전적으로 맡깁니다. uHasBg일 때
   // 캔버스가 alpha=1.0(완전 불투명)으로 사진까지 같이 그리면, 그 아래 CSS 레이어들이
   // 전부 가려져서 안 보이게 됩니다.
-  fragColor=vec4(pc,fa);
+  // 💡 블러 사진(1_blur.png)은 유체가 진한 곳(알파 0.28~0.6 → 0~1로 대비를 높임)에만 페인트 밑에 깔아 줌.
+  //    예전엔 이 모양을 CSS mask-image로 1초에 8번 바꿔 끼웠는데, iOS 사파리가 바꿀 때마다
+  //    마스크를 잠깐 비워서 깜빡였음 → 같은 계산을 여기(셰이더) 한 번의 그리기 안에서 처리
+  float bm=smoothstep(0.0,1.0,clamp((fa-0.28)/(0.6-0.28),0.0,1.0))*uHasBlurImg;
+  vec3 blurRgb=texture(uBlurImg,uv).rgb;
+  fragColor=vec4(pc+(1.0-fa)*blurRgb*bm, fa+(1.0-fa)*bm);
 }`;
 
 function compile(type, src) {
@@ -272,7 +281,8 @@ const U = {
   mask: gl.getUniformLocation(fluidProg, 'uMask'), bg: gl.getUniformLocation(fluidProg, 'uBg'),
   hasBg: gl.getUniformLocation(fluidProg, 'uHasBg'), bgAspect: gl.getUniformLocation(fluidProg, 'uBgAspect'),
   canvasAspect: gl.getUniformLocation(fluidProg, 'uCanvasAspect'), blur: gl.getUniformLocation(fluidProg, 'uBlur'),
-  gyro: gl.getUniformLocation(fluidProg, 'uGyro') 
+  gyro: gl.getUniformLocation(fluidProg, 'uGyro'),
+  blurImg: gl.getUniformLocation(fluidProg, 'uBlurImg'), hasBlurImg: gl.getUniformLocation(fluidProg, 'uHasBlurImg')
 };
 const B = {
   prev: gl.getUniformLocation(brushProg, 'uPrev'), point: gl.getUniformLocation(brushProg, 'uPoint'),
@@ -343,45 +353,21 @@ window.addEventListener('deviceorientation', (e) => {
   targetVelocityY = y * 0.008; 
 });
 
-// 💡 실시간 마스크 동기화: 캔버스가 그리고 있는 유체 모양(알파값)을 그대로 읽어서
-// 블러 레이어(.layer-1-bg-blur)의 CSS mask-image로 사용합니다. 정적인 원형
-// 그라데이션과 달리, 유체가 움직이거나 마우스로 지운 모양이 그대로 반영됩니다.
-const maskSyncCanvas = document.createElement('canvas');
-const maskSyncCtx = maskSyncCanvas.getContext('2d');
+// 💡 블러 사진(1_blur.png): 유체 모양대로만 비치게 하는 일은 셰이더(fluidFrag 맨 아래)가 직접 함.
+//    그래서 HTML의 .layer-1-bg-blur 이미지는 숨기고 같은 그림을 텍스처로 읽어 씀.
+//    (예전 방식: 캔버스를 매번 읽어 PNG로 만든 뒤 CSS mask-image로 교체 → iOS에서 깜빡임 + 느림)
 const blurLayerEl = __ctArea ? __ctArea.parentElement.querySelector('.layer-1-bg-blur') : null;
-let lastMaskSyncTime = 0;
-function syncBlurMask(now) {
-  if (!blurLayerEl) return;
-  if (now - lastMaskSyncTime < 120) return; // 약 8fps로 제한 (성능 고려, 유체는 천천히 움직임)
-  lastMaskSyncTime = now;
-  if (maskSyncCanvas.width !== canvas.width || maskSyncCanvas.height !== canvas.height) {
-    maskSyncCanvas.width = canvas.width;
-    maskSyncCanvas.height = canvas.height;
-  }
-  maskSyncCtx.clearRect(0, 0, maskSyncCanvas.width, maskSyncCanvas.height);
-  maskSyncCtx.drawImage(canvas, 0, 0);
-
-  // 💡 마스크 경계를 더 또렷하게 조이기: 옅게 퍼진 알파(예: 0.28 이하)는 아예 0으로 끊어내고,
-  // 어느 정도 진한 부분(0.6 이상)부터 완전히 보이도록 대비를 높입니다.
-  const imgData = maskSyncCtx.getImageData(0, 0, maskSyncCanvas.width, maskSyncCanvas.height);
-  const data = imgData.data;
-  const lo = 0.28, hi = 0.6;
-  for (let i = 3; i < data.length; i += 4) {
-    let a = data[i] / 255;
-    a = Math.min(1, Math.max(0, (a - lo) / (hi - lo)));
-    a = a * a * (3 - 2 * a); // smoothstep으로 경계를 부드럽게 이어줌
-    data[i] = Math.round(a * 255);
-  }
-  maskSyncCtx.putImageData(imgData, 0, 0);
-
-  const url = 'url(' + maskSyncCanvas.toDataURL() + ')';
-  blurLayerEl.style.maskImage = url;
-  blurLayerEl.style.webkitMaskImage = url;
-  blurLayerEl.style.maskMode = 'alpha';
-  blurLayerEl.style.maskSize = '100% 100%';
-  blurLayerEl.style.webkitMaskSize = '100% 100%';
-  blurLayerEl.style.maskRepeat = 'no-repeat';
-  blurLayerEl.style.webkitMaskRepeat = 'no-repeat';
+let blurTex = makeTex(2, 2); let blurLoaded = false;
+if (blurLayerEl) {
+  blurLayerEl.style.display = 'none';
+  const bimg = new Image();
+  bimg.onload = () => {
+    gl.bindTexture(gl.TEXTURE_2D, blurTex); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, bimg); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+    blurLoaded = true;
+  };
+  bimg.onerror = () => { blurLayerEl.style.display = ''; };   // 못 불러오면 원래 이미지라도 보이게
+  bimg.src = blurLayerEl.currentSrc || blurLayerEl.src;
 }
 
 let time = 0; let last = performance.now();
@@ -425,9 +411,9 @@ function render(now) {
 
   gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, maskTex[maskRead]); gl.uniform1i(U.mask, 0);
   gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, bgTex); gl.uniform1i(U.bg, 1);
+  gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, blurTex); gl.uniform1i(U.blurImg, 2);
+  gl.uniform1f(U.hasBlurImg, blurLoaded ? 1.0 : 0.0);
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-
-  syncBlurMask(now);
 
   requestAnimationFrame(render);
 }
